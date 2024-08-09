@@ -23,9 +23,6 @@ public class UserController {
 
     @PostMapping(value = Urls.User.CREATE_USER, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Response> createUser(@RequestBody UserDTO userDetails){
-        System.out.println("Creating user "+ userDetails.toString());
-        HashMap<String,Object> result=userService.createUser(userDetails);
-        Response response = new Response(result,result.get("message").toString());
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(userService.createUser(userDetails));
     }
 }

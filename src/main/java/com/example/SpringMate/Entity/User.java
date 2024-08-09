@@ -2,6 +2,7 @@ package com.example.SpringMate.Entity;
 import com.example.SpringMate.Constants;
 import com.example.SpringMate.DTO.UserDTO;
 import com.example.SpringMate.Helpers.CoreHelper;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ public class User implements UserDetails {
     @Column(unique = true, nullable = false)
     private String uuid;
     private String name;
+    @JsonIgnore
     private String password;
     @Column(unique = true, nullable = false)
     private String email;

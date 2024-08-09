@@ -41,7 +41,6 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
             if (email == null || password == null || password.isBlank() || email.isBlank()) {
                 throw new BadCredentialsException("Invalid email or password");
             }
-            System.out.println("Email-> " + email + " Pass-> " + password);
             UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(email, password);
             return authenticationManager.authenticate(authenticationToken);
 

@@ -4,6 +4,7 @@ import com.example.SpringMate.Entity.User;
 import com.example.SpringMate.Repositoy.SessionRepository;
 import com.example.SpringMate.Repositoy.UserRepository;
 import lombok.AllArgsConstructor;
+import java.util.List;
 
 @AllArgsConstructor
 public class SessionManagementHelper {
@@ -13,19 +14,15 @@ public class SessionManagementHelper {
 
     public Session checkIfSessionExists(String email) {
         User user = userRepository.findByEmail(email);
-        Session list = sessionRepository.findByUserId(user.getId());
-        System.out.println("List>>>>"+list.toString());
-        return null;
+        List<Session> sessions = sessionRepository.findByUserId(user.getId());
+        return !sessions.isEmpty() ? sessions.get(sessions.size()-1) : null;
     }
 
     public String createSession(String email) {
         User user = userRepository.findByEmail(email);
-        String sessionId = CoreHelper.generateUUID();
+        String sessionId = CoreHelper.generateUUID().toUpperCase();
         Session session = new Session(sessionId, user, System.currentTimeMillis(), System.currentTimeMillis());
         sessionRepository.save(session);
         return sessionId;
     }
-
-
-
 }

@@ -8,6 +8,7 @@ public class Urls {
         public static final String AUTH_BASE_URL=BASE_URL+"/auth";
         public static final String LOGIN_URL ="/login";
         public static final String LOGOUT_URL ="/logout";
+        public static final String AUTH_DETAILS ="/auth_details";
     }
 
     public static final class Admin{

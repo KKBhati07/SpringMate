@@ -38,23 +38,16 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         AuthenticationFilter authFilter = new AuthenticationFilter(authenticationManager(http), sessionRepository, userRepository);
-        System.out.println(">>>>" + http.toString());
         authFilter.setFilterProcessesUrl(Urls.Auth.AUTH_BASE_URL + Urls.Auth.LOGIN_URL);
 
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers("/api/v1/auth/**").permitAll()
                                 .requestMatchers("/api/v1/user/create_user").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .addFilterBefore(new SessionAuthenticationFilter(sessionRepository), UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
-                .logout(logout ->
-                        logout
-                                .logoutUrl("/api/v1/auth/logout")
-                                .permitAll()
-                )
                 .sessionManagement(sessionManagement ->
                         sessionManagement
                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
