@@ -1,12 +1,3 @@
 spring:
-  application:
-    name: springmate
-
-  datasource:
-    url: jdbc:postgresql://localhost:5432/marketmate
-    username: postgres
-    password: password
-
-  jpa:
-    hibernate:
-      ddl:-auto: update
+  profiles:
+    active: dev
