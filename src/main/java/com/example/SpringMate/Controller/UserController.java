@@ -6,6 +6,7 @@ import com.example.SpringMate.Response;
 import com.example.SpringMate.Service.UserService;
 import com.example.SpringMate.Urls;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,6 +27,6 @@ public class UserController {
         System.out.println("Creating user "+ userDetails.toString());
         HashMap<String,Object> result=userService.createUser(userDetails);
         Response response = new Response(result,result.get("message").toString());
-        return ResponseEntity.ok(response);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 }
