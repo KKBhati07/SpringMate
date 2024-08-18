@@ -45,6 +45,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
                                 .requestMatchers("/api/v1/auth/**").permitAll()
+                                .requestMatchers("/api/v1/admin/**").permitAll()
                                 .requestMatchers("/api/v1/user/create_user").permitAll()
                                 .anyRequest().authenticated()
                 )
