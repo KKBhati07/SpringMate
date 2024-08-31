@@ -2,7 +2,7 @@ package com.example.SpringMate.Service;
 import com.example.SpringMate.DTO.UserDTO;
 import com.example.SpringMate.Entity.User;
 import com.example.SpringMate.Repositoy.UserRepository;
-import com.example.SpringMate.Response;
+import com.example.SpringMate.Util.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +28,7 @@ public class UserService {
                 return new Response(res,"User created successfully");
             }else {
                 res.put("created", false);
+                res.put("already_exists", true);
                 return new Response(res,"User already exists");
             }
 

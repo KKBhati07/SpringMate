@@ -1,8 +1,8 @@
 package com.example.SpringMate.Controller;
 
-import com.example.SpringMate.Response;
+import com.example.SpringMate.Util.Response;
 import com.example.SpringMate.Service.AuthService;
-import com.example.SpringMate.Urls;
+import com.example.SpringMate.Util.Urls;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

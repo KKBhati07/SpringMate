@@ -1,5 +1,5 @@
 package com.example.SpringMate.Entity;
-import com.example.SpringMate.Constants;
+import com.example.SpringMate.Util.Constants;
 import com.example.SpringMate.DTO.UserDTO;
 import com.example.SpringMate.Helpers.CoreHelper;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -15,7 +15,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.UUID;
 
 @Entity
 @Table(name = "users")
@@ -69,5 +68,9 @@ public class User implements UserDetails {
     @Override
     public String getUsername() {
         return this.email;
+    }
+
+    public boolean isAdmin(){
+        return this.role.equals(Constants.UserRole.ADMIN);
     }
 }

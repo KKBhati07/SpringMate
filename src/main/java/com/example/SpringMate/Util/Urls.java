@@ -1,4 +1,4 @@
-package com.example.SpringMate;
+package com.example.SpringMate.Util;
 
 public class Urls {
     private Urls(){}

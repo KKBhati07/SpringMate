@@ -3,7 +3,7 @@ package com.example.SpringMate.Config;
 import com.example.SpringMate.Repositoy.SessionRepository;
 import com.example.SpringMate.Repositoy.UserRepository;
 import com.example.SpringMate.Service.UserDetailServiceImpl;
-import com.example.SpringMate.Urls;
+import com.example.SpringMate.Util.Urls;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

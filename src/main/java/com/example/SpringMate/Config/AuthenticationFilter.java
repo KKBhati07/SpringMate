@@ -4,6 +4,8 @@ import com.example.SpringMate.Entity.Session;
 import com.example.SpringMate.Helpers.SessionManagementHelper;
 import com.example.SpringMate.Repositoy.SessionRepository;
 import com.example.SpringMate.Repositoy.UserRepository;
+import com.example.SpringMate.Util.Response;
+import com.example.SpringMate.Util.ResponseMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
@@ -38,8 +40,8 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
             Map<String, String> requestBody = new ObjectMapper().readValue(req.getInputStream(), Map.class);
             String email = requestBody.get("email");
             String password = requestBody.get("password");
-            if (email == null || password == null || password.isBlank() || email.isBlank()) {
-                throw new BadCredentialsException("Invalid email or password");
+            if (email == null || password == null || password.isBlank() || email.isBlank() || userRepository.findByEmail(email) == null) {
+                throw new BadCredentialsException("Bad credentials");
             }
             UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(email, password);
             return authenticationManager.authenticate(authenticationToken);
@@ -60,15 +62,21 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         } else sessionId = existingSession.getSessionID();
 
         response.setContentType("application/json");
-        response.getWriter().write("{\"sessionId\": \"" + sessionId + "\", \"message\": \"Login successful\"}");
+        Map<String, Object> resMap = new HashMap<>();
+        resMap.put("sessionId", sessionId);
+        resMap.put("authenticated",true);
+        resMap.put("user_details",new ResponseMapper().mapUser(userRepository.findByEmail(authResult.getName())));
+        Response res=new Response(resMap,"Logged in successfully!");
+        response.getWriter().write(new ObjectMapper().writeValueAsString(res));
     }
 
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException {
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType("application/json");
-        Map<String, String> responseBody = new HashMap<>();
-        responseBody.put("message", "Authentication failed: " + failed.getMessage());
-        response.getWriter().write(new ObjectMapper().writeValueAsString(responseBody));
+        Map<String, Object> resMap = new HashMap<>();
+        resMap.put("authenticated",false);
+        Response res=new Response(resMap,"Authentication failed: " + failed.getMessage());
+        response.getWriter().write(new ObjectMapper().writeValueAsString(res));
     }
 }

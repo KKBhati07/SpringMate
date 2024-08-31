@@ -1,4 +1,4 @@
-package com.example.SpringMate;
+package com.example.SpringMate.Util;
 
 import lombok.Data;
 

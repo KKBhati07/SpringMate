@@ -3,9 +3,11 @@ package com.example.SpringMate.Service;
 
 import com.example.SpringMate.Entity.Session;
 import com.example.SpringMate.Entity.User;
+import com.example.SpringMate.Helpers.AuthHelper;
 import com.example.SpringMate.Repositoy.SessionRepository;
 import com.example.SpringMate.Repositoy.UserRepository;
-import com.example.SpringMate.Response;
+import com.example.SpringMate.Util.Response;
+import com.example.SpringMate.Util.ResponseMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -46,10 +48,9 @@ public class AuthService {
 
     public Response authDetails(){
         Map<String, Object> responseMap = new HashMap<>();
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        User user = (User) authentication.getPrincipal();
         responseMap.put("status", 200);
-        responseMap.put("userDetails", user);
+        responseMap.put("is_authenticated",true);
+        responseMap.put("user_details", new ResponseMapper().mapUser(new AuthHelper().getUserDetails()));
         return new Response(responseMap,"Data fetched successfully");
     }
 }

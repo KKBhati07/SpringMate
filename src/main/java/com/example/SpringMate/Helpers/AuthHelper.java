@@ -1,9 +1,12 @@
 package com.example.SpringMate.Helpers;
 
 import com.example.SpringMate.Entity.Session;
+import com.example.SpringMate.Entity.User;
 import com.example.SpringMate.Repositoy.SessionRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,5 +36,10 @@ public class AuthHelper {
         }catch (Exception e){
             return false;
         }
+    }
+
+    public User getUserDetails(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication.getPrincipal() instanceof User ? (User) authentication.getPrincipal() : null;
     }
 }
