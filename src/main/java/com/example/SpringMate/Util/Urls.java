@@ -28,4 +28,9 @@ public class Urls {
         public static final String DELETE_USER="/delete_user";
 
     }
+
+    public static final class Category{
+        public static final String CATEGORY_BASE= BASE_URL+ "/category";
+        public static final String GET_ALL="/get_all";
+    }
 }
