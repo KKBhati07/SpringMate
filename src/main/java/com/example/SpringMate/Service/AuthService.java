@@ -36,7 +36,7 @@ public class AuthService {
             User user = (User) authentication.getPrincipal();
             List<Session> sessions = sessionRepository.findByUserId(user.getId());
             sessionRepository.deleteAll(sessions);
-            SecurityContextHolder.clearContext();;
+            SecurityContextHolder.clearContext();
             responseMap.put("status", 200);
             return new Response(responseMap,"Logged out successfully");
         }catch (Exception e){

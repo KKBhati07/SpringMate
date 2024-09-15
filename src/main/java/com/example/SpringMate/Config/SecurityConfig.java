@@ -44,6 +44,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
                                 .requestMatchers("/api/v1/user/create_user").permitAll()
+                                .requestMatchers("/api/v1/category/**").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .addFilterBefore(new SessionAuthenticationFilter(sessionRepository), UsernamePasswordAuthenticationFilter.class)
