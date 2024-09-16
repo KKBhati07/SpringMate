@@ -42,4 +42,13 @@ public class AuthHelper {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return authentication.getPrincipal() instanceof User ? (User) authentication.getPrincipal() : null;
     }
+
+    public boolean compareUserDetails(User user){
+        User authenticatedUser = getUserDetails();
+        if(authenticatedUser == null) return false;
+        return authenticatedUser.getEmail().equals(user.getEmail())
+                && authenticatedUser.getPassword().equals(user.getPassword())
+                && authenticatedUser.getRole().equals(user.getRole())
+                && authenticatedUser.getUuid().equals(user.getUuid());
+    }
 }

@@ -21,7 +21,12 @@ public class UserController {
 
     @PostMapping(value = Urls.User.CREATE_USER, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Response> createUser(@RequestBody UserDTO userDetails){
-        System.out.println("::"+userDetails.toString());
         return ResponseEntity.ok(userService.createUser(userDetails));
+    }
+
+    @GetMapping(Urls.User.GET_DETAILS)
+    public ResponseEntity<Response> getUserDetails(@PathVariable String uuid){
+        System.out.println("::"+uuid);
+        return userService.getUserDetails(uuid);
     }
 }

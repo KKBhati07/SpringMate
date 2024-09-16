@@ -39,6 +39,8 @@ public class User implements UserDetails {
     @Column(unique = true, nullable = false)
     private String email;
     private String role;
+    @Column(name = "profile_url")
+    private String profileUrl;
 
     @PrePersist
     public void presets(){

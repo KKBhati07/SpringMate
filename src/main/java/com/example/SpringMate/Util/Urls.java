@@ -26,6 +26,7 @@ public class Urls {
         public static final String CREATE_USER="/create_user";
         public static final String UPDATE_USER="/update_user";
         public static final String DELETE_USER="/delete_user";
+        public static final String GET_DETAILS="/{uuid}/get_details";
 
     }
 
