@@ -26,7 +26,6 @@ public class UserController {
 
     @GetMapping(Urls.User.GET_DETAILS)
     public ResponseEntity<Response> getUserDetails(@PathVariable String uuid){
-        System.out.println("::"+uuid);
         return userService.getUserDetails(uuid);
     }
 }
