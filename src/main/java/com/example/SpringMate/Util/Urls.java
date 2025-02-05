@@ -14,7 +14,7 @@ public class Urls {
     public static final class Admin{
          public static final String ADMIN_BASE= BASE_URL+ "/admin";
          public static final class User{
-             public static final String FETCH_ALL="/users/fetch_all";
+             public static final String FETCH_ALL="/users/get_all";
          }
 
          public static final class Listing{
