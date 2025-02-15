@@ -14,18 +14,24 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     UserService userService;
+
     @Autowired
     public UserController(UserService userService) {
         this.userService = userService;
     }
 
     @PostMapping(value = Urls.User.CREATE_USER, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Response> createUser(@RequestBody UserDTO userDetails){
+    public ResponseEntity<Response> createUser(@RequestBody UserDTO userDetails) {
         return ResponseEntity.ok(userService.createUser(userDetails));
     }
 
     @GetMapping(Urls.User.GET_DETAILS)
-    public ResponseEntity<Response> getUserDetails(@PathVariable String uuid){
+    public ResponseEntity<Response> getUserDetails(@PathVariable String uuid) {
         return userService.getUserDetails(uuid);
+    }
+
+    @DeleteMapping(Urls.User.DELETE_USER)
+    public ResponseEntity<Response> deleteUser() {
+        return userService.deleteUser(null);
     }
 }

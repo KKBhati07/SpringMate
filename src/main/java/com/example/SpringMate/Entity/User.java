@@ -1,4 +1,5 @@
 package com.example.SpringMate.Entity;
+
 import com.example.SpringMate.Util.Constants;
 import com.example.SpringMate.DTO.UserDTO;
 import com.example.SpringMate.Helpers.CoreHelper;
@@ -22,12 +23,13 @@ import java.util.Collections;
 @Setter
 @RequiredArgsConstructor
 public class User implements UserDetails {
-    public User(UserDTO userDetails){
+    public User(UserDTO userDetails) {
         this.name = userDetails.getName();
         this.email = userDetails.getEmail();
         this.password = encodePassword(userDetails.getPassword());
         setRoleAndUuid(userDetails.getRole());
     }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -41,30 +43,33 @@ public class User implements UserDetails {
     private String role;
     @Column(name = "profile_url")
     private String profileUrl;
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted = false;
 
     @PrePersist
-    public void presets(){
-        if(uuid==null){
-            this.uuid=CoreHelper.generateUUID();
+    public void presets() {
+        if (uuid == null) {
+            this.uuid = CoreHelper.generateUUID();
         }
-        if(role==null){
-            this.role= Constants.UserRole.USER;
+        if (role == null) {
+            this.role = Constants.UserRole.USER;
         }
 
     }
-    private void setRoleAndUuid(String role){
-        this.uuid= CoreHelper.generateUUID();
-        this.role=role != null? role : Constants.UserRole.USER;
+
+    private void setRoleAndUuid(String role) {
+        this.uuid = CoreHelper.generateUUID();
+        this.role = role != null ? role : Constants.UserRole.USER;
     }
 
-    private String encodePassword(String password){
+    private String encodePassword(String password) {
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         return passwordEncoder.encode(password);
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_"+this.role));
+        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + this.role));
     }
 
     @Override
@@ -72,7 +77,7 @@ public class User implements UserDetails {
         return this.email;
     }
 
-    public boolean isAdmin(){
+    public boolean isAdmin() {
         return this.role.equals(Constants.UserRole.ADMIN);
     }
 }

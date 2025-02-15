@@ -31,7 +31,9 @@ public class SecurityConfig {
 
 
     @Autowired
-    public SecurityConfig(UserDetailServiceImpl userDetailService, SessionRepository sessionRepository, UserRepository userRepository) {
+    public SecurityConfig(UserDetailServiceImpl userDetailService,
+                          SessionRepository sessionRepository,
+                          UserRepository userRepository) {
         this.userDetailService = userDetailService;
         this.sessionRepository = sessionRepository;
         this.userRepository = userRepository;
