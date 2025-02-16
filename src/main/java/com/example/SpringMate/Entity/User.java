@@ -45,6 +45,8 @@ public class User implements UserDetails {
     private String profileUrl;
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;
+    @Column(name = "contact_no", nullable = true)
+    private String contactNo;
 
     @PrePersist
     public void presets() {

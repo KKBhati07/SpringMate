@@ -23,12 +23,12 @@ public class AuthController {
     }
 
     @GetMapping(Urls.Auth.LOGOUT_URL)
-    public ResponseEntity<Response> logout(HttpServletRequest req){
-            return ResponseEntity.ok(authService.logoutUser());
+    public ResponseEntity<Response> logout(HttpServletRequest req) {
+        return authService.logoutUser();
     }
 
     @GetMapping(Urls.Auth.AUTH_DETAILS)
-    public ResponseEntity<Response> getAuthDetails(HttpServletRequest req){
-        return ResponseEntity.ok(authService.authDetails());
+    public ResponseEntity<Response> getAuthDetails(HttpServletRequest req) {
+        return authService.authDetails();
     }
 }
