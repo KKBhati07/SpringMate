@@ -19,6 +19,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -60,7 +61,7 @@ public class UserService {
             Pageable pageable = PageRequest.of(page, size);
             Page<User> pagedUsers = userRepository.findAll(pageable);
             HashMap<String, Object> map = new HashMap<>();
-            map.put("users", pagedUsers.getContent());
+            map.put("users", injectSignedProfileUrl(pagedUsers.getContent()));
             map.put("currentPage", pagedUsers.getNumber());
             map.put("totalItems", pagedUsers.getTotalElements());
             map.put("totalPages", pagedUsers.getTotalPages());
@@ -165,13 +166,13 @@ public class UserService {
             }
             user.setName(userDetails.getName());
             user.setEmail(userDetails.getEmail());
-            if(userDetails.getContactNo() != null){
+            if (userDetails.getContactNo() != null) {
                 user.setContactNo(userDetails.getContactNo());
             }
             User updatedUser = this.userRepository.save(user);
             res.put("updated", true);
             res.put("self", true);
-            res.put("user_details",new ResponseMapper(awsS3Service).mapUser(updatedUser));
+            res.put("user_details", new ResponseMapper(awsS3Service).mapUser(updatedUser));
             return ResponseEntity.ok(new Response(res, "User Updated Successfully"));
 
         } catch (Exception e) {
@@ -179,6 +180,11 @@ public class UserService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new Response(res, "Internal server error"));
         }
+    }
+
+    private List<Map<String, Object>> injectSignedProfileUrl(List<User> users) {
+        ResponseMapper rm = new ResponseMapper(awsS3Service);
+        return users.stream().map(rm::mapUser).toList();
     }
 
 }

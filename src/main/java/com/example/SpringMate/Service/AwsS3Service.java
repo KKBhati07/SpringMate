@@ -48,6 +48,7 @@ public class AwsS3Service {
 
     public String getPreSignedUrl(String bucketName, String objectKey, long expirationInput) {
         try {
+            if(objectKey == null) return null;
             Date expiration = new Date();
             expiration.setTime(expiration.getTime() + expirationInput * 60 * 1000);
             GeneratePresignedUrlRequest req = new GeneratePresignedUrlRequest(bucketName, objectKey)
