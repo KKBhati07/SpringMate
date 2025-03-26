@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -58,7 +59,7 @@ public class UserService {
 
     public ResponseEntity<Response> fetchAll(int page, int size) {
         try {
-            Pageable pageable = PageRequest.of(page, size);
+            Pageable pageable = PageRequest.of(page, size, Sort.by("name"));
             Page<User> pagedUsers = userRepository.findAll(pageable);
             HashMap<String, Object> map = new HashMap<>();
             map.put("users", injectSignedProfileUrl(pagedUsers.getContent()));
