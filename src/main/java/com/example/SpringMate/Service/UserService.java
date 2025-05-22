@@ -1,19 +1,14 @@
 package com.example.SpringMate.Service;
-
-import com.example.SpringMate.DTO.UpdateUserDTO;
 import com.example.SpringMate.DTO.UserDTO;
+import com.example.SpringMate.DTO.UserDetailsResDTO;
 import com.example.SpringMate.Entity.User;
 import com.example.SpringMate.Helpers.AuthHelper;
 import com.example.SpringMate.Repositoy.UserRepository;
-import com.example.SpringMate.Util.AwsS3Directory;
-import com.example.SpringMate.Util.Constants;
 import com.example.SpringMate.Util.Response;
-import com.example.SpringMate.Util.ResponseMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,12 +22,10 @@ import java.util.Optional;
 @Service
 public class UserService {
     private final UserRepository userRepository;
-    private final AwsS3Service awsS3Service;
 
     @Autowired
-    public UserService(UserRepository userRepository, AwsS3Service awsS3Service) {
+    public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.awsS3Service = awsS3Service;
     }
 
     public Response createUser(UserDTO userDetails) {
@@ -59,18 +52,17 @@ public class UserService {
 
     public ResponseEntity<Response> fetchAll(int page, int size) {
         try {
-            Pageable pageable = PageRequest.of(page, size, Sort.by("name"));
+            Pageable pageable = PageRequest.of(page, size);
             Page<User> pagedUsers = userRepository.findAll(pageable);
             HashMap<String, Object> map = new HashMap<>();
-            map.put("users", injectSignedProfileUrl(pagedUsers.getContent()));
+            map.put("users", pagedUsers.getContent());
             map.put("currentPage", pagedUsers.getNumber());
             map.put("totalItems", pagedUsers.getTotalElements());
             map.put("totalPages", pagedUsers.getTotalPages());
             return ResponseEntity.ok(new Response(map, "Users fetched successfully"));
 
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).
-                    body(new Response(new HashMap<>(), "Internal server error"));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(new HashMap<>(), "Internal server error"));
         }
 
     }
@@ -83,13 +75,12 @@ public class UserService {
                         .body(new Response(new HashMap<>(), "User not found"));
             } else {
                 HashMap<String, Object> res = new HashMap<>();
-                res.put("user_details", new ResponseMapper(awsS3Service).mapUser(user.get()));
+                res.put("user_details", new UserDetailsResDTO(user.get()));
                 res.put("self", new AuthHelper().compareUserDetails(user.get()));
                 return ResponseEntity.ok(new Response(res, "User details fetched successfully"));
             }
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).
-                    body(new Response(new HashMap<>(), "Internal server error"));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(new HashMap<>(), "Internal server error"));
         }
 
     }
@@ -99,10 +90,7 @@ public class UserService {
         Map<String, Boolean> res = new HashMap<>();
         try {
             if (uuid == null) {
-                User user = this.userRepository.findByEmail(SecurityContextHolder.getContext()
-                                .getAuthentication().
-                                getName())
-                        .get();
+                User user = this.userRepository.findByEmail(SecurityContextHolder.getContext().getAuthentication().getName()).get();
                 user.setDeleted(true);
                 this.userRepository.save(user);
                 res.put("deleted", true);
@@ -110,8 +98,7 @@ public class UserService {
             }
             if (!this.userRepository.existsByUuid(uuid)) {
                 res.put("deleted", false);
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(new Response(res, "User not Found"));
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Response(res, "User not Found"));
 
             }
             User user = this.userRepository.findByUuid(uuid).get();
@@ -122,8 +109,7 @@ public class UserService {
 
         } catch (Exception e) {
             res.put("deleted", false);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new Response(res, "Internal server error"));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(res, "Internal server error"));
 
         }
     }
@@ -133,8 +119,7 @@ public class UserService {
         try {
             if (!this.userRepository.existsByUuid(uuid)) {
                 res.put("restored", false);
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(new Response(res, "User not Found"));
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Response(res, "User not Found"));
             }
             User user = this.userRepository.findByUuid(uuid).get();
             user.setDeleted(false);
@@ -146,46 +131,6 @@ public class UserService {
             res.put("restored", false);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(res, "Internal server error"));
         }
-    }
-
-    public ResponseEntity<Response> updateUser(UpdateUserDTO userDetails) {
-        Map<String, Object> res = new HashMap<>();
-        try {
-            if (!this.userRepository.existsByUuid(userDetails.getUuid())) {
-                res.put("updated", false);
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(res, "User not Found"));
-            }
-            User user = this.userRepository.findByUuid(userDetails.getUuid()).get();
-            if (userDetails.getProfileImage() != null) {
-                String oldProfilePicUrl = user.getProfileUrl();
-                String imageUrl = awsS3Service.uploadImage(Constants.AWS.BUCKET_NAME, AwsS3Directory.PROFILE, userDetails.getProfileImage());
-                if (imageUrl == null) throw new Exception("Upload Image failed");
-                user.setProfileUrl(imageUrl);
-                if (oldProfilePicUrl != null) {
-                    awsS3Service.deleteImage(Constants.AWS.BUCKET_NAME, oldProfilePicUrl);
-                }
-            }
-            user.setName(userDetails.getName());
-            user.setEmail(userDetails.getEmail());
-            if (userDetails.getContactNo() != null) {
-                user.setContactNo(userDetails.getContactNo());
-            }
-            User updatedUser = this.userRepository.save(user);
-            res.put("updated", true);
-            res.put("self", true);
-            res.put("user_details", new ResponseMapper(awsS3Service).mapUser(updatedUser));
-            return ResponseEntity.ok(new Response(res, "User Updated Successfully"));
-
-        } catch (Exception e) {
-            res.put("updated", false);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new Response(res, "Internal server error"));
-        }
-    }
-
-    private List<Map<String, Object>> injectSignedProfileUrl(List<User> users) {
-        ResponseMapper rm = new ResponseMapper(awsS3Service);
-        return users.stream().map(rm::mapUser).toList();
     }
 
 }
