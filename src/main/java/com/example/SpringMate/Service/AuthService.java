@@ -53,6 +53,8 @@ public class AuthService {
         try {
             responseMap.put("status", 200);
             responseMap.put("is_authenticated", true);
+            responseMap.put("is_reloading", true);
+            responseMap.put("is_reloading_for_for", true);
             responseMap.put("user_details", new ResponseMapper(awsS3Service)
                     .mapUser(new AuthHelper().getUserDetails()));
             return ResponseEntity.ok(new Response(responseMap, "Data fetched successfully"));
