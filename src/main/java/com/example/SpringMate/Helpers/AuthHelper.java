@@ -27,28 +27,33 @@ public class AuthHelper {
         AuthHelper.sessionRepository = sessionRepository;
     }
 
-    public static boolean updateSession(Session session){
-        try{
+    public static boolean updateSession(Session session) {
+        try {
             session.setLastAccessedAt(System.currentTimeMillis());
             sessionRepository.save(session);
             return true;
 
-        }catch (Exception e){
+        } catch (Exception e) {
             return false;
         }
     }
 
-    public User getUserDetails(){
+    public User getUserDetails() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return authentication.getPrincipal() instanceof User ? (User) authentication.getPrincipal() : null;
     }
 
-    public boolean compareUserDetails(User user){
+    public boolean compareUserDetails(User user) {
         User authenticatedUser = getUserDetails();
-        if(authenticatedUser == null) return false;
+        if (authenticatedUser == null) return false;
         return authenticatedUser.getEmail().equals(user.getEmail())
                 && authenticatedUser.getPassword().equals(user.getPassword())
                 && authenticatedUser.getRole().equals(user.getRole())
                 && authenticatedUser.getUuid().equals(user.getUuid());
+    }
+
+    public boolean isSelfUUID(String uuid) {
+        User authenticatedUser = getUserDetails();
+        return uuid.equals(authenticatedUser.getUuid());
     }
 }
