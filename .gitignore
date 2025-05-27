@@ -69,3 +69,5 @@ logs
 *.jar
 *.war
 *.ear
+
+src/main/java/com/example/SpringMate/env/.env

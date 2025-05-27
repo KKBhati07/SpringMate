@@ -28,10 +28,14 @@ import java.util.Optional;
 public class UserService {
     private final UserRepository userRepository;
     private final AwsS3Service awsS3Service;
+    private final AuthHelper authHelper;
 
     @Autowired
-    public UserService(UserRepository userRepository, AwsS3Service awsS3Service) {
+    public UserService(UserRepository userRepository,
+                       AuthHelper authHelper,
+                       AwsS3Service awsS3Service) {
         this.userRepository = userRepository;
+        this.authHelper = authHelper;
         this.awsS3Service = awsS3Service;
     }
 
@@ -75,7 +79,7 @@ public class UserService {
 
     }
 
-    public ResponseEntity<Response> getUserDetails(String uuid) {
+    public ResponseEntity<Response> getUserDetails(String uuid, User authenticatedUser) {
         try {
             Optional<User> user = userRepository.findByUuid(uuid);
             if (user.isEmpty() || user.get().isDeleted()) {
@@ -84,7 +88,7 @@ public class UserService {
             } else {
                 HashMap<String, Object> res = new HashMap<>();
                 res.put("user_details", new ResponseMapper(awsS3Service).mapUser(user.get()));
-                res.put("self", new AuthHelper().compareUserDetails(user.get()));
+                res.put("self", authHelper.compareUserDetails(user.get(), authenticatedUser));
                 return ResponseEntity.ok(new Response(res, "User details fetched successfully"));
             }
         } catch (Exception e) {

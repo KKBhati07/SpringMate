@@ -1,13 +1,16 @@
 package com.example.SpringMate.Controller;
 
+import com.example.SpringMate.Entity.User;
 import com.example.SpringMate.Util.Response;
 import com.example.SpringMate.Service.AuthService;
 import com.example.SpringMate.Util.Urls;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,13 +25,13 @@ public class AuthController {
         this.authService = authService;
     }
 
-    @GetMapping(Urls.Auth.LOGOUT_URL)
-    public ResponseEntity<Response> logout(HttpServletRequest req) {
-        return authService.logoutUser();
+    @PostMapping(Urls.Auth.LOGOUT_URL)
+    public ResponseEntity<Response> logout(@AuthenticationPrincipal User user) {
+        return authService.logoutUser(user);
     }
 
     @GetMapping(Urls.Auth.AUTH_DETAILS)
-    public ResponseEntity<Response> getAuthDetails(HttpServletRequest req) {
-        return authService.authDetails();
+    public ResponseEntity<Response> getAuthDetails(@AuthenticationPrincipal User authenticatedUser) {
+        return authService.authDetails(authenticatedUser);
     }
 }

@@ -5,16 +5,17 @@ import com.example.SpringMate.Entity.User;
 import com.example.SpringMate.Repositoy.SessionRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.NoArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@Component
+@NoArgsConstructor
 public class AuthHelper {
-
-
-    private static SessionRepository sessionRepository;
 
     public static String failureResponse(String message, String status) throws JsonProcessingException {
         Map<String, String> map = new HashMap<>();
@@ -23,28 +24,12 @@ public class AuthHelper {
         return new ObjectMapper().writeValueAsString(map);
     }
 
-    public static void setSessionRepository(SessionRepository sessionRepository) {
-        AuthHelper.sessionRepository = sessionRepository;
-    }
-
-    public static boolean updateSession(Session session) {
-        try {
-            session.setLastAccessedAt(System.currentTimeMillis());
-            sessionRepository.save(session);
-            return true;
-
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
     public User getUserDetails() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return authentication.getPrincipal() instanceof User ? (User) authentication.getPrincipal() : null;
     }
 
-    public boolean compareUserDetails(User user) {
-        User authenticatedUser = getUserDetails();
+    public boolean compareUserDetails(User user, User authenticatedUser) {
         if (authenticatedUser == null) return false;
         return authenticatedUser.getEmail().equals(user.getEmail())
                 && authenticatedUser.getPassword().equals(user.getPassword())
@@ -52,8 +37,7 @@ public class AuthHelper {
                 && authenticatedUser.getUuid().equals(user.getUuid());
     }
 
-    public boolean isSelfUUID(String uuid) {
-        User authenticatedUser = getUserDetails();
+    public boolean isSelfUUID(String uuid, User authenticatedUser) {
         return uuid.equals(authenticatedUser.getUuid());
     }
 }

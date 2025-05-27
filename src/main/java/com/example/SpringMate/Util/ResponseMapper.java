@@ -2,12 +2,18 @@ package com.example.SpringMate.Util;
 
 import com.example.SpringMate.Entity.User;
 import com.example.SpringMate.Service.AwsS3Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@Component
 public class ResponseMapper {
-    AwsS3Service awsS3Service;
+
+    private final AwsS3Service awsS3Service;
+
+    @Autowired
     public ResponseMapper(AwsS3Service awsS3Service){
         this.awsS3Service = awsS3Service;
     }

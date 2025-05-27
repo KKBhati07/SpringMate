@@ -1,5 +1,6 @@
 package com.example.SpringMate.Config;
 
+import com.example.SpringMate.Helpers.SessionHelper;
 import com.example.SpringMate.Repositoy.SessionRepository;
 import com.example.SpringMate.Repositoy.UserRepository;
 import com.example.SpringMate.Service.UserDetailServiceImpl;
@@ -28,15 +29,18 @@ public class SecurityConfig {
     private final UserDetailServiceImpl userDetailService;
     private final SessionRepository sessionRepository;
     private final UserRepository userRepository;
+    private final SessionHelper sessionHelper;
 
 
     @Autowired
     public SecurityConfig(UserDetailServiceImpl userDetailService,
+                          SessionHelper sessionHelper,
                           SessionRepository sessionRepository,
                           UserRepository userRepository) {
         this.userDetailService = userDetailService;
         this.sessionRepository = sessionRepository;
         this.userRepository = userRepository;
+        this.sessionHelper = sessionHelper;
     }
 
     @Bean
@@ -51,7 +55,8 @@ public class SecurityConfig {
                                 .requestMatchers("/api/v1/category/**").permitAll()
                                 .anyRequest().authenticated()
                 )
-                .addFilterBefore(new SessionAuthenticationFilter(sessionRepository), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new SessionAuthenticationFilter(sessionRepository, sessionHelper),
+                        UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
                 .sessionManagement(sessionManagement ->
                         sessionManagement
