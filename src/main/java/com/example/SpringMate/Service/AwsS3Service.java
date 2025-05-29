@@ -3,6 +3,7 @@ package com.example.SpringMate.Service;
 import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.example.SpringMate.Util.AwsS3Directory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,10 +36,17 @@ public class AwsS3Service {
             }
             String uniqueFileName = UUID.randomUUID() + fileExtension;
             String objectKey = directoryName.getName() + "/" + uniqueFileName;
-            File file = convertMultipartFileToFile(imageFile);
-            PutObjectRequest putRequest = new PutObjectRequest(bucketName, objectKey, file);
+
+            ObjectMetadata metadata = new ObjectMetadata();
+            metadata.setContentLength(imageFile.getSize());
+            metadata.setContentType(imageFile.getContentType());
+
+            PutObjectRequest putRequest = new PutObjectRequest(
+                    bucketName,
+                    objectKey,
+                    imageFile.getInputStream(),
+                    metadata);
             s3Client.putObject(putRequest);
-            file.delete();
             return objectKey;
         } catch (IOException e) {
             e.printStackTrace();
