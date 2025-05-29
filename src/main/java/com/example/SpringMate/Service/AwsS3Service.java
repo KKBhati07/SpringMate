@@ -6,6 +6,8 @@ import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.example.SpringMate.Util.AwsS3Directory;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,6 +29,8 @@ public class AwsS3Service {
 
     }
 
+    @Retry(name = "s3upload")
+    @CircuitBreaker(name = "s3Upload", fallbackMethod = "uploadFallback")
     public String uploadImage(String bucketName, AwsS3Directory directoryName, MultipartFile imageFile) {
         try {
             String originalFilename = imageFile.getOriginalFilename();
@@ -84,6 +88,11 @@ public class AwsS3Service {
             e.printStackTrace();
             return false;
         }
+    }
+
+    public String uploadFallback(Exception ex) {
+        ex.printStackTrace();
+        return null;
     }
 
 }
