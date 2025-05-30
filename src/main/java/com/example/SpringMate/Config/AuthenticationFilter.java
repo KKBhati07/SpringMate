@@ -2,10 +2,7 @@ package com.example.SpringMate.Config;
 
 import com.example.SpringMate.Entity.Session;
 import com.example.SpringMate.Helpers.SessionManagementHelper;
-import com.example.SpringMate.Repositoy.SessionRepository;
-import com.example.SpringMate.Repositoy.UserRepository;
 import com.example.SpringMate.Util.Response;
-import com.example.SpringMate.Util.ResponseMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,17 +17,17 @@ import org.springframework.security.core.Authentication;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
     private final AuthenticationManager authenticationManager;
-    private final SessionRepository sessionRepository;
-    private final UserRepository userRepository;
+    private final SessionManagementHelper sessionManagementHelper;
 
-    public AuthenticationFilter(AuthenticationManager authenticationManager, SessionRepository sessionRepository, UserRepository userRepository) {
+    public AuthenticationFilter(AuthenticationManager authenticationManager,
+                                SessionManagementHelper sessionManagementHelper) {
         this.authenticationManager = authenticationManager;
-        this.sessionRepository = sessionRepository;
-        this.userRepository = userRepository;
+        this.sessionManagementHelper = sessionManagementHelper;
     }
 
     @Override
@@ -64,12 +61,10 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException {
-        SessionManagementHelper sessionManagementHelper = new SessionManagementHelper(userRepository, sessionRepository);
-        Session existingSession = sessionManagementHelper.checkIfSessionExists(authResult.getName());
-        String sessionId;
-        if (existingSession == null) {
-            sessionId = sessionManagementHelper.createSession(authResult.getName());
-        } else sessionId = existingSession.getSessionID();
+        String sessionId = Optional.ofNullable(sessionManagementHelper.checkIfSessionExists(authResult.getName()))
+                .map(Session::getSessionID)
+                .orElseGet(() -> sessionManagementHelper.createSession(authResult.getName()));
+
 
         response.setContentType("application/json");
         Map<String, Object> resMap = new HashMap<>();

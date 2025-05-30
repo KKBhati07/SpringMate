@@ -16,7 +16,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -73,7 +72,7 @@ public class UserService {
             return ResponseEntity.ok(new Response(map, "Users fetched successfully"));
 
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR.value()).
                     body(new Response(new HashMap<>(), "Internal server error"));
         }
 
@@ -83,7 +82,7 @@ public class UserService {
         try {
             Optional<User> user = userRepository.findByUuid(uuid);
             if (user.isEmpty() || user.get().isDeleted()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                return ResponseEntity.status(HttpStatus.NOT_FOUND.value())
                         .body(new Response(new HashMap<>(), "User not found"));
             } else {
                 HashMap<String, Object> res = new HashMap<>();
@@ -92,55 +91,60 @@ public class UserService {
                 return ResponseEntity.ok(new Response(res, "User details fetched successfully"));
             }
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR.value()).
                     body(new Response(new HashMap<>(), "Internal server error"));
         }
 
     }
 
 
-    public ResponseEntity<Response> deleteUser(String uuid) {
+    public ResponseEntity<Response> deleteUser(String uuid, User authenticatedUser) {
         Map<String, Boolean> res = new HashMap<>();
         try {
-            if (uuid == null) {
-                User user = this.userRepository.findByEmail(SecurityContextHolder.getContext()
-                                .getAuthentication().
-                                getName())
-                        .get();
-                user.setDeleted(true);
-                this.userRepository.save(user);
-                res.put("deleted", true);
-                return ResponseEntity.ok(new Response(res, "User Deleted Successfully"));
-            }
-            if (!this.userRepository.existsByUuid(uuid)) {
-                res.put("deleted", false);
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(new Response(res, "User not Found"));
+            User userToDelete;
 
+            if (uuid == null) {
+                Optional<User> authUserOpt = userRepository.findByEmail(authenticatedUser.getEmail());
+                if (authUserOpt.isEmpty()) {
+                    res.put("deleted", false);
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                            .body(new Response(res, "Authenticated user not found"));
+                }
+                userToDelete = authUserOpt.get();
+            } else {
+                Optional<User> userOpt = userRepository.findByUuid(uuid);
+                if (userOpt.isEmpty()) {
+                    res.put("deleted", false);
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                            .body(new Response(res, "User not found"));
+                }
+                userToDelete = userOpt.get();
             }
-            User user = this.userRepository.findByUuid(uuid).get();
-            user.setDeleted(true);
-            this.userRepository.save(user);
+
+            userToDelete.setDeleted(true);
+            userRepository.save(userToDelete);
+
             res.put("deleted", true);
-            return ResponseEntity.ok(new Response(res, "User Deleted Successfully"));
+            return ResponseEntity.ok(new Response(res, "User deleted successfully"));
 
         } catch (Exception e) {
             res.put("deleted", false);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new Response(res, "Internal server error"));
-
         }
     }
 
     public ResponseEntity<Response> restoreUser(String uuid) {
         Map<String, Boolean> res = new HashMap<>();
         try {
-            if (!this.userRepository.existsByUuid(uuid)) {
+            Optional<User> userOpt = this.userRepository.findByUuid(uuid);
+            if (userOpt.isEmpty()) {
                 res.put("restored", false);
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(new Response(res, "User not Found"));
+                        .body(new Response(res, "User not found"));
             }
-            User user = this.userRepository.findByUuid(uuid).get();
+
+            User user = userOpt.get();
             user.setDeleted(false);
             this.userRepository.save(user);
             res.put("restored", true);
@@ -148,29 +152,44 @@ public class UserService {
 
         } catch (Exception e) {
             res.put("restored", false);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(res, "Internal server error"));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR.value()).body(new Response(res, "Internal server error"));
         }
     }
 
     public ResponseEntity<Response> updateUser(UpdateUserDTO userDetails) {
         Map<String, Object> res = new HashMap<>();
         try {
-            if (!this.userRepository.existsByUuid(userDetails.getUuid())) {
+            Optional<User> optionalUser = userRepository.findByUuid(userDetails.getUuid());
+            if(optionalUser.isEmpty()){
                 res.put("updated", false);
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(res, "User not Found"));
+                return ResponseEntity.status(
+                        HttpStatus.BAD_REQUEST.value()
+                ).body(new Response(res, "User not Found"));
             }
-            User user = this.userRepository.findByUuid(userDetails.getUuid()).get();
+
+            User user = optionalUser.get();
             if (userDetails.getProfileImage() != null) {
                 String oldProfilePicUrl = user.getProfileUrl();
                 String imageUrl = awsS3Service.uploadImage(Constants.AWS.BUCKET_NAME, AwsS3Directory.PROFILE, userDetails.getProfileImage());
-                if (imageUrl == null) throw new Exception("Upload Image failed");
+                if (imageUrl == null) throw new RuntimeException("Upload Image failed");
                 user.setProfileUrl(imageUrl);
                 if (oldProfilePicUrl != null) {
                     awsS3Service.deleteImage(Constants.AWS.BUCKET_NAME, oldProfilePicUrl);
                 }
             }
-            user.setName(userDetails.getName());
-            user.setEmail(userDetails.getEmail());
+
+            if (userDetails.getName() != null) {
+                user.setName(userDetails.getName());
+            }
+            if (userDetails.getEmail() != null) {
+                Optional<User> existing = userRepository.findByEmail(userDetails.getEmail());
+                if(existing.isPresent() && !user.getUuid().equals(existing.get().getUuid())){
+                    res.put("updated", false);
+                    return ResponseEntity.status(HttpStatus.CONFLICT)
+                            .body(new Response(res, "Email already in use"));
+                }
+                user.setEmail(userDetails.getEmail());
+            }
             if (userDetails.getContactNo() != null) {
                 user.setContactNo(userDetails.getContactNo());
             }
@@ -182,7 +201,7 @@ public class UserService {
 
         } catch (Exception e) {
             res.put("updated", false);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .body(new Response(res, "Internal server error"));
         }
     }

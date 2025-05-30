@@ -1,8 +1,8 @@
 package com.example.SpringMate.Config;
 
 import com.example.SpringMate.Helpers.SessionHelper;
+import com.example.SpringMate.Helpers.SessionManagementHelper;
 import com.example.SpringMate.Repositoy.SessionRepository;
-import com.example.SpringMate.Repositoy.UserRepository;
 import com.example.SpringMate.Service.UserDetailServiceImpl;
 import com.example.SpringMate.Util.Urls;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,31 +28,30 @@ public class SecurityConfig {
 
     private final UserDetailServiceImpl userDetailService;
     private final SessionRepository sessionRepository;
-    private final UserRepository userRepository;
     private final SessionHelper sessionHelper;
+    private final SessionManagementHelper sessionManagementHelper;
 
 
     @Autowired
     public SecurityConfig(UserDetailServiceImpl userDetailService,
+                          SessionManagementHelper sessionManagementHelper,
                           SessionHelper sessionHelper,
-                          SessionRepository sessionRepository,
-                          UserRepository userRepository) {
+                          SessionRepository sessionRepository) {
         this.userDetailService = userDetailService;
         this.sessionRepository = sessionRepository;
-        this.userRepository = userRepository;
+        this.sessionManagementHelper = sessionManagementHelper;
         this.sessionHelper = sessionHelper;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        AuthenticationFilter authFilter = new AuthenticationFilter(authenticationManager(http), sessionRepository, userRepository);
+        AuthenticationFilter authFilter = new AuthenticationFilter(authenticationManager(http),sessionManagementHelper);
         authFilter.setFilterProcessesUrl(Urls.Auth.AUTH_BASE_URL + Urls.Auth.LOGIN_URL);
 
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers("/api/v1/user/create_user").permitAll()
-                                .requestMatchers("/api/v1/category/**").permitAll()
+                                .requestMatchers(Urls.PUBLIC_ENDPOINTS).permitAll()
                                 .anyRequest().authenticated()
                 )
                 .addFilterBefore(new SessionAuthenticationFilter(sessionRepository, sessionHelper),

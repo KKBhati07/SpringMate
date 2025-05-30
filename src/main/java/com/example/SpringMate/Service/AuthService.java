@@ -35,12 +35,12 @@ public class AuthService {
             List<Session> sessions = sessionRepository.findByUserId(user.getId());
             sessionRepository.deleteAll(sessions);
             SecurityContextHolder.clearContext();
-            responseMap.put("status", 200);
+            responseMap.put("status", HttpStatus.OK.value());
             return ResponseEntity.ok(new Response(responseMap, "Logged out successfully"));
         } catch (Exception e) {
             e.printStackTrace();
             responseMap.put("status", 500);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .body(new Response(responseMap, "Something went wrong"));
         }
     }
@@ -48,13 +48,13 @@ public class AuthService {
     public ResponseEntity<Response> authDetails(User authenticateUser) {
         Map<String, Object> responseMap = new HashMap<>();
         try {
-            responseMap.put("status", 200);
+            responseMap.put("status", HttpStatus.OK.value());
             responseMap.put("is_authenticated", true);
             responseMap.put("user_details", new ResponseMapper(awsS3Service)
                     .mapUser(authenticateUser));
             return ResponseEntity.ok(new Response(responseMap, "Data fetched successfully"));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .body(new Response(responseMap, "Internal server Error"));
 
         }

@@ -5,10 +5,12 @@ import com.example.SpringMate.Entity.User;
 import com.example.SpringMate.Repositoy.SessionRepository;
 import com.example.SpringMate.Repositoy.UserRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
 
+@Component
 @AllArgsConstructor
 public class SessionManagementHelper {
 
@@ -23,10 +25,13 @@ public class SessionManagementHelper {
     }
 
     public String createSession(String email) {
-        Optional<User> user = userRepository.findByEmail(email);
-        String sessionId = CoreHelper.generateUUID().toUpperCase();
-        Session session = new Session(sessionId, user.get(), System.currentTimeMillis(), System.currentTimeMillis());
-        sessionRepository.save(session);
-        return sessionId;
+        return userRepository.findByEmail(email)
+                .map(user -> {
+                    String sessionId = CoreHelper.generateUUID().toUpperCase();
+                    Session session = new Session(sessionId, user, System.currentTimeMillis(), System.currentTimeMillis());
+                    sessionRepository.save(session);
+                    return sessionId;
+                })
+                .orElse(null);
     }
 }

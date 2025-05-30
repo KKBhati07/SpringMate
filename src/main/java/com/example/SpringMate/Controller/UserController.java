@@ -43,8 +43,8 @@ public class UserController {
     }
 
     @DeleteMapping(Urls.User.DELETE_USER)
-    public ResponseEntity<Response> deleteUser() {
-        return userService.deleteUser(null);
+    public ResponseEntity<Response> deleteUser(@AuthenticationPrincipal User user) {
+        return userService.deleteUser(null, user);
     }
 
     @PutMapping(value = Urls.User.UPDATE_USER,
@@ -52,7 +52,7 @@ public class UserController {
     public ResponseEntity<?> updateUserProfile(@ModelAttribute UpdateUserDTO updatedUserDetails,
                                                @AuthenticationPrincipal User autheticatedUser) {
         if(!authHelper.isSelfUUID(updatedUserDetails.getUuid(), autheticatedUser)){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED.value())
                     .body(new Response(new HashMap<>(), "Cannot update other's profile"));
         }
         return userService.updateUser(updatedUserDetails);

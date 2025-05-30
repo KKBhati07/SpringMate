@@ -39,4 +39,9 @@ public class Urls {
         public static final String CATEGORY_BASE = BASE_URL + "/category";
         public static final String GET_ALL = "/get_all";
     }
+
+    public static final String[] PUBLIC_ENDPOINTS = {
+            "/api/v1/user/create_user",
+            "/api/v1/category/**"
+    };
 }

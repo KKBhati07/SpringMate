@@ -32,7 +32,7 @@ public class AdminController {
 
     @DeleteMapping(value = Urls.Admin.User.DELETE)
     public ResponseEntity<Response> deleteUser(@PathVariable String uuid) {
-        return this.userService.deleteUser(uuid);
+        return this.userService.deleteUser(uuid, null);
     }
 
     @PatchMapping(value = Urls.Admin.User.RESTORE)
