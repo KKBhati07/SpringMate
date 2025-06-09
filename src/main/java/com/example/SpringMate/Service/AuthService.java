@@ -20,13 +20,13 @@ import java.util.Map;
 public class AuthService {
 
     private final SessionRepository sessionRepository;
-    private final AwsS3Service awsS3Service;
+    private final ResponseMapper responseMapper;
 
     @Autowired
     public AuthService(SessionRepository sessionRepository,
-                       AwsS3Service awsS3Service) {
+                       ResponseMapper responseMapper) {
         this.sessionRepository = sessionRepository;
-        this.awsS3Service = awsS3Service;
+        this.responseMapper = responseMapper;
     }
 
     public ResponseEntity<Response> logoutUser(User user) {
@@ -50,7 +50,7 @@ public class AuthService {
         try {
             responseMap.put("status", HttpStatus.OK.value());
             responseMap.put("is_authenticated", true);
-            responseMap.put("user_details", new ResponseMapper(awsS3Service)
+            responseMap.put("user_details", responseMapper
                     .mapUser(authenticateUser));
             return ResponseEntity.ok(new Response(responseMap, "Data fetched successfully"));
         } catch (Exception e) {

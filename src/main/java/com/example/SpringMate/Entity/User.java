@@ -23,11 +23,11 @@ import java.util.Collections;
 @Setter
 @RequiredArgsConstructor
 public class User implements UserDetails {
-    public User(UserDTO userDetails) {
+    public User(UserDTO userDetails, Role role) {
         this.name = userDetails.getName();
         this.email = userDetails.getEmail();
         this.password = encodePassword(userDetails.getPassword());
-        setRoleAndUuid(userDetails.getRole());
+        this.role = role;
     }
 
     @Id
@@ -40,7 +40,9 @@ public class User implements UserDetails {
     private String password;
     @Column(unique = true, nullable = false)
     private String email;
-    private String role;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id", nullable = false)
+    private Role role;
     @Column(name = "profile_url")
     private String profileUrl;
     @Column(name = "is_deleted", nullable = false)
@@ -53,15 +55,6 @@ public class User implements UserDetails {
         if (uuid == null) {
             this.uuid = CoreHelper.generateUUID();
         }
-        if (role == null) {
-            this.role = Constants.UserRole.USER;
-        }
-
-    }
-
-    private void setRoleAndUuid(String role) {
-        this.uuid = CoreHelper.generateUUID();
-        this.role = role != null ? role : Constants.UserRole.USER;
     }
 
     private String encodePassword(String password) {
@@ -71,7 +64,7 @@ public class User implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + this.role));
+        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + this.role.getName()));
     }
 
     @Override
@@ -80,6 +73,6 @@ public class User implements UserDetails {
     }
 
     public boolean isAdmin() {
-        return this.role.equals(Constants.UserRole.ADMIN);
+        return Constants.UserRole.ADMIN.equalsIgnoreCase(this.role.getName());
     }
 }

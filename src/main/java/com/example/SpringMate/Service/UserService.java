@@ -2,8 +2,10 @@ package com.example.SpringMate.Service;
 
 import com.example.SpringMate.DTO.UpdateUserDTO;
 import com.example.SpringMate.DTO.UserDTO;
+import com.example.SpringMate.Entity.Role;
 import com.example.SpringMate.Entity.User;
 import com.example.SpringMate.Helpers.AuthHelper;
+import com.example.SpringMate.Repositoy.RoleRepository;
 import com.example.SpringMate.Repositoy.UserRepository;
 import com.example.SpringMate.Util.AwsS3Directory;
 import com.example.SpringMate.Util.Constants;
@@ -28,30 +30,45 @@ public class UserService {
     private final UserRepository userRepository;
     private final AwsS3Service awsS3Service;
     private final AuthHelper authHelper;
+    private final RoleRepository roleRepository;
+    private final ResponseMapper responseMapper;
 
     @Autowired
     public UserService(UserRepository userRepository,
                        AuthHelper authHelper,
-                       AwsS3Service awsS3Service) {
+                       AwsS3Service awsS3Service,
+                       RoleRepository roleRepository,
+                       ResponseMapper responseMapper) {
         this.userRepository = userRepository;
         this.authHelper = authHelper;
         this.awsS3Service = awsS3Service;
+        this.roleRepository = roleRepository;
+        this.responseMapper = responseMapper;
     }
 
     public Response createUser(UserDTO userDetails) {
         HashMap<String, Object> res = new HashMap<>();
         try {
             Optional<User> user = userRepository.findByEmail(userDetails.getEmail());
-            if (user.isEmpty()) {
-                User newUser = new User(userDetails);
-                userRepository.save(newUser);
-                res.put("created", true);
-                return new Response(res, "User created successfully");
-            } else {
+            if(user.isPresent()){
                 res.put("created", false);
                 res.put("already_exists", true);
                 return new Response(res, "User already exists");
             }
+
+            Optional<Role> role = roleRepository.findByName((userDetails.getRole() == null
+                    || userDetails.getRole().isBlank())
+                    ? Constants.UserRole.USER
+                    : userDetails.getRole().trim().toUpperCase());
+
+            if(role.isEmpty()){
+                throw new RuntimeException("Unable to fetch role");
+            }
+
+            User newUser = new User(userDetails, role.get());
+            userRepository.save(newUser);
+            res.put("created", true);
+            return new Response(res, "User created successfully");
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -86,7 +103,7 @@ public class UserService {
                         .body(new Response(new HashMap<>(), "User not found"));
             } else {
                 HashMap<String, Object> res = new HashMap<>();
-                res.put("user_details", new ResponseMapper(awsS3Service).mapUser(user.get()));
+                res.put("user_details", responseMapper.mapUser(user.get()));
                 res.put("self", authHelper.compareUserDetails(user.get(), authenticatedUser));
                 return ResponseEntity.ok(new Response(res, "User details fetched successfully"));
             }
@@ -196,7 +213,7 @@ public class UserService {
             User updatedUser = this.userRepository.save(user);
             res.put("updated", true);
             res.put("self", true);
-            res.put("user_details", new ResponseMapper(awsS3Service).mapUser(updatedUser));
+            res.put("user_details", responseMapper.mapUser(updatedUser));
             return ResponseEntity.ok(new Response(res, "User Updated Successfully"));
 
         } catch (Exception e) {
@@ -207,8 +224,7 @@ public class UserService {
     }
 
     private List<Map<String, Object>> injectSignedProfileUrl(List<User> users) {
-        ResponseMapper rm = new ResponseMapper(awsS3Service);
-        return users.stream().map(rm::mapUser).toList();
+        return users.stream().map(responseMapper::mapUser).toList();
     }
 
 }
