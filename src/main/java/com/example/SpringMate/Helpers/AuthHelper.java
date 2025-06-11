@@ -33,7 +33,7 @@ public class AuthHelper {
         if (authenticatedUser == null) return false;
         return authenticatedUser.getEmail().equals(user.getEmail())
                 && authenticatedUser.getPassword().equals(user.getPassword())
-                && authenticatedUser.getRole().equals(user.getRole())
+                && authenticatedUser.getRole().getName().equals(user.getRole().getName())
                 && authenticatedUser.getUuid().equals(user.getUuid());
     }
 

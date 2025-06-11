@@ -9,6 +9,7 @@ import com.example.SpringMate.Util.AwsS3Directory;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -80,13 +81,12 @@ public class AwsS3Service {
         return file;
     }
 
-    public boolean deleteImage(String bucketName, String objectKey) {
+    @Async("appDefault")
+    public void deleteImage(String bucketName, String objectKey) {
         try {
             s3Client.deleteObject(bucketName, objectKey);
-            return true;
         } catch (Exception e) {
             e.printStackTrace();
-            return false;
         }
     }
 

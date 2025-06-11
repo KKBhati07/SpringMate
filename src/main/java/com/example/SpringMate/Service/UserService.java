@@ -217,6 +217,7 @@ public class UserService {
             return ResponseEntity.ok(new Response(res, "User Updated Successfully"));
 
         } catch (Exception e) {
+            e.printStackTrace();
             res.put("updated", false);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .body(new Response(res, "Internal server error"));
