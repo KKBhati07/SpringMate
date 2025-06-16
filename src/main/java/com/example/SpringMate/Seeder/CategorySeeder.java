@@ -1,0 +1,43 @@
+package com.example.SpringMate.Seeder;
+
+import com.example.SpringMate.Entity.Category;
+import com.example.SpringMate.Repositoy.CategoryRepository;
+import com.example.SpringMate.Util.Constants;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+@Component
+public class CategorySeeder implements CommandLineRunner {
+
+    private final CategoryRepository categoryRepository;
+
+    @Autowired
+    CategorySeeder(CategoryRepository categoryRepository){
+        this.categoryRepository = categoryRepository;
+    }
+
+    @Override
+    public void run(String... args) throws Exception {
+
+        Set<String> existingCategoriesSet = categoryRepository.findAll().stream()
+                .map(category -> category.getName().toLowerCase())
+                .collect(Collectors.toSet());
+        List<Category> categoriesToAdd = new ArrayList<>();
+
+        for(String category : Constants.CATEGORIES){
+            if(!existingCategoriesSet.contains(category.toLowerCase())){
+                categoriesToAdd.add(new Category(category));
+            }
+        }
+
+        if(!categoriesToAdd.isEmpty()){
+            categoryRepository.saveAll(categoriesToAdd);
+        }
+    }
+}
