@@ -2,7 +2,7 @@ package com.example.SpringMate.Service;
 
 import com.example.SpringMate.Entity.User;
 import com.example.SpringMate.Repositoy.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -13,14 +13,10 @@ import java.util.Collections;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class UserDetailServiceImpl implements UserDetailsService {
 
     private final UserRepository userRepository;
-
-    @Autowired
-    public UserDetailServiceImpl(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {

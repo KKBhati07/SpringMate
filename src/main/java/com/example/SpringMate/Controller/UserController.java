@@ -7,7 +7,7 @@ import com.example.SpringMate.Helpers.AuthHelper;
 import com.example.SpringMate.Util.Response;
 import com.example.SpringMate.Service.UserService;
 import com.example.SpringMate.Util.Urls;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -17,19 +17,12 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping(Urls.User.USER_BASE)
 public class UserController {
 
     private final UserService userService;
     private final AuthHelper authHelper;
-
-    @Autowired
-    public UserController(UserService userService,
-                          AuthHelper authHelper
-                          ) {
-        this.userService = userService;
-        this.authHelper = authHelper;
-    }
 
     @PostMapping(value = Urls.User.CREATE_USER, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Response> createUser(@RequestBody UserDTO userDetails) {

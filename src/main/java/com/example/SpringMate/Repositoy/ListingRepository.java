@@ -8,7 +8,7 @@ import java.util.Optional;
 
 public interface ListingRepository extends JpaRepository<Listing, Long> {
 
-    List<Listing> findByIsDeletedFalse();
-    Optional<Listing> findByIdAndIsDeletedFalse(Long id);
-    List<Listing> findByCategoryIdAndIsDeletedFalse(Long categoryId);
+    List<Listing> findByDeletedFalse();
+    Optional<Listing> findByIdAndDeletedFalse(Long id);
+    List<Listing> findByCategoryIdAndDeletedFalse(Long categoryId);
 }

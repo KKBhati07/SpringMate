@@ -5,10 +5,7 @@ import com.example.SpringMate.DTO.UserDTO;
 import com.example.SpringMate.Helpers.CoreHelper;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -28,14 +25,11 @@ import java.util.Collections;
 @Getter
 @Setter
 @AllArgsConstructor
+@NoArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
+
+//TODO : Use builder instead of custom constructor
 public class User implements UserDetails {
-    public User(UserDTO userDetails, Role role) {
-        this.name = userDetails.getName();
-        this.email = userDetails.getEmail();
-        this.password = encodePassword(userDetails.getPassword());
-        this.role = role;
-    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -82,6 +76,13 @@ public class User implements UserDetails {
     @PrePersist
     public void presets() {
         this.uuid = CoreHelper.generateUUID();
+    }
+
+    public User(UserDTO userDetails, Role role) {
+        this.name = userDetails.getName();
+        this.email = userDetails.getEmail();
+        this.password = encodePassword(userDetails.getPassword());
+        this.role = role;
     }
 
     private String encodePassword(String password) {

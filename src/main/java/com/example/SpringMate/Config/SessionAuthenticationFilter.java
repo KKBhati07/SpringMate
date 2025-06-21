@@ -2,16 +2,25 @@ package com.example.SpringMate.Config;
 import com.example.SpringMate.Entity.Session;
 import com.example.SpringMate.Helpers.SessionHelper;
 import com.example.SpringMate.Repositoy.SessionRepository;
+import com.example.SpringMate.Util.Response;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 @Component
 public class SessionAuthenticationFilter extends OncePerRequestFilter {
@@ -26,14 +35,27 @@ public class SessionAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, @NotNull HttpServletResponse response,
+                                    @NotNull FilterChain filterChain) throws ServletException, IOException {
         String sessionId = request.getHeader("sessionId");
 
         if (sessionId != null) {
-            Session session = sessionRepository.findBySessionID(sessionId);
+            Optional<Session> sessionOpt = sessionRepository.findBySessionID(sessionId);
 
-            if (session != null) {
+            if (sessionOpt.isPresent()) {
+                Session session = sessionOpt.get();
+                if (session.getExpiresAt().isBefore(LocalDateTime.now())) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("status", HttpStatus.UNAUTHORIZED.value());
+                    map.put("message", "Session expired. Please log in again.");
+
+                    Response res = new Response(map, "Session expired. Please log in again.");
+                    response.setContentType("application/json");
+                    response.getWriter().write(new ObjectMapper().writeValueAsString(res));
+                    return;
+
+                }
                 sessionHelper.updateSession(session);
                 Authentication authentication = new UsernamePasswordAuthenticationToken(
                         session.getUser(),

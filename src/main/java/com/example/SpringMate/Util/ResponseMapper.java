@@ -2,21 +2,17 @@ package com.example.SpringMate.Util;
 
 import com.example.SpringMate.Entity.User;
 import com.example.SpringMate.Service.AwsS3Service;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @Component
+@RequiredArgsConstructor
 public class ResponseMapper {
 
     private final AwsS3Service awsS3Service;
-
-    @Autowired
-    public ResponseMapper(AwsS3Service awsS3Service){
-        this.awsS3Service = awsS3Service;
-    }
 
     public Map<String, Object> mapUser(User user) {
         Map<String, Object> map = new HashMap<>();

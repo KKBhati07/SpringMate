@@ -2,7 +2,7 @@ package com.example.SpringMate.Service;
 
 import com.example.SpringMate.Repositoy.CategoryRepository;
 import com.example.SpringMate.Util.Response;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -11,13 +11,9 @@ import java.util.Collections;
 import java.util.Map;
 
 @Service
+@RequiredArgsConstructor
 public class CategoryService {
     private final CategoryRepository categoryRepository;
-
-    @Autowired
-    public CategoryService(CategoryRepository categoryRepository){
-        this.categoryRepository = categoryRepository;
-    }
 
     public ResponseEntity<Response> getAllCategory() {
         try {

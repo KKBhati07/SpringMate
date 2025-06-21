@@ -4,23 +4,19 @@ import com.example.SpringMate.DTO.UpdateUserDTO;
 import com.example.SpringMate.Util.Response;
 import com.example.SpringMate.Service.UserService;
 import com.example.SpringMate.Util.Urls;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping(Urls.Admin.ADMIN_BASE)
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
     private final UserService userService;
-
-    @Autowired
-    public AdminController(UserService userService) {
-        this.userService = userService;
-    }
 
     @GetMapping(value = Urls.Admin.User.FETCH_ALL)
     public ResponseEntity<Response> fetchAll(

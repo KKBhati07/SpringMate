@@ -11,7 +11,7 @@ import com.example.SpringMate.Util.AwsS3Directory;
 import com.example.SpringMate.Util.Constants;
 import com.example.SpringMate.Util.Response;
 import com.example.SpringMate.Util.ResponseMapper;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -26,25 +26,13 @@ import java.util.Map;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
     private final AwsS3Service awsS3Service;
     private final AuthHelper authHelper;
     private final RoleRepository roleRepository;
     private final ResponseMapper responseMapper;
-
-    @Autowired
-    public UserService(UserRepository userRepository,
-                       AuthHelper authHelper,
-                       AwsS3Service awsS3Service,
-                       RoleRepository roleRepository,
-                       ResponseMapper responseMapper) {
-        this.userRepository = userRepository;
-        this.authHelper = authHelper;
-        this.awsS3Service = awsS3Service;
-        this.roleRepository = roleRepository;
-        this.responseMapper = responseMapper;
-    }
 
     public Response createUser(UserDTO userDetails) {
         HashMap<String, Object> res = new HashMap<>();

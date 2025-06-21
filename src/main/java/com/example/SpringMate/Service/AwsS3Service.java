@@ -8,7 +8,7 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.example.SpringMate.Util.AwsS3Directory;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,14 +21,9 @@ import java.util.Objects;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class AwsS3Service {
     private final AmazonS3 s3Client;
-
-    @Autowired
-    public AwsS3Service(AmazonS3 s3Client) {
-        this.s3Client = s3Client;
-
-    }
 
     @Retry(name = "s3upload")
     @CircuitBreaker(name = "s3Upload", fallbackMethod = "uploadFallback")

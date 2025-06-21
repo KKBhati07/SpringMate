@@ -5,6 +5,8 @@ import com.example.SpringMate.Repositoy.SessionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+
 @Component
 public class SessionHelper {
 
@@ -17,7 +19,7 @@ public class SessionHelper {
 
     public boolean updateSession(Session session) {
         try {
-            session.setLastAccessedAt(System.currentTimeMillis());
+            session.setLastAccessedAt(LocalDateTime.now());
             sessionRepository.save(session);
             return true;
 

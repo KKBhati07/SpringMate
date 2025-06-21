@@ -1,7 +1,6 @@
 package com.example.SpringMate.Config;
 
 import com.example.SpringMate.Entity.User;
-import com.example.SpringMate.Repositoy.UserRepository;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
