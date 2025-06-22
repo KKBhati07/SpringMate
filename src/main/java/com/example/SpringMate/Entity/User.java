@@ -73,6 +73,12 @@ public class User implements UserDetails {
     @JoinColumn(name = "updated_by")
     private User updatedBy;
 
+    @Column(name = "email_verified", nullable = false)
+    private boolean emailVerified = false;
+
+    @Column(name = "phone_verified", nullable = false)
+    private boolean phoneVerified = false;
+
     @PrePersist
     public void presets() {
         this.uuid = CoreHelper.generateUUID();
