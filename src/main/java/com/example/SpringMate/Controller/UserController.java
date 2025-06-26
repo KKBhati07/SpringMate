@@ -7,6 +7,7 @@ import com.example.SpringMate.Helpers.AuthHelper;
 import com.example.SpringMate.Util.Response;
 import com.example.SpringMate.Service.UserService;
 import com.example.SpringMate.Util.Urls;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -25,7 +26,7 @@ public class UserController {
     private final AuthHelper authHelper;
 
     @PostMapping(value = Urls.User.CREATE_USER, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Response> createUser(@RequestBody UserDTO userDetails) {
+    public ResponseEntity<Response> createUser(@Valid @RequestBody UserDTO userDetails) {
         return ResponseEntity.ok(userService.createUser(userDetails));
     }
 
@@ -42,7 +43,7 @@ public class UserController {
 
     @PutMapping(value = Urls.User.UPDATE_USER,
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> updateUserProfile(@ModelAttribute UpdateUserDTO updatedUserDetails,
+    public ResponseEntity<?> updateUserProfile(@Valid @ModelAttribute UpdateUserDTO updatedUserDetails,
                                                @AuthenticationPrincipal User autheticatedUser) {
         if(!authHelper.isSelfUUID(updatedUserDetails.getUuid(), autheticatedUser)){
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED.value())

@@ -23,5 +23,10 @@ public class Constants {
 
     public static final String[] CATEGORIES = {"cars", "bikes", "mobile_phones", "electronic", "furniture", "property", "others"};
 
-    public static final int SESSION_VALIDITY = 7;
+    public static final int SESSION_VALIDITY = 30;
+    public static final int OTP_EXPIRATION_MINUTES = 10;
+
+    public static class EmailHeaders{
+        public  static final String LOGIN = "OTP Verification";
+    }
 }

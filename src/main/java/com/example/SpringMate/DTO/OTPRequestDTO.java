@@ -1,22 +1,18 @@
 package com.example.SpringMate.DTO;
 
+import com.example.SpringMate.Util.OTPType;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-import org.hibernate.validator.constraints.Length;
 
 @Data
-public class UserDTO {
+public class OTPRequestDTO {
+
     @NotNull
-    private String name;
+    private OTPType type;
 
     @Email
-    @NotNull
+    @NotBlank
     private String email;
-
-    @Length(min = 5)
-    @NotNull
-    private String password;
-
-    private String role;
 }

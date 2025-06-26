@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 @Component
 @NoArgsConstructor
@@ -35,6 +36,12 @@ public class AuthHelper {
                 && authenticatedUser.getPassword().equals(user.getPassword())
                 && authenticatedUser.getRole().getName().equals(user.getRole().getName())
                 && authenticatedUser.getUuid().equals(user.getUuid());
+    }
+
+    public String generateOTP() {
+        Random random = new Random();
+        int otp = 100000 + random.nextInt(900000);
+        return String.valueOf(otp);
     }
 
     public boolean isSelfUUID(String uuid, User authenticatedUser) {

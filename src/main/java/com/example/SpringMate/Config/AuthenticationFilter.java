@@ -59,7 +59,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException {
-        String sessionId = sessionManagementHelper.createSession(authResult.getName(), request);
+        String sessionId = sessionManagementHelper.getUserAndCreateSession(authResult.getName(), request);
         response.setContentType("application/json");
         Map<String, Object> resMap = new HashMap<>();
         resMap.put("sessionId", sessionId);

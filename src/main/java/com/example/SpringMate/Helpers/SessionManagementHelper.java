@@ -30,6 +30,40 @@ public class SessionManagementHelper {
         return !sessions.isEmpty() ? sessions.get(sessions.size() - 1) : null;
     }
 
+    public String getUserAndCreateSession(String email, HttpServletRequest request){
+        return userRepository.findByEmail(email)
+                .map(user -> createSession(user,request))
+                .orElse(null);
+    }
+
+    public String createSession(User user, HttpServletRequest request) {
+        String sessionId = CoreHelper.generateUUID().toUpperCase();
+        Session session = Session.builder()
+                .sessionID(sessionId)
+                .user(user)
+                .createdAt(LocalDateTime.now())
+                .lastAccessedAt(LocalDateTime.now())
+                .expiresAt(LocalDateTime.now().plusDays(Constants.SESSION_VALIDITY))
+                .build();
+        Session createdSession = sessionRepository.save(session);
+        createSessionLog(createdSession.getCreatedAt(),user, sessionId, request);
+        return createdSession.getSessionID();
+//        return userRepository.findByEmail(email)
+//                .map(user -> {
+//                    String sessionId = CoreHelper.generateUUID().toUpperCase();
+//                    Session session = Session.builder()
+//                            .sessionID(sessionId)
+//                            .user(user)
+//                            .createdAt(LocalDateTime.now())
+//                            .lastAccessedAt(LocalDateTime.now())
+//                            .expiresAt(LocalDateTime.now().plusDays(Constants.SESSION_VALIDITY))
+//                            .build();
+//                    Session createdSession = sessionRepository.save(session);
+//                    createSessionLog(createdSession.getCreatedAt(),user, sessionId, request);
+//                    return createdSession.getSessionID();
+//                })
+//                .orElse(null);
+    }
     public String createSession(String email, HttpServletRequest request) {
         return userRepository.findByEmail(email)
                 .map(user -> {
