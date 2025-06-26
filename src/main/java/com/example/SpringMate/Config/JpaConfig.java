@@ -1,7 +1,7 @@
 package com.example.SpringMate.Config;
 
-import com.example.SpringMate.Entity.User;
-import com.example.SpringMate.Repositoy.UserRepository;
+import com.example.SpringMate.User.Entity.User;
+import com.example.SpringMate.User.Repository.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.AuditorAware;

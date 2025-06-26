@@ -1,10 +1,10 @@
 package com.example.SpringMate.Config;
 
-import com.example.SpringMate.Helpers.SessionHelper;
-import com.example.SpringMate.Helpers.SessionManagementHelper;
-import com.example.SpringMate.Repositoy.SessionRepository;
-import com.example.SpringMate.Service.UserDetailServiceImpl;
-import com.example.SpringMate.Util.Urls;
+import com.example.SpringMate.Auth.Helper.SessionHelper;
+import com.example.SpringMate.Auth.Helper.SessionManagementHelper;
+import com.example.SpringMate.Auth.Repository.SessionRepository;
+import com.example.SpringMate.User.Service.UserDetailServiceImpl;
+import com.example.SpringMate.Shared.Urls;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

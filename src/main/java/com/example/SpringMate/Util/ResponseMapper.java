@@ -1,7 +1,8 @@
 package com.example.SpringMate.Util;
 
-import com.example.SpringMate.Entity.User;
-import com.example.SpringMate.Service.AwsS3Service;
+import com.example.SpringMate.Shared.Constants;
+import com.example.SpringMate.User.Entity.User;
+import com.example.SpringMate.Shared.Service.AwsS3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

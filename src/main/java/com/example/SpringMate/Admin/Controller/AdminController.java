@@ -1,0 +1,45 @@
+package com.example.SpringMate.Admin.Controller;
+
+import com.example.SpringMate.User.DTO.UpdateUserDTO;
+import com.example.SpringMate.Util.Response;
+import com.example.SpringMate.User.Service.UserService;
+import com.example.SpringMate.Shared.Urls;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping(Urls.Admin.ADMIN_BASE)
+@PreAuthorize("hasRole('ADMIN')")
+public class AdminController {
+
+    private final UserService userService;
+
+    @GetMapping(value = Urls.Admin.User.FETCH_ALL)
+    public ResponseEntity<Response> fetchAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return userService.fetchAll(page, size);
+    }
+
+    @DeleteMapping(value = Urls.Admin.User.DELETE)
+    public ResponseEntity<Response> deleteUser(@PathVariable String uuid) {
+        return this.userService.deleteUser(uuid, null);
+    }
+
+    @PatchMapping(value = Urls.Admin.User.RESTORE)
+    public ResponseEntity<Response> restoreUser(@PathVariable String uuid) {
+        return this.userService.restoreUser(uuid);
+    }
+
+    @PutMapping(
+            value = Urls.Admin.User.UPDATE,
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Response> updateUser(@ModelAttribute UpdateUserDTO updatedUser) {
+        return this.userService.updateUser(updatedUser);
+    }
+}

@@ -1,7 +1,7 @@
 package com.example.SpringMate.Config;
-import com.example.SpringMate.Entity.Session;
-import com.example.SpringMate.Helpers.SessionHelper;
-import com.example.SpringMate.Repositoy.SessionRepository;
+import com.example.SpringMate.Admin.Entity.Session;
+import com.example.SpringMate.Auth.Helper.SessionHelper;
+import com.example.SpringMate.Auth.Repository.SessionRepository;
 import com.example.SpringMate.Util.Response;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;

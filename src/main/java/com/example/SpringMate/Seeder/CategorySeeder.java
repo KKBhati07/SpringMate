@@ -1,8 +1,8 @@
 package com.example.SpringMate.Seeder;
 
-import com.example.SpringMate.Entity.Category;
-import com.example.SpringMate.Repositoy.CategoryRepository;
-import com.example.SpringMate.Util.Constants;
+import com.example.SpringMate.Listing.Entity.Category;
+import com.example.SpringMate.Listing.Repository.CategoryRepository;
+import com.example.SpringMate.Shared.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
