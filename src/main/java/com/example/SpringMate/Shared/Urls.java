@@ -17,7 +17,7 @@ public class Urls {
         public static final String ADMIN_BASE = BASE_URL + "/admin";
 
         public static final class User {
-            public static final String FETCH_ALL = "/users/get_all";
+            public static final String FETCH_ALL = "/users/fetch_all";
             public static final String DELETE = "/users/delete_user/{uuid}";
             public static final String RESTORE = "/users/restore_user/{uuid}";
             public static final String UPDATE = "/users/update_user";
@@ -37,6 +37,17 @@ public class Urls {
 
     }
 
+    public static final class Listing {
+        public static final String LISTING_BASE = BASE_URL + "/listing";
+        public static final String FETCH = "/fetch";
+        public static final String CREATE_LISTING = "/create_listing";
+        public static final String UPDATE_LISTING = "/update_listing";
+        public static final String DELETE_LISTING = "/delete_listing";
+        public static final String GET_DETAILS = "/{uuid}/get_details";
+
+    }
+
+
     public static final class Category {
         public static final String CATEGORY_BASE = BASE_URL + "/category";
         public static final String GET_ALL = "/get_all";
@@ -46,6 +57,7 @@ public class Urls {
             "/api/v1/user/create_user",
             "/api/v1/category/**",
             "/api/v1/auth/request_login_otp",
-            "/api/v1/auth/login_with_otp"
+            "/api/v1/auth/login_with_otp",
+            "/api/v1/listing/fetch"
     };
 }

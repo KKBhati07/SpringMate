@@ -22,8 +22,8 @@ public class ResponseMapper {
         map.put("email", user.getEmail());
         map.put("uuid", user.getUuid());
         map.put("is_admin", user.isAdmin());
-        map.put("contactNo", user.getContactNo());
-        map.put("profileUrl", awsS3Service.getPreSignedUrl(
+        map.put("contact_no", user.getContactNo());
+        map.put("profile_url", awsS3Service.getPreSignedUrl(
                 Constants.AWS.BUCKET_NAME,
                 user.getProfileUrl(),
                 Constants.AWS.SIGNED_URI_EXPIRATION));

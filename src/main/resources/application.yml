@@ -8,6 +8,9 @@ spring:
     password: ${DB_PASSWORD}  # Database password
     driver-class-name: org.postgresql.Driver  # PostgreSQL JDBC driver class
 
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+
   jpa:
     hibernate:
       ddl-auto: update  # Automatically updates the database schema. OK for dev.
