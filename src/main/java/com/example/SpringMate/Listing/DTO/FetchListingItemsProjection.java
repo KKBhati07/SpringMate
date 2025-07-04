@@ -2,7 +2,7 @@ package com.example.SpringMate.Listing.DTO;
 
 import java.time.LocalDateTime;
 
-public interface ListingItemsProjection {
+public interface FetchListingItemsProjection {
 
     Long getId();
     String getTitle();

@@ -1,8 +1,9 @@
 package com.example.SpringMate.Listing.Service;
 
-import com.example.SpringMate.Listing.DTO.FetchListingQueryParams;
-import com.example.SpringMate.Listing.DTO.ListingItemsProjection;
+import com.example.SpringMate.Listing.DTO.FetchListingRequestDto;
+import com.example.SpringMate.Listing.DTO.FetchListingItemsProjection;
 import com.example.SpringMate.Listing.Repository.ListingRepository;
+import com.example.SpringMate.Util.PaginatedResponse;
 import com.example.SpringMate.Util.Response;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -22,8 +23,8 @@ public class ListingService {
 
     private final ListingRepository listingRepository;
 
-    public ResponseEntity<Response> fetchRecords(
-            FetchListingQueryParams queryParams
+    public ResponseEntity<Response<PaginatedResponse<FetchListingItemsProjection>>> fetchRecords(
+            FetchListingRequestDto queryParams
     ){
 
         try{
@@ -33,27 +34,24 @@ public class ListingService {
                     Sort.by(Sort.Direction.DESC,"postedAt")
             );
 
-            Page<ListingItemsProjection> pagedRecords = listingRepository
+            Page<FetchListingItemsProjection> pagedRecords = listingRepository
                     .findAllByFilters(queryParams.getCategoryId(),
                             queryParams.getMinPrice(),
                             queryParams.getMaxPrice(),
                             pageable);
 
-            Map<String , Object> map = new HashMap<>();
-            map.put("listings", pagedRecords.getContent());
-            map.put("currentPage", pagedRecords.getNumber());
-            map.put("totalItems",pagedRecords.getTotalElements());
-            map.put("totalPages",pagedRecords.getTotalPages());
-            return ResponseEntity.ok(new Response(map,"Listings fetched successfully"));
+            PaginatedResponse<FetchListingItemsProjection> paginatedResponse =
+                    new PaginatedResponse<>(pagedRecords.getContent(),
+                            pagedRecords.getNumber(),
+                            pagedRecords.getTotalElements(),
+                            pagedRecords.getTotalPages());
+            return ResponseEntity.ok(new Response<>(paginatedResponse,"Listings fetched successfully"));
 
         }catch (Exception e){
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new Response(new HashMap<>(),"Internal server error"));
-
+                    .body(new Response<>(null,"Internal server error"));
         }
-
-
     }
 
 

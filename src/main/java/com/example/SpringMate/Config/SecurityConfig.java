@@ -46,7 +46,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         AuthenticationFilter authFilter = new AuthenticationFilter(authenticationManager(http),sessionManagementHelper);
-        authFilter.setFilterProcessesUrl(Urls.Auth.AUTH_BASE_URL + Urls.Auth.LOGIN_URL);
+        authFilter.setFilterProcessesUrl(Urls.Auth.AUTH_BASE + Urls.Auth.LOGIN_WITH_PASS);
 
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorizeRequests ->

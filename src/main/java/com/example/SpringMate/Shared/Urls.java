@@ -5,9 +5,9 @@ public class Urls {
     public static final String BASE_URL="/api/v1";
 
     public static final class Auth {
-        public static final String AUTH_BASE_URL = BASE_URL + "/auth";
-        public static final String LOGIN_URL = "/login";
-        public static final String LOGOUT_URL = "/logout";
+        public static final String AUTH_BASE = BASE_URL + "/auth";
+        public static final String LOGIN_WITH_PASS = "/login_with_password";
+        public static final String LOGOUT = "/logout";
         public static final String AUTH_DETAILS = "/auth_details";
         public static final String REQUEST_LOGIN_OTP = "/request_login_otp";
         public static final String OTP_LOGIN = "/login_with_otp";

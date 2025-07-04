@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.UUID;
 
 @Component
 @NoArgsConstructor
@@ -42,7 +43,7 @@ public class AuthHelper {
         return String.valueOf(otp);
     }
 
-    public boolean isSelfUUID(String uuid, User authenticatedUser) {
+    public boolean isSelfUUID(UUID uuid, User authenticatedUser) {
         return uuid.equals(authenticatedUser.getUuid());
     }
 }

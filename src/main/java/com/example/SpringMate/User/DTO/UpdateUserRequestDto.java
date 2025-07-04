@@ -6,9 +6,9 @@ import org.hibernate.validator.constraints.UUID;
 import org.springframework.web.multipart.MultipartFile;
 
 @Data
-public class UpdateUserDTO {
+public class UpdateUserRequestDto {
     @UUID
-    private String uuid;
+    private java.util.UUID uuid;
     private String name;
     @Email
     private String email;

@@ -1,5 +1,6 @@
 package com.example.SpringMate.Listing.Controller;
 
+import com.example.SpringMate.Listing.DTO.FetchCategoriesResponseDto;
 import com.example.SpringMate.Listing.Service.CategoryService;
 import com.example.SpringMate.Util.Response;
 import com.example.SpringMate.Shared.Urls;
@@ -17,7 +18,7 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @GetMapping(Urls.Category.GET_ALL)
-    public ResponseEntity<Response> getCategories() {
+    public ResponseEntity<Response<FetchCategoriesResponseDto>> getCategories() {
         return categoryService.getAllCategory();
     }
 }

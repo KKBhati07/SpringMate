@@ -1,6 +1,6 @@
 package com.example.SpringMate.Listing.Repository;
 
-import com.example.SpringMate.Listing.DTO.ListingItemsProjection;
+import com.example.SpringMate.Listing.DTO.FetchListingItemsProjection;
 import com.example.SpringMate.Listing.Entity.Listing;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -46,7 +46,7 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
                   AND (:minPrice IS NULL OR l.price >= :minPrice)
                   AND (:maxPrice IS NULL OR l.price <= :maxPrice)
             """)
-    Page<ListingItemsProjection> findAllByFilters(
+    Page<FetchListingItemsProjection> findAllByFilters(
             @Param("categoryId") Long categoryId,
             @Param("minPrice") Double minPrice,
             @Param("maxPrice") Double maxPrice,

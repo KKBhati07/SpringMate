@@ -1,6 +1,6 @@
 package com.example.SpringMate.Auth.Repository;
 
-import com.example.SpringMate.Admin.Entity.SessionLog;
+import com.example.SpringMate.Auth.Entity.SessionLog;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

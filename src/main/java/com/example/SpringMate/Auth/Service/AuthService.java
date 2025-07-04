@@ -1,11 +1,13 @@
 package com.example.SpringMate.Auth.Service;
 
 
-import com.example.SpringMate.Auth.DTO.OTPRequestDTO;
-import com.example.SpringMate.Auth.DTO.OtpLoginDTO;
-import com.example.SpringMate.Admin.Entity.Session;
+import com.example.SpringMate.Auth.DTO.AuthDetailsResponseDto;
+import com.example.SpringMate.Auth.DTO.OtpLoginResponseDto;
+import com.example.SpringMate.Auth.DTO.OtpRequestDto;
+import com.example.SpringMate.Auth.DTO.OtpLoginRequestDto;
+import com.example.SpringMate.Auth.Entity.Session;
 import com.example.SpringMate.User.Entity.User;
-import com.example.SpringMate.Admin.Entity.VerificationCode;
+import com.example.SpringMate.Auth.Entity.VerificationCode;
 import com.example.SpringMate.Auth.Helper.AuthHelper;
 import com.example.SpringMate.Auth.Helper.SessionManagementHelper;
 import com.example.SpringMate.Auth.Repository.SessionLogRepository;
@@ -44,8 +46,8 @@ public class AuthService {
     private final AuthHelper authHelper;
 
     @Transactional
-    public ResponseEntity<Response> logoutUser(String sessionId) {
-        Map<String, Object> responseMap = new HashMap<>();
+    public ResponseEntity<Response<Map<String,Boolean>>> logoutUser(String sessionId) {
+        Map<String, Boolean> responseMap = new HashMap<>();
         try {
             Optional<Session> sessionOpt = sessionRepository.findBySessionID(sessionId);
             if (sessionOpt.isPresent()) {
@@ -54,39 +56,36 @@ public class AuthService {
                 sessionLogRepository.updateLogoutTime(session.getSessionID(), LocalDateTime.now());
 
                 SecurityContextHolder.clearContext();
-                responseMap.put("status", HttpStatus.OK.value());
-                return ResponseEntity.ok(new Response(responseMap, "Logged out successfully"));
+                responseMap.put("logged_out",true);
+                return ResponseEntity.ok(new Response<>(responseMap, "Logged out successfully"));
             }
-            responseMap.put("status", 400);
+            responseMap.put("logged_out", false);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new Response(responseMap, "Bad Request"));
+                    .body(new Response<>(responseMap, "Bad Request"));
 
         } catch (Exception e) {
             e.printStackTrace();
-            responseMap.put("status", 500);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .body(new Response(responseMap, "Something went wrong"));
+                    .body(new Response<>(responseMap, "Something went wrong"));
         }
     }
 
-    public ResponseEntity<Response> authDetails(User authenticateUser) {
+    public ResponseEntity<Response<AuthDetailsResponseDto>> authDetails(User authenticateUser) {
         Map<String, Object> responseMap = new HashMap<>();
         try {
-            responseMap.put("status", HttpStatus.OK.value());
-            responseMap.put("is_authenticated", true);
-            responseMap.put("user_details", responseMapper
-                    .mapUser(authenticateUser));
-            return ResponseEntity.ok(new Response(responseMap, "Data fetched successfully"));
+            AuthDetailsResponseDto authDetails = new AuthDetailsResponseDto(responseMapper
+                    .mapUser(authenticateUser),true);
+            return ResponseEntity.ok(new Response<>(authDetails, "Data fetched successfully"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .body(new Response(responseMap, "Internal server Error"));
+                    .body(new Response<>(null, "Internal server Error"));
 
         }
 
     }
 
     @Transactional
-    public ResponseEntity<Response> generateAndSendOTP(OTPRequestDTO loginDTO) {
+    public ResponseEntity<Response<Object>> generateAndSendOTP(OtpRequestDto loginDTO) {
         Map<String, Object> responseMap = new HashMap<>();
         try {
             if (loginDTO.getType() == OTPType.LOGIN) {
@@ -101,7 +100,7 @@ public class AuthService {
                         LocalDateTime lastSentAt = codeOptional.get().getCreatedAt();
                         if (ChronoUnit.SECONDS.between(lastSentAt, LocalDateTime.now()) < 60) {
                             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
-                                    .body(new Response(responseMap,
+                                    .body(new Response<>(null,
                                             "Please wait before requesting another OTP."));
                         }
                     }
@@ -120,23 +119,23 @@ public class AuthService {
                     );
                 }
 
-                return ResponseEntity.ok(new Response(responseMap, "OTP sent successfully"));
+                return ResponseEntity.ok(new Response<>(null, "OTP sent successfully"));
             }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST.value())
-                    .body(new Response(responseMap, "Ambiguous request type"));
+                    .body(new Response<>(null, "Ambiguous request type"));
 
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .body(new Response(responseMap, "Internal server Error"));
+                    .body(new Response<>(responseMap, "Internal server Error"));
         }
 
 
     }
 
     @Transactional
-    public ResponseEntity<Response> verifyOtp(OtpLoginDTO loginDTO, HttpServletRequest request) {
-        Map<String, Object> responseMap = new HashMap<>();
+    public ResponseEntity<Response<OtpLoginResponseDto>>
+    verifyOtp(OtpLoginRequestDto loginDTO, HttpServletRequest request) {
         try {
             if (loginDTO.getType() == OTPType.LOGIN) {
                 Optional<User> userExists = userRepository.findByEmail(loginDTO.getEmail());
@@ -152,24 +151,25 @@ public class AuthService {
                             String sessionId = sessionManagementHelper.createSession(user, request);
                             if (sessionId != null) {
                                 verificationCodeRepository.deleteByUserAndType(user, OTPType.LOGIN.name());
-                                responseMap.put("sessionId", sessionId);
-                                responseMap.put("authenticated", true);
-                                responseMap.put("user_details", user);
-                                return ResponseEntity.ok(new Response(responseMap, "Logged in successfully!"));
+                                OtpLoginResponseDto response = OtpLoginResponseDto.builder()
+                                        .authenticated(true).sessionId(sessionId)
+                                        .userDetails(responseMapper.mapUser(user))
+                                        .build();
+                                return ResponseEntity.ok(new Response<>(response, "Logged in successfully!"));
                             }
                         }
                     }
                 }
                 return ResponseEntity.status(HttpStatus.FORBIDDEN.value())
-                        .body(new Response(responseMap, "OTP verification failed"));
+                        .body(new Response<>(null, "OTP verification failed"));
             }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST.value())
-                    .body(new Response(responseMap, "Ambiguous request type"));
+                    .body(new Response<>(null, "Ambiguous request type"));
 
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .body(new Response(responseMap, "Internal server Error"));
+                    .body(new Response<>(null, "Internal server Error"));
         }
     }
 }

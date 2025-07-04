@@ -1,4 +1,4 @@
-package com.example.SpringMate.Admin.Entity;
+package com.example.SpringMate.Auth.Entity;
 
 import com.example.SpringMate.Shared.Constants;
 import com.example.SpringMate.User.Entity.User;

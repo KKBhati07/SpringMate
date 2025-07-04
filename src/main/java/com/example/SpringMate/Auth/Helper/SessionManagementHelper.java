@@ -1,7 +1,7 @@
 package com.example.SpringMate.Auth.Helper;
 
-import com.example.SpringMate.Admin.Entity.Session;
-import com.example.SpringMate.Admin.Entity.SessionLog;
+import com.example.SpringMate.Auth.Entity.Session;
+import com.example.SpringMate.Auth.Entity.SessionLog;
 import com.example.SpringMate.Shared.Helper.CoreHelper;
 import com.example.SpringMate.User.Entity.User;
 import com.example.SpringMate.Auth.Repository.SessionLogRepository;
@@ -38,7 +38,7 @@ public class SessionManagementHelper {
     }
 
     public String createSession(User user, HttpServletRequest request) {
-        String sessionId = CoreHelper.generateUUID().toUpperCase();
+        String sessionId = CoreHelper.generateUUID().toString().toUpperCase();
         Session session = Session.builder()
                 .sessionID(sessionId)
                 .user(user)
@@ -68,7 +68,7 @@ public class SessionManagementHelper {
     public String createSession(String email, HttpServletRequest request) {
         return userRepository.findByEmail(email)
                 .map(user -> {
-                    String sessionId = CoreHelper.generateUUID().toUpperCase();
+                    String sessionId = CoreHelper.generateUUID().toString().toUpperCase();
                     Session session = Session.builder()
                             .sessionID(sessionId)
                             .user(user)

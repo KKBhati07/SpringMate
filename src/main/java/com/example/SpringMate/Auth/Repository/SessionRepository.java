@@ -1,6 +1,6 @@
 package com.example.SpringMate.Auth.Repository;
 
-import com.example.SpringMate.Admin.Entity.Session;
+import com.example.SpringMate.Auth.Entity.Session;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

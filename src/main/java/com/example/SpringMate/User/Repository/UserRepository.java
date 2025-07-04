@@ -5,12 +5,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
-    Optional<User> findByUuid(String uuid);
+    Optional<User> findByUuid(UUID uuid);
     Optional<User> findByEmail(String email);
-    boolean existsByUuid(String uuid);
-    boolean existsByEmail(String uuid);
-    void deleteByUuid(String uuid);
+    boolean existsByUuid(UUID uuid);
+    boolean existsByEmail(String email);
+    void deleteByUuid(UUID uuid);
 }

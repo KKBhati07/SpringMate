@@ -1,7 +1,7 @@
 package com.example.SpringMate.User.Entity;
 
 import com.example.SpringMate.Shared.Constants;
-import com.example.SpringMate.User.DTO.UserDTO;
+import com.example.SpringMate.User.DTO.CreateUserRequestDto;
 import com.example.SpringMate.Shared.Helper.CoreHelper;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -19,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users")
@@ -36,7 +37,7 @@ public class User implements UserDetails {
     private Long id;
     @Column(unique = true, nullable = false)
 
-    private String uuid;
+    private UUID uuid;
 
     private String name;
 
@@ -84,7 +85,7 @@ public class User implements UserDetails {
         this.uuid = CoreHelper.generateUUID();
     }
 
-    public User(UserDTO userDetails, Role role) {
+    public User(CreateUserRequestDto userDetails, Role role) {
         this.name = userDetails.getName();
         this.email = userDetails.getEmail();
         this.password = encodePassword(userDetails.getPassword());

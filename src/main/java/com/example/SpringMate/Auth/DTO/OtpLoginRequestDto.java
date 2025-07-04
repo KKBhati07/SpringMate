@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class OtpLoginDTO {
+public class OtpLoginRequestDto {
 
     @NotBlank
     private String email;

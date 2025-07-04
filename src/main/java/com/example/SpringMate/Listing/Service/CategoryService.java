@@ -1,5 +1,7 @@
 package com.example.SpringMate.Listing.Service;
 
+import com.example.SpringMate.Listing.DTO.FetchCategoriesResponseDto;
+import com.example.SpringMate.Listing.Entity.Category;
 import com.example.SpringMate.Listing.Repository.CategoryRepository;
 import com.example.SpringMate.Util.Response;
 import lombok.RequiredArgsConstructor;
@@ -15,16 +17,15 @@ import java.util.Map;
 public class CategoryService {
     private final CategoryRepository categoryRepository;
 
-    public ResponseEntity<Response> getAllCategory() {
+    public ResponseEntity<Response<FetchCategoriesResponseDto>> getAllCategory() {
         try {
-            Map<String, Object> map = Map.of("categories", categoryRepository.findAll());
             return ResponseEntity.ok(
-                    new Response(map,
+                    new Response<>(new FetchCategoriesResponseDto(categoryRepository.findAll()),
                             "Categories fetched successfully"));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .body(new Response(Map.of("categories", Collections.emptyList()),
+                    .body(new Response<>( new FetchCategoriesResponseDto(Collections.emptyList()),
                             "Failed to fetch categories"));
         }
     }

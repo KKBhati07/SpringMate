@@ -1,6 +1,9 @@
 package com.example.SpringMate.Admin.Controller;
 
-import com.example.SpringMate.User.DTO.UpdateUserDTO;
+import com.example.SpringMate.User.DTO.UpdateUserRequestDto;
+import com.example.SpringMate.User.DTO.UpdateUserResponseDto;
+import com.example.SpringMate.Util.UserDetailsDto;
+import com.example.SpringMate.Util.PaginatedResponse;
 import com.example.SpringMate.Util.Response;
 import com.example.SpringMate.User.Service.UserService;
 import com.example.SpringMate.Shared.Urls;
@@ -9,6 +12,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -19,7 +25,7 @@ public class AdminController {
     private final UserService userService;
 
     @GetMapping(value = Urls.Admin.User.FETCH_ALL)
-    public ResponseEntity<Response> fetchAll(
+    public ResponseEntity<Response<PaginatedResponse<UserDetailsDto>>> fetchAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
@@ -27,19 +33,19 @@ public class AdminController {
     }
 
     @DeleteMapping(value = Urls.Admin.User.DELETE)
-    public ResponseEntity<Response> deleteUser(@PathVariable String uuid) {
+    public ResponseEntity<Response<Map<String,Boolean>>> deleteUser(@PathVariable UUID uuid) {
         return this.userService.deleteUser(uuid, null);
     }
 
     @PatchMapping(value = Urls.Admin.User.RESTORE)
-    public ResponseEntity<Response> restoreUser(@PathVariable String uuid) {
+    public ResponseEntity<Response<Map<String,Boolean>>> restoreUser(@PathVariable UUID uuid) {
         return this.userService.restoreUser(uuid);
     }
 
     @PutMapping(
             value = Urls.Admin.User.UPDATE,
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Response> updateUser(@ModelAttribute UpdateUserDTO updatedUser) {
+    public ResponseEntity<Response<UpdateUserResponseDto>> updateUser(@ModelAttribute UpdateUserRequestDto updatedUser) {
         return this.userService.updateUser(updatedUser);
     }
 }

@@ -1,6 +1,6 @@
 package com.example.SpringMate.Auth.Helper;
 
-import com.example.SpringMate.Admin.Entity.Session;
+import com.example.SpringMate.Auth.Entity.Session;
 import com.example.SpringMate.Auth.Repository.SessionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

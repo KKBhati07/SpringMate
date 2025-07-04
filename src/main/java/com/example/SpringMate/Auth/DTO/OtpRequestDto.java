@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
-public class OTPRequestDTO {
+public class OtpRequestDto {
 
     @NotNull
     private OTPType type;

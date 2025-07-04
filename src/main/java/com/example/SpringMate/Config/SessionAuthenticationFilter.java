@@ -1,5 +1,5 @@
 package com.example.SpringMate.Config;
-import com.example.SpringMate.Admin.Entity.Session;
+import com.example.SpringMate.Auth.Entity.Session;
 import com.example.SpringMate.Auth.Helper.SessionHelper;
 import com.example.SpringMate.Auth.Repository.SessionRepository;
 import com.example.SpringMate.Util.Response;

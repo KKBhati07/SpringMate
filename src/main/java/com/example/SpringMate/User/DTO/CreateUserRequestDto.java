@@ -6,7 +6,7 @@ import lombok.Data;
 import org.hibernate.validator.constraints.Length;
 
 @Data
-public class UserDTO {
+public class CreateUserRequestDto {
     @NotNull
     private String name;
 

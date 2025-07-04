@@ -5,8 +5,8 @@ public final class CoreHelper {
 
     private CoreHelper() {}
 
-    public static String generateUUID() {
-        return UUID.randomUUID().toString();
+    public static UUID generateUUID() {
+        return UUID.randomUUID();
     }
 
 
