@@ -29,4 +29,6 @@ public class Constants {
     public static class EmailHeaders{
         public  static final String LOGIN = "OTP Verification";
     }
+
+    public static final String DEFAULT_CATEGORY = "others";
 }

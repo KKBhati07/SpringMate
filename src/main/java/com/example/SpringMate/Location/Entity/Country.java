@@ -1,14 +1,13 @@
 package com.example.SpringMate.Location.Entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@RequiredArgsConstructor
 @Table(name = "countries")
 public class Country {
 
@@ -17,5 +16,6 @@ public class Country {
     private Long id;
 
     @Column(nullable = false)
+    @NonNull
     private String name;
 }

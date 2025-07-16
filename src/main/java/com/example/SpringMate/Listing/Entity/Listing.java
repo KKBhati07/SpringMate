@@ -4,6 +4,7 @@ import com.example.SpringMate.Location.Entity.Location;
 import com.example.SpringMate.User.Entity.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedBy;
@@ -20,6 +21,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
+@Builder
 @EntityListeners(AuditingEntityListener.class)
 public class Listing {
 
