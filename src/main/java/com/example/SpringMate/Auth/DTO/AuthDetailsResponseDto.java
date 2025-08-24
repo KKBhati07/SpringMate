@@ -7,6 +7,6 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class AuthDetailsResponseDto {
-    private UserDetailsDto userDetailsDto;
+    private UserDetailsDto authDetails;
     private boolean isAuthenticated;
 }

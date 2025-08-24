@@ -39,6 +39,7 @@ public class Listing {
     private Double price;
 
     @Column(name = "is_sold")
+    @Builder.Default
     private boolean isSold = false;
 
     @Column(name = "posted_at")
@@ -50,6 +51,7 @@ public class Listing {
     private LocalDateTime updatedAt;
 
     @Column(name = "is_deleted")
+    @Builder.Default
     private boolean deleted = false;
 
     @ManyToOne
@@ -60,7 +62,7 @@ public class Listing {
     @JoinColumn(name = "seller_id")
     private User seller;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "updated_by_id")
     @LastModifiedBy
     private User updatedBy;
@@ -70,5 +72,6 @@ public class Listing {
     private Location location;
 
     @OneToMany(mappedBy = "listing", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<ListingImage> listingImages = new ArrayList<>();
 }

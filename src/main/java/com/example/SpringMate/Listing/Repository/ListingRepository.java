@@ -4,7 +4,9 @@ import com.example.SpringMate.Listing.DTO.FetchListingItemsProjection;
 import com.example.SpringMate.Listing.Entity.Listing;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -13,11 +15,23 @@ import java.util.Optional;
 
 public interface ListingRepository extends JpaRepository<Listing, Long> {
 
+    Optional<Listing> findByIdAndDeletedFalse(Long id);
+
+    @EntityGraph(attributePaths = {"category", "seller", "listingImages","location"})
+    Optional<Listing> findWithRelationsByIdAndDeletedFalse(Long id);
+
     List<Listing> findByDeletedFalse();
 
     Page<Listing> findByDeletedFalse(Pageable pageable);
 
-    Optional<Listing> findByIdAndDeletedFalse(Long id);
+
+    @Modifying
+    @Query("UPDATE Listing l SET l.deleted = true WHERE l.id = :id")
+    void softDeleteById(@Param("id") Long id);
+
+    @Modifying
+    @Query("UPDATE Listing l SET l.deleted = true WHERE l.seller.id = :userId")
+    void softDeleteByUserId(@Param("userId") Long userId);
 
     List<Listing> findByCategoryIdAndDeletedFalse(Long categoryId);
 

@@ -2,7 +2,8 @@ package com.example.SpringMate.Listing.Controller;
 
 import com.example.SpringMate.Listing.DTO.CreateListingRequestDto;
 import com.example.SpringMate.Listing.DTO.FetchListingItemsProjection;
-import com.example.SpringMate.Listing.DTO.FetchListingRequestDto;
+import com.example.SpringMate.Listing.DTO.FetchListingsRequestDto;
+import com.example.SpringMate.Listing.DTO.ListingResponseDto;
 import com.example.SpringMate.Listing.Service.ListingService;
 import com.example.SpringMate.Shared.Urls;
 import com.example.SpringMate.User.Entity.User;
@@ -24,7 +25,7 @@ public class ListingController {
     @GetMapping(Urls.Listing.FETCH)
     public ResponseEntity<Response<PaginatedResponse<FetchListingItemsProjection>>>
     fetchAll(
-            @ModelAttribute FetchListingRequestDto queryParams
+            @ModelAttribute FetchListingsRequestDto queryParams
     ) {
         return listingService.fetchRecords(queryParams);
     }
@@ -37,5 +38,21 @@ public class ListingController {
     ) {
         System.out.println("Method Reached here!!");
         return listingService.createRecord(requestDto, authenticatedUser);
+    }
+
+    @DeleteMapping(Urls.Listing.DELETE_LISTING)
+    public ResponseEntity<Response<Boolean>>
+    deleteListing(@PathVariable Long id,
+                  @AuthenticationPrincipal User authenticatedUser
+    ) {
+        return listingService.deleteRecord(id, authenticatedUser);
+    }
+
+    @DeleteMapping(Urls.Listing.GET_DETAILS)
+    // directly returning entities can cause infinite recursion while serialization
+    // due to back ref Listing -> Images -> Listing
+    public ResponseEntity<Response<ListingResponseDto>>
+    fetchOne(@PathVariable Long id) {
+        return listingService.getOne(id);
     }
 }

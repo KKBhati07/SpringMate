@@ -1,8 +1,9 @@
 package com.example.SpringMate.Listing.Service;
 
 import com.example.SpringMate.Listing.DTO.CreateListingRequestDto;
-import com.example.SpringMate.Listing.DTO.FetchListingRequestDto;
+import com.example.SpringMate.Listing.DTO.FetchListingsRequestDto;
 import com.example.SpringMate.Listing.DTO.FetchListingItemsProjection;
+import com.example.SpringMate.Listing.DTO.ListingResponseDto;
 import com.example.SpringMate.Listing.Entity.Category;
 import com.example.SpringMate.Listing.Entity.Listing;
 import com.example.SpringMate.Listing.Entity.ListingImage;
@@ -15,6 +16,8 @@ import com.example.SpringMate.Shared.Service.AwsS3Service;
 import com.example.SpringMate.User.Entity.User;
 import com.example.SpringMate.Util.PaginatedResponse;
 import com.example.SpringMate.Util.Response;
+import com.example.SpringMate.Util.ResponseMapper;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -36,9 +39,10 @@ public class ListingService {
     private final CategoryRepository categoryRepository;
     private final LocationService locationService;
     private final AwsS3Service awsS3Service;
+    private final ResponseMapper responseMapper;
 
     public ResponseEntity<Response<PaginatedResponse<FetchListingItemsProjection>>> fetchRecords(
-            FetchListingRequestDto queryParams
+            FetchListingsRequestDto queryParams
     ) {
 
         try {
@@ -75,7 +79,7 @@ public class ListingService {
         try {
             List<ListingImage> listingImages = new ArrayList<>();
 
-            if(requestDto.getImages() != null){
+            if (requestDto.getImages() != null) {
                 for (CreateListingRequestDto.ImageDto imageDto : requestDto.getImages()) {
                     String imgUrl = awsS3Service.uploadImage(Constants.AWS.BUCKET_NAME,
                             AwsS3Directory.LISTINGS, imageDto.getImage());
@@ -84,14 +88,14 @@ public class ListingService {
                 }
             }
             Category category;
-            if(requestDto.getCategoryId() != null){
+            if (requestDto.getCategoryId() != null) {
                 Optional<Category> categoryOptional = categoryRepository.findById(requestDto.getCategoryId());
-                if(categoryOptional.isEmpty()){
+                if (categoryOptional.isEmpty()) {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                            .body(new Response<>(false,"Please select a valid category"));
+                            .body(new Response<>(false, "Please select a valid category"));
                 }
                 category = categoryOptional.get();
-            }else{
+            } else {
                 category = categoryRepository.findByName(Constants.DEFAULT_CATEGORY)
                         .orElseThrow(() -> new RuntimeException("Default category not found"));
 
@@ -114,7 +118,7 @@ public class ListingService {
             listingRepository.save(item);
 
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(new Response<>(true,"Item created successfully"));
+                    .body(new Response<>(true, "Item created successfully"));
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -122,5 +126,57 @@ public class ListingService {
                     .body(new Response<>(false, "Internal server error"));
         }
     }
+
+    @Transactional
+    public ResponseEntity<Response<Boolean>> deleteRecord(
+            Long itemId,
+            User authenticatedUser
+    ) {
+        try {
+
+            Optional<Listing> listingOptional = listingRepository.findByIdAndDeletedFalse(itemId);
+            if (listingOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Response<>(false, "Listing not found"));
+            }
+
+            if (authenticatedUser.isAdmin()) {
+                listingRepository.softDeleteById(itemId);
+            } else {
+                Listing listing = listingOptional.get();
+                if (listing.getSeller().getUuid().equals(authenticatedUser.getUuid())) {
+                    listingRepository.softDeleteById(itemId);
+                }
+            }
+            return ResponseEntity.ok(new Response<>(true, "Item deleted successfully"));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new Response<>(false, "Internal server error"));
+        }
+    }
+
+    public ResponseEntity<Response<ListingResponseDto>> getOne(Long itemId) {
+        try {
+
+            Optional<Listing> listingOptional = listingRepository.findWithRelationsByIdAndDeletedFalse(itemId);
+            return listingOptional.map(listing ->
+                    ResponseEntity.ok(new Response<>(responseMapper.mapListing(listing),
+                            "Item Fetched Successfully!")))
+                    .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
+                            .body(new Response<>(null, "Listing not found")));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new Response<>(null, "Internal server error"));
+        }
+    }
+
+    public boolean softDeleteByUserId(Long userId) {
+        this.listingRepository.softDeleteByUserId(userId);
+        return true;
+    }
+
 
 }

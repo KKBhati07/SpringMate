@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class FetchListingRequestDto {
+public class FetchListingsRequestDto {
     private Long categoryId;
     private Double minPrice;
     private Double maxPrice;

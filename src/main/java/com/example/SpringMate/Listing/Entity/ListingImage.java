@@ -24,6 +24,7 @@ public class ListingImage {
     private String url;
 
     @Column(nullable = false, name = "is_cover")
+    @Builder.Default // to make sure it initializes with the given value
     private boolean isCover = false;
 
     @Column(name = "created_at")

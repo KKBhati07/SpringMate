@@ -1,5 +1,6 @@
 package com.example.SpringMate.User.Service;
 
+import com.example.SpringMate.Listing.Service.ListingService;
 import com.example.SpringMate.Shared.Service.AwsS3Service;
 import com.example.SpringMate.User.DTO.*;
 import com.example.SpringMate.User.Entity.Role;
@@ -13,6 +14,7 @@ import com.example.SpringMate.Util.PaginatedResponse;
 import com.example.SpringMate.Util.Response;
 import com.example.SpringMate.Util.ResponseMapper;
 import com.example.SpringMate.Util.UserDetailsDto;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -33,6 +35,7 @@ public class UserService {
     private final AuthHelper authHelper;
     private final RoleRepository roleRepository;
     private final ResponseMapper responseMapper;
+    private final ListingService listingService;
 
     public ResponseEntity<Response<CreateUserResponseDto>> createUser(CreateUserRequestDto userDetails) {
         try {
@@ -113,11 +116,12 @@ public class UserService {
         }
     }
 
+    @Transactional
     public ResponseEntity<Response<Map<String, Boolean>>>
     deleteUser(UUID uuid, User authenticatedUser) {
         Map<String, Boolean> res = new HashMap<>();
+        Long userId = null;
         try {
-            User userToDelete;
 
             if (uuid == null) {
                 Optional<User> authUserOpt = userRepository.findByEmail(authenticatedUser.getEmail());
@@ -126,19 +130,20 @@ public class UserService {
                     return ResponseEntity.status(HttpStatus.NOT_FOUND)
                             .body(new Response<>(res, "Authenticated user not found"));
                 }
-                userToDelete = authUserOpt.get();
+                userId = authUserOpt.get().getId();
             } else {
-                Optional<User> userOpt = userRepository.findByUuid(uuid);
+                Optional<User> userOpt = userRepository.findByUuidAndDeletedFalse(uuid);
                 if (userOpt.isEmpty()) {
                     res.put("deleted", false);
                     return ResponseEntity.status(HttpStatus.NOT_FOUND)
                             .body(new Response<>(res, "User not found"));
                 }
-                userToDelete = userOpt.get();
+                userId = userOpt.get().getId();
             }
 
-            userToDelete.setDeleted(true);
-            userRepository.save(userToDelete);
+            userRepository.softDeleteByUuid(uuid!=null? uuid : authenticatedUser.getUuid());
+            listingService.softDeleteByUserId(userId);
+
 
             res.put("deleted", true);
             return ResponseEntity.ok(new Response<>(res, "User deleted successfully"));
