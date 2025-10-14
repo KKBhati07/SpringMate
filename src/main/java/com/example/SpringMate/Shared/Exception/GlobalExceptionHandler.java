@@ -1,5 +1,7 @@
-package com.example.SpringMate.Shared;
+package com.example.SpringMate.Shared.Exception;
 
+import com.example.SpringMate.Shared.Constants;
+import com.example.SpringMate.Util.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -13,7 +15,7 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<?> handleValidationErrors(MethodArgumentNotValidException e){
+    public ResponseEntity<Response<?>> handleValidationErrors(MethodArgumentNotValidException e){
         List<String> errors = e.getBindingResult().getFieldErrors()
                 .stream()
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
@@ -21,7 +23,13 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("message", "Validation failed", "errors", errors));
+                .body(new Response<>(Map.of("message", "Validation failed", "errors", errors),"Error"));
 
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Response<?>> handleGeneralException(Exception ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new Response<>(null, Constants.Messages.Error.SOMETHING_WENT_WRONG));
     }
 }

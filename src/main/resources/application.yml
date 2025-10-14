@@ -1,5 +1,6 @@
 spring:
   application:
+    seed-secret: ${SEED_SECRET}
     name: springmate  # Sets the name of the Spring Boot application. Useful for identification in logs and admin tools.
 
   datasource:

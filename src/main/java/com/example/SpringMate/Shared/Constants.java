@@ -26,9 +26,15 @@ public class Constants {
     public static final int SESSION_VALIDITY = 30;
     public static final int OTP_EXPIRATION_MINUTES = 10;
 
-    public static class EmailHeaders{
-        public  static final String LOGIN = "OTP Verification";
+    public static class EmailHeaders {
+        public static final String LOGIN = "OTP Verification";
     }
 
     public static final String DEFAULT_CATEGORY = "others";
+
+    public static final class Messages {
+        public static final class Error {
+            public static final String SOMETHING_WENT_WRONG = "Something went wrong!";
+        }
+    }
 }

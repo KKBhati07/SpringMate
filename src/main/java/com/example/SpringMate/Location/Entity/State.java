@@ -8,6 +8,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @RequiredArgsConstructor
+@Builder
 @Table(
         name = "states",
         uniqueConstraints = {

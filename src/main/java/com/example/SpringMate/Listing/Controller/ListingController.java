@@ -36,7 +36,6 @@ public class ListingController {
                   @RequestBody CreateListingRequestDto requestDto,
                   @AuthenticationPrincipal User authenticatedUser
     ) {
-        System.out.println("Method Reached here!!");
         return listingService.createRecord(requestDto, authenticatedUser);
     }
 

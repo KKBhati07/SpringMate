@@ -8,6 +8,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @RequiredArgsConstructor
+@Builder
 @Table(name = "countries")
 public class Country {
 
@@ -18,4 +19,7 @@ public class Country {
     @Column(nullable = false)
     @NonNull
     private String name;
+
+    @Column
+    private String iso2;
 }
