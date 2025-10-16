@@ -29,23 +29,27 @@ public class AdminController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        return userService.fetchAll(page, size);
+        return ResponseEntity.ok(
+                new Response<>(userService.fetchAll(page, size),
+                "Users fetched successfully")
+        );
     }
 
     @DeleteMapping(value = Urls.Admin.User.DELETE)
     public ResponseEntity<Response<Map<String,Boolean>>> deleteUser(@PathVariable UUID uuid) {
-        return this.userService.deleteUser(uuid, null);
+        return ResponseEntity.ok(new Response<>(userService.deleteUser(uuid, null),"User deleted successfully"));
     }
 
     @PatchMapping(value = Urls.Admin.User.RESTORE)
     public ResponseEntity<Response<Map<String,Boolean>>> restoreUser(@PathVariable UUID uuid) {
-        return this.userService.restoreUser(uuid);
+        return ResponseEntity.ok(new Response<>(userService.restoreUser(uuid),"User restored successfully"));
     }
 
     @PutMapping(
             value = Urls.Admin.User.UPDATE,
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Response<UpdateUserResponseDto>> updateUser(@ModelAttribute UpdateUserRequestDto updatedUser) {
-        return this.userService.updateUser(updatedUser);
+        return ResponseEntity.ok(new Response<>(userService.updateUser(updatedUser),
+                "User updated successfully"));
     }
 }

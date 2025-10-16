@@ -3,6 +3,7 @@ package com.example.SpringMate.User.Controller;
 import com.example.SpringMate.User.DTO.*;
 import com.example.SpringMate.User.Entity.User;
 import com.example.SpringMate.Auth.Helper.AuthHelper;
+import com.example.SpringMate.User.Exception.UnauthorizedUserUpdateException;
 import com.example.SpringMate.Util.Response;
 import com.example.SpringMate.User.Service.UserService;
 import com.example.SpringMate.Shared.Urls;
@@ -27,27 +28,36 @@ public class UserController {
 
     @PostMapping(value = Urls.User.CREATE_USER, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Response<CreateUserResponseDto>> createUser(@Valid @RequestBody CreateUserRequestDto userDetails) {
-        return userService.createUser(userDetails);
+        return ResponseEntity.ok(new Response<>(userService.createUser(userDetails), "User created successfully"));
     }
 
+
     @GetMapping(Urls.User.GET_DETAILS)
-    public ResponseEntity<Response<UserDetailsResponseDto>> getUserDetails(@PathVariable UUID uuid, @AuthenticationPrincipal User authenticatedUser) {
-        return userService.getUserDetails(uuid, authenticatedUser);
+    public ResponseEntity<Response<UserDetailsResponseDto>>
+    getUserDetails(@PathVariable UUID uuid,
+                   @AuthenticationPrincipal User authenticatedUser) {
+        return ResponseEntity.ok(new Response<>(userService
+                .getUserDetails(uuid, authenticatedUser),
+                "User details fetched successfully"));
     }
 
     @DeleteMapping(Urls.User.DELETE_USER)
-    public ResponseEntity<Response<Map<String, Boolean>>> deleteUser(@AuthenticationPrincipal User user) {
-        return userService.deleteUser(null, user);
+    public ResponseEntity<Response<Map<String, Boolean>>>
+    deleteUser(@AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(new Response<>(userService.deleteUser(null, user),"User deleted successfully"));
     }
 
-    @PutMapping(value = Urls.User.UPDATE_USER,
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Response<UpdateUserResponseDto>> updateUserProfile(@Valid @ModelAttribute UpdateUserRequestDto updatedUserDetails,
-                                                                             @AuthenticationPrincipal User autheticatedUser) {
-        if (!authHelper.isSelfUUID(updatedUserDetails.getUuid(), autheticatedUser)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED.value())
-                    .body(new Response<>(new UpdateUserResponseDto(false), "Cannot update other's profile"));
+    @PutMapping(value = Urls.User.UPDATE_USER, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Response<UpdateUserResponseDto>> updateUserProfile(
+            @Valid @ModelAttribute UpdateUserRequestDto updatedUserDetails,
+            @AuthenticationPrincipal User authenticatedUser) {
+
+        if (!authHelper.isSelfUUID(updatedUserDetails.getUuid(), authenticatedUser)) {
+            throw new UnauthorizedUserUpdateException();
         }
-        return userService.updateUser(updatedUserDetails);
+
+        return ResponseEntity.ok(new Response<>(userService.updateUser(updatedUserDetails),
+                "User updated successfully"));
     }
+
 }

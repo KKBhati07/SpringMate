@@ -11,6 +11,7 @@ import com.example.SpringMate.Util.PaginatedResponse;
 import com.example.SpringMate.Util.Response;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +28,9 @@ public class ListingController {
     fetchAll(
             @ModelAttribute FetchListingsRequestDto queryParams
     ) {
-        return listingService.fetchRecords(queryParams);
+        return ResponseEntity.ok(
+                new Response<>(listingService.fetchRecords(queryParams),
+                        "Listings fetched successfully"));
     }
 
     @PostMapping(Urls.Listing.CREATE_LISTING)
@@ -36,7 +39,10 @@ public class ListingController {
                   @RequestBody CreateListingRequestDto requestDto,
                   @AuthenticationPrincipal User authenticatedUser
     ) {
-        return listingService.createRecord(requestDto, authenticatedUser);
+        listingService.createRecord(requestDto, authenticatedUser);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new Response<>(null,
+                "Listing created successfully"));
     }
 
     @DeleteMapping(Urls.Listing.DELETE_LISTING)
@@ -44,7 +50,9 @@ public class ListingController {
     deleteListing(@PathVariable Long id,
                   @AuthenticationPrincipal User authenticatedUser
     ) {
-        return listingService.deleteRecord(id, authenticatedUser);
+                listingService.deleteRecord(id, authenticatedUser);
+        return ResponseEntity.ok(new Response<>(null,
+                        "Item deleted successfully"));
     }
 
     @DeleteMapping(Urls.Listing.GET_DETAILS)
@@ -52,6 +60,8 @@ public class ListingController {
     // due to back ref Listing -> Images -> Listing
     public ResponseEntity<Response<ListingResponseDto>>
     fetchOne(@PathVariable Long id) {
-        return listingService.getOne(id);
+        return ResponseEntity.ok(new Response<>(
+                listingService.getOne(id),
+                "Item fetched successfully"));
     }
 }

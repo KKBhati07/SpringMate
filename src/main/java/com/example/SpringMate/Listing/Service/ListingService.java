@@ -12,10 +12,12 @@ import com.example.SpringMate.Listing.Repository.ListingRepository;
 import com.example.SpringMate.Location.Service.LocationService;
 import com.example.SpringMate.Shared.Constants;
 import com.example.SpringMate.Shared.Enum.AwsS3Directory;
+import com.example.SpringMate.Shared.Exception.BadRequestException;
+import com.example.SpringMate.Shared.Exception.ForbiddenException;
+import com.example.SpringMate.Shared.Exception.NotFoundException;
 import com.example.SpringMate.Shared.Service.AwsS3Service;
 import com.example.SpringMate.User.Entity.User;
 import com.example.SpringMate.Util.PaginatedResponse;
-import com.example.SpringMate.Util.Response;
 import com.example.SpringMate.Util.ResponseMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -23,8 +25,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -41,136 +41,99 @@ public class ListingService {
     private final AwsS3Service awsS3Service;
     private final ResponseMapper responseMapper;
 
-    public ResponseEntity<Response<PaginatedResponse<FetchListingItemsProjection>>> fetchRecords(
+    public PaginatedResponse<FetchListingItemsProjection> fetchRecords(
             FetchListingsRequestDto queryParams
     ) {
+        Pageable pageable = PageRequest.of(
+                queryParams.getPage(),
+                queryParams.getSize(),
+                Sort.by(Sort.Direction.DESC, "postedAt")
+        );
 
-        try {
-            Pageable pageable = PageRequest.of(
-                    queryParams.getPage(),
-                    queryParams.getSize(),
-                    Sort.by(Sort.Direction.DESC, "postedAt")
-            );
-
-            Page<FetchListingItemsProjection> pagedRecords = listingRepository
-                    .findAllByFilters(queryParams.getCategoryId(),
-                            queryParams.getMinPrice(),
-                            queryParams.getMaxPrice(),
-                            pageable);
-
-            PaginatedResponse<FetchListingItemsProjection> paginatedResponse =
-                    new PaginatedResponse<>(pagedRecords.getContent(),
-                            pagedRecords.getNumber(),
-                            pagedRecords.getTotalElements(),
-                            pagedRecords.getTotalPages());
-            return ResponseEntity.ok(new Response<>(paginatedResponse, "Listings fetched successfully"));
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new Response<>(null, "Internal server error"));
-        }
+        Page<FetchListingItemsProjection> pagedRecords = listingRepository
+                .findAllByFilters(queryParams.getCategoryId(),
+                        queryParams.getMinPrice(),
+                        queryParams.getMaxPrice(),
+                        pageable);
+        return new PaginatedResponse<>(pagedRecords.getContent(),
+                pagedRecords.getNumber(),
+                pagedRecords.getTotalElements(),
+                pagedRecords.getTotalPages());
     }
 
-    public ResponseEntity<Response<Boolean>> createRecord(
+    public void createRecord(
             CreateListingRequestDto requestDto,
             User authenticatedUser
     ) {
-        try {
-            List<ListingImage> listingImages = new ArrayList<>();
+        List<ListingImage> listingImages = new ArrayList<>();
 
-            if (requestDto.getImages() != null) {
-                for (CreateListingRequestDto.ImageDto imageDto : requestDto.getImages()) {
-                    String imgUrl = awsS3Service.uploadImage(Constants.AWS.BUCKET_NAME,
-                            AwsS3Directory.LISTINGS, imageDto.getImage());
-                    listingImages.add(ListingImage.builder().url(imgUrl)
-                            .isCover(imageDto.isCover()).build());
-                }
+        if (requestDto.getImages() != null) {
+            for (CreateListingRequestDto.ImageDto imageDto : requestDto.getImages()) {
+                String imgUrl = awsS3Service.uploadImage(Constants.AWS.BUCKET_NAME,
+                        AwsS3Directory.LISTINGS, imageDto.getImage());
+                listingImages.add(ListingImage.builder().url(imgUrl)
+                        .isCover(imageDto.isCover()).build());
             }
-            Category category;
-            if (requestDto.getCategoryId() != null) {
-                Optional<Category> categoryOptional = categoryRepository.findById(requestDto.getCategoryId());
-                if (categoryOptional.isEmpty()) {
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                            .body(new Response<>(false, "Please select a valid category"));
-                }
-                category = categoryOptional.get();
-            } else {
-                category = categoryRepository.findByName(Constants.DEFAULT_CATEGORY)
-                        .orElseThrow(() -> new RuntimeException("Default category not found"));
-
-            }
-
-            Listing item = Listing.builder()
-                    .price(requestDto.getPrice())
-                    .title(requestDto.getTitle())
-                    .description(requestDto.getDescription())
-                    .seller(authenticatedUser)
-                    .location(locationService.getOrCreateOne(
-                            requestDto.getCity().trim().toLowerCase(),
-                            requestDto.getState().trim().toLowerCase(),
-                            requestDto.getCountry().trim().toLowerCase()
-                    ))
-                    .category(category)
-                    .listingImages(listingImages)
-                    .build();
-
-            listingRepository.save(item);
-
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(new Response<>(true, "Item created successfully"));
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new Response<>(false, "Internal server error"));
         }
+        Category category;
+        if (requestDto.getCategoryId() != null) {
+            Optional<Category> categoryOptional = categoryRepository.findById(requestDto.getCategoryId());
+            if (categoryOptional.isEmpty()) {
+                throw new BadRequestException("Please select a valid category");
+            }
+            category = categoryOptional.get();
+        } else {
+            category = categoryRepository.findByName(Constants.DEFAULT_CATEGORY)
+                    .orElseThrow(() -> new RuntimeException("Default category not found"));
+
+        }
+
+        Listing item = Listing.builder()
+                .price(requestDto.getPrice())
+                .title(requestDto.getTitle())
+                .description(requestDto.getDescription())
+                .seller(authenticatedUser)
+                .location(locationService.getOrCreateOne(
+                        requestDto.getCity().trim().toLowerCase(),
+                        requestDto.getState().trim().toLowerCase(),
+                        requestDto.getCountry().trim().toLowerCase()
+                ))
+                .category(category)
+                .listingImages(listingImages)
+                .build();
+
+        listingRepository.save(item);
     }
 
     @Transactional
-    public ResponseEntity<Response<Boolean>> deleteRecord(
+    public void deleteRecord(
             Long itemId,
             User authenticatedUser
     ) {
-        try {
 
-            Optional<Listing> listingOptional = listingRepository.findByIdAndDeletedFalse(itemId);
-            if (listingOptional.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Response<>(false, "Listing not found"));
-            }
+        Optional<Listing> listingOptional = listingRepository.findByIdAndDeletedFalse(itemId);
+        if (listingOptional.isEmpty()) {
+            throw new NotFoundException("Listing not found");
+        }
 
-            if (authenticatedUser.isAdmin()) {
+        if (authenticatedUser.isAdmin()) {
+            listingRepository.softDeleteById(itemId);
+        } else {
+            Listing listing = listingOptional.get();
+            if (listing.getSeller().getUuid()
+                    .equals(authenticatedUser.getUuid())) {
                 listingRepository.softDeleteById(itemId);
             } else {
-                Listing listing = listingOptional.get();
-                if (listing.getSeller().getUuid().equals(authenticatedUser.getUuid())) {
-                    listingRepository.softDeleteById(itemId);
-                }
+                throw new ForbiddenException();
             }
-            return ResponseEntity.ok(new Response<>(true, "Item deleted successfully"));
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new Response<>(false, "Internal server error"));
         }
     }
 
-    public ResponseEntity<Response<ListingResponseDto>> getOne(Long itemId) {
-        try {
-
-            Optional<Listing> listingOptional = listingRepository.findWithRelationsByIdAndDeletedFalse(itemId);
-            return listingOptional.map(listing ->
-                    ResponseEntity.ok(new Response<>(responseMapper.mapListing(listing),
-                            "Item Fetched Successfully!")))
-                    .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
-                            .body(new Response<>(null, "Listing not found")));
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new Response<>(null, "Internal server error"));
-        }
+    public ListingResponseDto getOne(Long itemId) {
+        Optional<Listing> listingOptional = listingRepository
+                .findWithRelationsByIdAndDeletedFalse(itemId);
+        return listingOptional.map(responseMapper::mapListing)
+                .orElseThrow(() -> new NotFoundException("Listing not found"));
     }
 
     public boolean softDeleteByUserId(Long userId) {

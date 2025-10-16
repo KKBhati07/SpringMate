@@ -13,12 +13,12 @@ import org.springframework.stereotype.Service;
 public class OtpNotificationDispatcher {
     private final EmailService emailService;
 
-    @Async("appDefault")
-    @Retry(name = "sendEmail")
-    @CircuitBreaker(name = "sendEmail", fallbackMethod = "handleEmailFailure")
-    public void dispatchEmail(String to, String subject, String otp) throws MessagingException {
-        emailService.sendEmail(to,subject,otp);
-    }
+        @Async("appDefault")
+        @Retry(name = "sendEmail")
+        @CircuitBreaker(name = "sendEmail", fallbackMethod = "handleEmailFailure")
+        public void dispatchEmail(String to, String subject, String otp) throws MessagingException {
+            emailService.sendEmail(to,subject,otp);
+        }
 
     public String handleEmailFailure(Exception ex){
         ex.printStackTrace();

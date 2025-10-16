@@ -34,6 +34,7 @@ public class Constants {
 
     public static final class Messages {
         public static final class Error {
+
             public static final String SOMETHING_WENT_WRONG = "Something went wrong!";
         }
     }
