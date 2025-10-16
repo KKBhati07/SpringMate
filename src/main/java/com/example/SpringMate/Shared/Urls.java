@@ -57,6 +57,9 @@ public class Urls {
         public static final String LOCATION_BASE = BASE_URL + "/location";
 //        public static final String GET_ALL = "/get_all";
         public static final String SEED = "/seed";
+        public static final String GET_COUNTRIES = "/get_countries";
+        public static final String GET_STATES = "/get_states";
+        public static final String GET_CITIES = "/get_cities";
     }
 
     public static final String[] PUBLIC_ENDPOINTS = {
@@ -65,7 +68,7 @@ public class Urls {
             "/api/v1/auth/request_login_otp",
             "/api/v1/auth/login_with_otp",
             "/api/v1/listing/fetch",
-            "/api/v1/location/seed"
+            "/api/v1/location/**"
 
     };
 }

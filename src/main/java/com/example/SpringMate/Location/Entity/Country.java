@@ -20,6 +20,6 @@ public class Country {
     @NonNull
     private String name;
 
-    @Column
-    private String iso2;
+    @Column(name = "country_code")
+    private String countryCode;
 }

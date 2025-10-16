@@ -18,7 +18,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class LocationSeederService {
     private final RestTemplate restTemplate;
-    private final CountryRepository  countryRepository;
+    private final CountryRepository countryRepository;
     private final StateRepository stateRepository;
     private final CityRepository cityRepository;
 
@@ -34,14 +34,11 @@ public class LocationSeederService {
         countries.forEach(c -> {
             Country country = new Country();
             country.setName((String) c.get("country"));
-            country.setIso2((String) c.get("iso2"));
+            country.setCountryCode((String) c.get("iso2"));
             country = countryRepository.save(Country.builder()
-                    .iso2((String) c.get("iso2"))
+                    .countryCode((String) c.get("iso2"))
                     .name((String) c.get("country"))
                     .build());
-
-
-
 
 
             List<Map<String, Object>> states = (List<Map<String, Object>>) c.get("states");
@@ -65,5 +62,6 @@ public class LocationSeederService {
 
         return "Location data seeded successfully.";
     }
+
 
 }

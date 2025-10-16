@@ -75,7 +75,6 @@ public class UserService {
     public UserDetailsResponseDto
     getUserDetails(UUID uuid,
                    User authenticatedUser) {
-//        try {
         Optional<User> user = userRepository.findByUuid(uuid);
         if (user.isEmpty() || user.get().isDeleted()) {
             throw new UserNotFoundException();

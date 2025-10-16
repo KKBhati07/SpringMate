@@ -42,7 +42,7 @@ public class ListingController {
         listingService.createRecord(requestDto, authenticatedUser);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new Response<>(null,
-                "Listing created successfully"));
+                        "Listing created successfully"));
     }
 
     @DeleteMapping(Urls.Listing.DELETE_LISTING)
@@ -50,12 +50,12 @@ public class ListingController {
     deleteListing(@PathVariable Long id,
                   @AuthenticationPrincipal User authenticatedUser
     ) {
-                listingService.deleteRecord(id, authenticatedUser);
+        listingService.deleteRecord(id, authenticatedUser);
         return ResponseEntity.ok(new Response<>(null,
-                        "Item deleted successfully"));
+                "Item deleted successfully"));
     }
 
-    @DeleteMapping(Urls.Listing.GET_DETAILS)
+    @GetMapping(Urls.Listing.GET_DETAILS)
     // directly returning entities can cause infinite recursion while serialization
     // due to back ref Listing -> Images -> Listing
     public ResponseEntity<Response<ListingResponseDto>>
