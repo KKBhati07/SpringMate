@@ -26,6 +26,10 @@ public class State {
     @NonNull
     private String name;
 
+    @NonNull
+    @Column(nullable = false)
+    private String iso2;
+
     @ManyToOne
     @NonNull
     @JoinColumn(name = "country_id")

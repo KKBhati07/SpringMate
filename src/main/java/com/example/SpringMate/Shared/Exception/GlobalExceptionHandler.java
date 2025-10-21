@@ -9,6 +9,7 @@ import com.example.SpringMate.User.Exception.UserNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -77,7 +78,15 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Response<?>> handleGeneralException(Exception ex) {
+        ex.printStackTrace();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new Response<>(null, Constants.Messages.Error.SOMETHING_WENT_WRONG));
     }
+
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<Response<String>> handleMissingHeader(MissingRequestHeaderException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new Response<>(null, "Missing required header: " + ex.getHeaderName()));
+    }
+
 }

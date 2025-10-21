@@ -1,6 +1,7 @@
 spring:
   application:
     seed-secret: ${SEED_SECRET}
+    location-api-key: "api-key"
     name: springmate  # Sets the name of the Spring Boot application. Useful for identification in logs and admin tools.
 
   datasource:

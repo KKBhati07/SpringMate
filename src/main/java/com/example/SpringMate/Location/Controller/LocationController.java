@@ -17,7 +17,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
-@RestController(Urls.Location.LOCATION_BASE)
+@RestController()
+@RequestMapping(Urls.Location.LOCATION_BASE)
 @RequiredArgsConstructor
 public class LocationController {
 
@@ -27,13 +28,16 @@ public class LocationController {
     @Value("${spring.application.seed-secret}")
     private String seedSecret;
 
+    @Value("${spring.application.location-api-key}")
+    private String locationApikey;
+
 
     @PostMapping(Urls.Location.SEED)
     public String seedLocations(@RequestHeader("x-seed-key") String key) {
         if (key == null || key.isEmpty() || !seedSecret.equals(key)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Unauthorized access");
         }
-        return locationSeederService.seedLocations();
+        return locationSeederService.seedLocations(locationApikey);
     }
 
     @GetMapping(Urls.Location.GET_COUNTRIES)

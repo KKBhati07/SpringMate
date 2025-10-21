@@ -16,10 +16,11 @@ public class Country {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
     @NonNull
+    @Column(nullable = false)
     private String name;
 
-    @Column(name = "country_code")
-    private String countryCode;
+    @NonNull
+    @Column(nullable = false,unique = true)
+    private String iso2;
 }

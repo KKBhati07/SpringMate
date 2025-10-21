@@ -10,4 +10,5 @@ public interface CountryRepository extends JpaRepository<Country, Long> {
 
     Optional<Country> findByNameIgnoreCase(String name);
     List<Country> findAllByOrderByNameAsc();
+    Optional<Country> findByIso2(String iso2);
 }

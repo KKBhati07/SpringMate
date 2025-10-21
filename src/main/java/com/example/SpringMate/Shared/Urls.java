@@ -2,7 +2,8 @@ package com.example.SpringMate.Shared;
 
 public class Urls {
     private Urls(){}
-    public static final String BASE_URL="/api/v1";
+
+    public static final String BASE_URL = "/api/v1";
 
     public static final class Auth {
         public static final String AUTH_BASE = BASE_URL + "/auth";
@@ -55,11 +56,21 @@ public class Urls {
 
     public static final class Location {
         public static final String LOCATION_BASE = BASE_URL + "/location";
-//        public static final String GET_ALL = "/get_all";
+        //        public static final String GET_ALL = "/get_all";
         public static final String SEED = "/seed";
         public static final String GET_COUNTRIES = "/get_countries";
         public static final String GET_STATES = "/get_states";
         public static final String GET_CITIES = "/get_cities";
+    }
+
+    public static final class ExternalApi {
+        public static final class Locations {
+            public static final String BASE_URL = "https://api.countrystatecity.in/v1";
+            public static final String COUNTRIES = BASE_URL + "/countries";
+            public static final String STATES_BY_COUNTRY = BASE_URL + "/countries/{iso2}/states";
+            public static final String CITIES_BY_STATE = BASE_URL + "/countries/{country_iso2}/states/{state_iso2}/cities";
+        }
+
     }
 
     public static final String[] PUBLIC_ENDPOINTS = {

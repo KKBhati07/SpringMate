@@ -23,6 +23,7 @@ import java.util.List;
 @Data
 @Builder
 @EntityListeners(AuditingEntityListener.class)
+@Table(name = "listings")
 public class Listing {
 
     @Id
