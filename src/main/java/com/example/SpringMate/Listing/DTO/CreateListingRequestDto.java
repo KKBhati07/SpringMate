@@ -16,16 +16,16 @@ public class CreateListingRequestDto {
     private Double price;
     private Long categoryId;
     @NotNull
-    private String city;
+    private Long cityId;
     @NotNull
-    private String state;
+    private Long stateId;
     @NotNull
-    private String country;
+    private Long countryId;
     private List<ImageDto> images;
 
     @Data
     public static class ImageDto{
         private MultipartFile image;
-        private boolean isCover;
+        private boolean cover;
     }
 }

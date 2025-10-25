@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
 
 import java.time.LocalDateTime;
 
@@ -28,6 +29,7 @@ public class ListingImage {
     private boolean isCover = false;
 
     @Column(name = "created_at")
+    @CreatedDate
     private LocalDateTime createdAt;
 
     @ManyToOne

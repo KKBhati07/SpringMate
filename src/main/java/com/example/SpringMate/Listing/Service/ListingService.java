@@ -8,6 +8,7 @@ import com.example.SpringMate.Listing.Entity.Category;
 import com.example.SpringMate.Listing.Entity.Listing;
 import com.example.SpringMate.Listing.Entity.ListingImage;
 import com.example.SpringMate.Listing.Repository.CategoryRepository;
+import com.example.SpringMate.Listing.Repository.ListingImageRepository;
 import com.example.SpringMate.Listing.Repository.ListingRepository;
 import com.example.SpringMate.Location.Service.LocationService;
 import com.example.SpringMate.Shared.Constants;
@@ -36,6 +37,7 @@ import java.util.Optional;
 public class ListingService {
 
     private final ListingRepository listingRepository;
+    private final ListingImageRepository listingImageRepository;
     private final CategoryRepository categoryRepository;
     private final LocationService locationService;
     private final AwsS3Service awsS3Service;
@@ -61,20 +63,11 @@ public class ListingService {
                 pagedRecords.getTotalPages());
     }
 
+    @Transactional
     public void createRecord(
             CreateListingRequestDto requestDto,
             User authenticatedUser
     ) {
-        List<ListingImage> listingImages = new ArrayList<>();
-
-        if (requestDto.getImages() != null) {
-            for (CreateListingRequestDto.ImageDto imageDto : requestDto.getImages()) {
-                String imgUrl = awsS3Service.uploadImage(Constants.AWS.BUCKET_NAME,
-                        AwsS3Directory.LISTINGS, imageDto.getImage());
-                listingImages.add(ListingImage.builder().url(imgUrl)
-                        .isCover(imageDto.isCover()).build());
-            }
-        }
         Category category;
         if (requestDto.getCategoryId() != null) {
             Optional<Category> categoryOptional = categoryRepository.findById(requestDto.getCategoryId());
@@ -94,15 +87,26 @@ public class ListingService {
                 .description(requestDto.getDescription())
                 .seller(authenticatedUser)
                 .location(locationService.getOrCreateOne(
-                        requestDto.getCity().trim().toLowerCase(),
-                        requestDto.getState().trim().toLowerCase(),
-                        requestDto.getCountry().trim().toLowerCase()
+                        requestDto.getCityId(),
+                        requestDto.getStateId(),
+                        requestDto.getCountryId()
                 ))
                 .category(category)
-                .listingImages(listingImages)
                 .build();
 
-        listingRepository.save(item);
+        Listing savedItem = listingRepository.save(item);
+        List<ListingImage> listingImages = new ArrayList<>();
+        if (requestDto.getImages() != null) {
+            for (CreateListingRequestDto.ImageDto imageDto : requestDto.getImages()) {
+                String imgUrl = awsS3Service.uploadImage(Constants.AWS.BUCKET_NAME,
+                        AwsS3Directory.LISTINGS, imageDto.getImage());
+                listingImages.add(ListingImage.builder().url(imgUrl)
+                        .listing(savedItem)
+                        .isCover(imageDto.isCover())
+                        .build());
+            }
+        }
+        listingImageRepository.saveAll(listingImages);
     }
 
     @Transactional

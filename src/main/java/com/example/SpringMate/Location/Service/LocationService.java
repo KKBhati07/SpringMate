@@ -26,12 +26,12 @@ public class LocationService {
     private final CountryRepository countryRepository;
     private final LocationRepository locationRepository;
 
-    public Location getOrCreateOne(String cityName, String stateName, String countryName) {
-        Country country = countryRepository.findByNameIgnoreCase(countryName)
+    public Location getOrCreateOne(Long cityId, Long stateId, Long countryId) {
+        Country country = countryRepository.findById(countryId)
                 .orElseThrow(() -> new RuntimeException("Country not found"));
-        State state = stateRepository.findByNameIgnoreCaseAndCountry(stateName, country)
+        State state = stateRepository.findById(stateId)
                 .orElseThrow(() -> new RuntimeException("State not found"));
-        City city = this.cityRepository.findByNameIgnoreCaseAndState(cityName, state)
+        City city = this.cityRepository.findById(cityId)
                 .orElseThrow(() -> new RuntimeException("City not found"));
 
         return locationRepository.findByCityAndStateAndCountry(city, state, country)
@@ -45,7 +45,8 @@ public class LocationService {
     }
 
     public List<CountryResponseDto> getCountries() {
-        List<Country> countries = countryRepository.findAllByOrderByNameAsc();
+        List<Country> countries = countryRepository
+                .findAllByIso2In(List.of("IN", "US"));
 
         if (countries.isEmpty()) {
             throw new NotFoundException("No countries found");

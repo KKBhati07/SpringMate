@@ -41,9 +41,9 @@ public class Urls {
     public static final class Listing {
         public static final String LISTING_BASE = BASE_URL + "/listing";
         public static final String FETCH = "/fetch";
-        public static final String CREATE_LISTING = "/create_listing";
-        public static final String UPDATE_LISTING = "/update_listing";
-        public static final String DELETE_LISTING = "/delete_listing";
+        public static final String CREATE_LISTING = "/create";
+        public static final String UPDATE_LISTING = "/update";
+        public static final String DELETE_LISTING = "/delete";
         public static final String GET_DETAILS = "/{uuid}/get_details";
 
     }

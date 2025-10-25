@@ -12,6 +12,7 @@ import com.example.SpringMate.Util.Response;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -33,10 +34,11 @@ public class ListingController {
                         "Listings fetched successfully"));
     }
 
-    @PostMapping(Urls.Listing.CREATE_LISTING)
+    @PostMapping(value = Urls.Listing.CREATE_LISTING,
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Response<Boolean>>
     createListing(@Valid
-                  @RequestBody CreateListingRequestDto requestDto,
+                  @ModelAttribute CreateListingRequestDto requestDto,
                   @AuthenticationPrincipal User authenticatedUser
     ) {
         listingService.createRecord(requestDto, authenticatedUser);
