@@ -17,7 +17,7 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
 
     Optional<Listing> findByIdAndDeletedFalse(Long id);
 
-    @EntityGraph(attributePaths = {"category", "seller", "listingImages","location"})
+    @EntityGraph(attributePaths = {"category", "seller", "listingImages", "location"})
     Optional<Listing> findWithRelationsByIdAndDeletedFalse(Long id);
 
     List<Listing> findByDeletedFalse();
@@ -52,15 +52,27 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
                         WHERE li.listing = l AND li.isCover = true
                         ORDER BY li.createdAt ASC
                         LIMIT 1
-                    ) AS coverImageUrl
+                    ) AS coverImageUrl,
+                    loc AS location,
+                    CASE 
+                        WHEN :userId IS NOT NULL AND uf.id IS NOT NULL AND uf.isFavorite = true THEN true
+                        ELSE false 
+                    END AS isFavorite
                 FROM Listing l
                 LEFT JOIN l.category c
+                LEFT JOIN l.location loc
+                LEFT JOIN loc.city city
+                LEFT JOIN loc.state state
+                LEFT JOIN loc.country country
+                LEFT JOIN UserFavorite uf 
+                    ON uf.listing = l AND (:userId IS NOT NULL AND uf.user.id = :userId)
                 WHERE l.deleted = false
                   AND (:categoryId IS NULL OR l.category.id = :categoryId)
                   AND (:minPrice IS NULL OR l.price >= :minPrice)
                   AND (:maxPrice IS NULL OR l.price <= :maxPrice)
             """)
     Page<FetchListingItemsProjection> findAllByFilters(
+            @Param("userId") Long userId,
             @Param("categoryId") Long categoryId,
             @Param("minPrice") Double minPrice,
             @Param("maxPrice") Double maxPrice,

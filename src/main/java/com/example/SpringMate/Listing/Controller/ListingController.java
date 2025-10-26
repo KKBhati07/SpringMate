@@ -27,10 +27,18 @@ public class ListingController {
     @GetMapping(Urls.Listing.FETCH)
     public ResponseEntity<Response<PaginatedResponse<FetchListingItemsProjection>>>
     fetchAll(
-            @ModelAttribute FetchListingsRequestDto queryParams
+            @RequestParam(value = "category_id", required = false) Long categoryId,
+            @RequestParam(value = "min_price", required = false) Double minPrice,
+            @RequestParam(value = "max_price", required = false) Double maxPrice,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @AuthenticationPrincipal User autheticatedUser
     ) {
         return ResponseEntity.ok(
-                new Response<>(listingService.fetchRecords(queryParams),
+                new Response<>(listingService.fetchRecords(
+                        new FetchListingsRequestDto(categoryId,minPrice,maxPrice,page,size),
+                        autheticatedUser
+                ),
                         "Listings fetched successfully"));
     }
 

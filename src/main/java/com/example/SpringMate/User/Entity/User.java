@@ -28,8 +28,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
-
-//TODO : Use builder instead of custom constructor
+@Builder
 public class User implements UserDetails {
 
     @Id

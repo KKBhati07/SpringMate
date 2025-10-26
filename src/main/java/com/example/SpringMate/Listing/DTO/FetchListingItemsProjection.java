@@ -11,4 +11,28 @@ public interface FetchListingItemsProjection {
     LocalDateTime getPostedAt();
     String getCategoryName();
     String getCoverImageUrl();
+    Boolean getIsFavorite();
+
+    LocationProjection getLocation();
+
+    interface LocationProjection {
+        CityProjection getCity();
+        StateProjection getState();
+        CountryProjection getCountry();
+    }
+
+    interface CityProjection {
+        Long getId();
+        String getName();
+    }
+
+    interface StateProjection {
+        Long getId();
+        String getName();
+    }
+
+    interface CountryProjection {
+        Long getId();
+        String getName();
+    }
 }

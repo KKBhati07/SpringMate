@@ -44,7 +44,8 @@ public class ListingService {
     private final ResponseMapper responseMapper;
 
     public PaginatedResponse<FetchListingItemsProjection> fetchRecords(
-            FetchListingsRequestDto queryParams
+            FetchListingsRequestDto queryParams,
+            User authenticatedUser
     ) {
         Pageable pageable = PageRequest.of(
                 queryParams.getPage(),
@@ -53,7 +54,9 @@ public class ListingService {
         );
 
         Page<FetchListingItemsProjection> pagedRecords = listingRepository
-                .findAllByFilters(queryParams.getCategoryId(),
+                .findAllByFilters(
+                        authenticatedUser == null ? null : authenticatedUser.getId(),
+                        queryParams.getCategoryId(),
                         queryParams.getMinPrice(),
                         queryParams.getMaxPrice(),
                         pageable);
@@ -115,15 +118,11 @@ public class ListingService {
             User authenticatedUser
     ) {
 
-        Optional<Listing> listingOptional = listingRepository.findByIdAndDeletedFalse(itemId);
-        if (listingOptional.isEmpty()) {
-            throw new NotFoundException("Listing not found");
-        }
+        Listing listing = getByIdOrThrow(itemId);
 
         if (authenticatedUser.isAdmin()) {
             listingRepository.softDeleteById(itemId);
         } else {
-            Listing listing = listingOptional.get();
             if (listing.getSeller().getUuid()
                     .equals(authenticatedUser.getUuid())) {
                 listingRepository.softDeleteById(itemId);
@@ -140,10 +139,14 @@ public class ListingService {
                 .orElseThrow(() -> new NotFoundException("Listing not found"));
     }
 
-    public boolean softDeleteByUserId(Long userId) {
+    public void softDeleteByUserId(Long userId) {
         this.listingRepository.softDeleteByUserId(userId);
-        return true;
     }
 
+
+    public Listing getByIdOrThrow(Long id) {
+        return listingRepository.findByIdAndDeletedFalse(id)
+                .orElseThrow(() -> new NotFoundException("Listing not found"));
+    }
 
 }

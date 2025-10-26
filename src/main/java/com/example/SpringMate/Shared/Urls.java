@@ -40,7 +40,7 @@ public class Urls {
 
     public static final class Listing {
         public static final String LISTING_BASE = BASE_URL + "/listing";
-        public static final String FETCH = "/fetch";
+        public static final String FETCH = "/fetch_all";
         public static final String CREATE_LISTING = "/create";
         public static final String UPDATE_LISTING = "/update";
         public static final String DELETE_LISTING = "/delete";
@@ -63,6 +63,12 @@ public class Urls {
         public static final String GET_CITIES = "/get_cities";
     }
 
+    public static final class UserFavorites {
+        public static final String FAVORITE_BASE = BASE_URL + "/favorite";
+        public static final String SET = "/set_unset";
+
+    }
+
     public static final class ExternalApi {
         public static final class Locations {
             public static final String BASE_URL = "https://api.countrystatecity.in/v1";
@@ -78,7 +84,7 @@ public class Urls {
             "/api/v1/category/**",
             "/api/v1/auth/request_login_otp",
             "/api/v1/auth/login_with_otp",
-            "/api/v1/listing/fetch",
+            "/api/v1/listing/fetch_all",
             "/api/v1/location/**"
 
     };

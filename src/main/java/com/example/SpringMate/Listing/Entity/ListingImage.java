@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
 @Data
 @Builder
 @Table(name = "listing_images")
+@EntityListeners(AuditingEntityListener.class)
 public class ListingImage {
 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
