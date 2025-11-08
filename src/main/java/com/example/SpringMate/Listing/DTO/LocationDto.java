@@ -1,10 +1,12 @@
 package com.example.SpringMate.Listing.DTO;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
 @Data
 @Builder
+@AllArgsConstructor
 public class LocationDto {
 
     private Long id;
@@ -15,6 +17,7 @@ public class LocationDto {
 
     @Data
     @Builder
+    @AllArgsConstructor
     public static class CityDto {
         private Long id;
         private String name;
@@ -22,6 +25,7 @@ public class LocationDto {
 
     @Data
     @Builder
+    @AllArgsConstructor
     public static class StateDto {
         private Long id;
         private String name;
@@ -29,6 +33,7 @@ public class LocationDto {
 
     @Data
     @Builder
+    @AllArgsConstructor
     public static class CountryDto {
         private Long id;
         private String name;

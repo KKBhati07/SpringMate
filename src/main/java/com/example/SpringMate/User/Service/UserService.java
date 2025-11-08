@@ -75,16 +75,12 @@ public class UserService {
     public UserDetailsResponseDto
     getUserDetails(UUID uuid,
                    User authenticatedUser) {
-        Optional<User> user = userRepository.findByUuid(uuid);
-        if (user.isEmpty() || user.get().isDeleted()) {
-            throw new UserNotFoundException();
-        } else {
+        User user = getUserOrThrowByUUID(uuid);
+        UserDetailsDto userDetails = responseMapper.mapUser(user);
+        return new UserDetailsResponseDto(userDetails,
+                authHelper.compareUserDetails(user,
+                        authenticatedUser));
 
-            UserDetailsDto userDetails = responseMapper.mapUser(user.get());
-            return new UserDetailsResponseDto(userDetails,
-                    authHelper.compareUserDetails(user.get(),
-                            authenticatedUser));
-        }
     }
 
     @Transactional

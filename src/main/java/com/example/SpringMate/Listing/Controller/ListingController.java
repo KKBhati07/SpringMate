@@ -1,9 +1,6 @@
 package com.example.SpringMate.Listing.Controller;
 
-import com.example.SpringMate.Listing.DTO.CreateListingRequestDto;
-import com.example.SpringMate.Listing.DTO.FetchListingItemsProjection;
-import com.example.SpringMate.Listing.DTO.FetchListingsRequestDto;
-import com.example.SpringMate.Listing.DTO.ListingResponseDto;
+import com.example.SpringMate.Listing.DTO.*;
 import com.example.SpringMate.Listing.Service.ListingService;
 import com.example.SpringMate.Shared.Urls;
 import com.example.SpringMate.User.Entity.User;
@@ -25,7 +22,7 @@ public class ListingController {
     private final ListingService listingService;
 
     @GetMapping(Urls.Listing.FETCH)
-    public ResponseEntity<Response<PaginatedResponse<FetchListingItemsProjection>>>
+    public ResponseEntity<Response<PaginatedResponse<FetchListingItemsResponseDto>>>
     fetchAll(
             @RequestParam(value = "category_id", required = false) Long categoryId,
             @RequestParam(value = "min_price", required = false) Double minPrice,

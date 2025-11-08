@@ -1,9 +1,6 @@
 package com.example.SpringMate.Listing.Service;
 
-import com.example.SpringMate.Listing.DTO.CreateListingRequestDto;
-import com.example.SpringMate.Listing.DTO.FetchListingsRequestDto;
-import com.example.SpringMate.Listing.DTO.FetchListingItemsProjection;
-import com.example.SpringMate.Listing.DTO.ListingResponseDto;
+import com.example.SpringMate.Listing.DTO.*;
 import com.example.SpringMate.Listing.Entity.Category;
 import com.example.SpringMate.Listing.Entity.Listing;
 import com.example.SpringMate.Listing.Entity.ListingImage;
@@ -43,7 +40,7 @@ public class ListingService {
     private final AwsS3Service awsS3Service;
     private final ResponseMapper responseMapper;
 
-    public PaginatedResponse<FetchListingItemsProjection> fetchRecords(
+    public PaginatedResponse<FetchListingItemsResponseDto> fetchRecords(
             FetchListingsRequestDto queryParams,
             User authenticatedUser
     ) {
@@ -60,7 +57,11 @@ public class ListingService {
                         queryParams.getMinPrice(),
                         queryParams.getMaxPrice(),
                         pageable);
-        return new PaginatedResponse<>(pagedRecords.getContent(),
+        return new PaginatedResponse<>(pagedRecords.getContent()
+                .stream()
+                .map(this::injectPreSignedUrl)
+                .toList(),
+
                 pagedRecords.getNumber(),
                 pagedRecords.getTotalElements(),
                 pagedRecords.getTotalPages());
@@ -147,6 +148,49 @@ public class ListingService {
     public Listing getByIdOrThrow(Long id) {
         return listingRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new NotFoundException("Listing not found"));
+    }
+
+    private FetchListingItemsResponseDto injectPreSignedUrl(FetchListingItemsProjection record) {
+
+        LocationDto locationDTO = null;
+
+        if (record.getLocation() != null) {
+            var loc = record.getLocation();
+
+            locationDTO = LocationDto.builder()
+                    .city(LocationDto.CityDto.builder()
+                            .id(loc.getCity().getId())
+                            .name(loc.getCity().getName())
+                            .build())
+                    .state(LocationDto.StateDto.builder()
+                            .id(loc.getState().getId())
+                            .name(loc.getState().getName())
+                            .build())
+                    .country(LocationDto.CountryDto.builder()
+                            .id(loc.getCountry().getId())
+                            .name(loc.getCountry().getName())
+                            .build())
+                    .build();
+        }
+
+        return FetchListingItemsResponseDto.builder()
+                .id(record.getId())
+                .title(record.getTitle())
+                .description(record.getDescription())
+                .price(record.getPrice())
+                .postedAt(record.getPostedAt())
+                .category(CategoryDto
+                        .builder()
+                        .id(record.getCategory().getId())
+                        .name(record.getCategory().getName())
+                        .build())
+                .coverImageUrl(awsS3Service.getPreSignedUrl(
+                        Constants.AWS.BUCKET_NAME,
+                        record.getCoverImageUrl(),
+                        Constants.AWS.SIGNED_URI_EXPIRATION))
+                .isFavorite(record.getIsFavorite())
+                .location(locationDTO)
+                .build();
     }
 
 }

@@ -45,7 +45,7 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
                     l.description AS description,
                     l.price AS price,
                     l.postedAt AS postedAt,
-                    c.name AS categoryName,
+                    c AS category,
                     (
                         SELECT li.url 
                         FROM ListingImage li 
