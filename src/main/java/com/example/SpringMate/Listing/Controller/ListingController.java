@@ -2,6 +2,7 @@ package com.example.SpringMate.Listing.Controller;
 
 import com.example.SpringMate.Listing.DTO.*;
 import com.example.SpringMate.Listing.Service.ListingService;
+import com.example.SpringMate.Shared.Exception.BadRequestException;
 import com.example.SpringMate.Shared.Urls;
 import com.example.SpringMate.User.Entity.User;
 import com.example.SpringMate.Util.PaginatedResponse;
@@ -53,7 +54,28 @@ public class ListingController {
                 new Response<>(listingService.getRecordsByUser(
                         uuid,
                         page,
-                        size
+                        size,
+                        false
+                ),
+                        "Listings fetched successfully"));
+    }
+
+    @GetMapping(Urls.Listing.GET_FAVORITES)
+    public ResponseEntity<Response<PaginatedResponse<FetchListingItemsResponseDto>>>
+    getFavoritesByUser(
+            @RequestParam(value = "user") UUID uuid,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        if(uuid == null){
+            throw new BadRequestException("Invalid params!");
+        }
+        return ResponseEntity.ok(
+                new Response<>(listingService.getRecordsByUser(
+                        uuid,
+                        page,
+                        size,
+                        true
                 ),
                         "Listings fetched successfully"));
     }

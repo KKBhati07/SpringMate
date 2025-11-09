@@ -42,6 +42,7 @@ public class Urls {
         public static final String LISTING_BASE = BASE_URL + "/listing";
         public static final String GET_ALL = "/get_all";
         public static final String GET_BY_USER = "/get_by_user";
+        public static final String GET_FAVORITES = "/get_favorites";
         public static final String CREATE_LISTING = "/create";
         public static final String UPDATE_LISTING = "/update";
         public static final String DELETE_LISTING = "/delete";

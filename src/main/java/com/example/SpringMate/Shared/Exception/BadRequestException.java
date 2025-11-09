@@ -1,6 +1,9 @@
 package com.example.SpringMate.Shared.Exception;
 
 public class BadRequestException extends RuntimeException {
+    public BadRequestException() {
+        super("Bad Request");
+    }
     public BadRequestException(String message) {
         super(message);
     }

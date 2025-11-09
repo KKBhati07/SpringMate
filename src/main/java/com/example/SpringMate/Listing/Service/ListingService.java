@@ -73,7 +73,8 @@ public class ListingService {
     public PaginatedResponse<FetchListingItemsResponseDto> getRecordsByUser(
             UUID uuid,
             int page,
-            int size
+            int size,
+            boolean getFavorites
     ) {
         Pageable pageable = PageRequest.of(
                 page,
@@ -81,7 +82,11 @@ public class ListingService {
                 Sort.by(Sort.Direction.DESC, "postedAt")
         );
 
-        Page<FetchListingItemsProjection> pagedRecords = listingRepository
+        Page<FetchListingItemsProjection> pagedRecords = getFavorites ?
+                listingRepository
+                        .findFavoritesByUser(
+                                coreUserService.getUserOrThrowByUUID(uuid).getId(),
+                                pageable) : listingRepository
                 .findAllByUser(
                         coreUserService.getUserOrThrowByUUID(uuid).getId(),
                         pageable);
