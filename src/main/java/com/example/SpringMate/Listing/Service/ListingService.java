@@ -15,6 +15,7 @@ import com.example.SpringMate.Shared.Exception.ForbiddenException;
 import com.example.SpringMate.Shared.Exception.NotFoundException;
 import com.example.SpringMate.Shared.Service.AwsS3Service;
 import com.example.SpringMate.User.Entity.User;
+import com.example.SpringMate.User.Service.CoreUserService;
 import com.example.SpringMate.Util.PaginatedResponse;
 import com.example.SpringMate.Util.ResponseMapper;
 import jakarta.transaction.Transactional;
@@ -28,6 +29,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -37,10 +39,11 @@ public class ListingService {
     private final ListingImageRepository listingImageRepository;
     private final CategoryRepository categoryRepository;
     private final LocationService locationService;
+    private final CoreUserService coreUserService;
     private final AwsS3Service awsS3Service;
     private final ResponseMapper responseMapper;
 
-    public PaginatedResponse<FetchListingItemsResponseDto> fetchRecords(
+    public PaginatedResponse<FetchListingItemsResponseDto> getAllRecords(
             FetchListingsRequestDto queryParams,
             User authenticatedUser
     ) {
@@ -62,6 +65,30 @@ public class ListingService {
                 .map(this::injectPreSignedUrl)
                 .toList(),
 
+                pagedRecords.getNumber(),
+                pagedRecords.getTotalElements(),
+                pagedRecords.getTotalPages());
+    }
+
+    public PaginatedResponse<FetchListingItemsResponseDto> getRecordsByUser(
+            UUID uuid,
+            int page,
+            int size
+    ) {
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.DESC, "postedAt")
+        );
+
+        Page<FetchListingItemsProjection> pagedRecords = listingRepository
+                .findAllByUser(
+                        coreUserService.getUserOrThrowByUUID(uuid).getId(),
+                        pageable);
+        return new PaginatedResponse<>(pagedRecords.getContent()
+                .stream()
+                .map(this::injectPreSignedUrl)
+                .toList(),
                 pagedRecords.getNumber(),
                 pagedRecords.getTotalElements(),
                 pagedRecords.getTotalPages());

@@ -5,7 +5,7 @@ import com.example.SpringMate.Favorite.Repository.UserFavoriteRepository;
 import com.example.SpringMate.Listing.Entity.Listing;
 import com.example.SpringMate.Listing.Service.ListingService;
 import com.example.SpringMate.User.Entity.User;
-import com.example.SpringMate.User.Service.UserService;
+import com.example.SpringMate.User.Service.CoreUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -15,14 +15,15 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class UserFavoriteService {
-    private final UserService userService;
+    private final CoreUserService coreUserService;
     private final ListingService listingService;
     private final UserFavoriteRepository userFavoriteRepository;
 
 
     public Map<String, Boolean> setUnsetFavorite(Long userId, Long listingId) {
-        User user = userService.getUserOrThrowById(userId);
-        Listing listing = listingService.getByIdOrThrow(userId);
+        System.out.println("Listing ID :: "+listingId);
+        User user = coreUserService.getUserOrThrowById(userId);
+        Listing listing = listingService.getByIdOrThrow(listingId);
         Optional<UserFavorite> existing = userFavoriteRepository
                 .findByUserAndListing(user, listing);
 
@@ -30,7 +31,7 @@ public class UserFavoriteService {
             UserFavorite favorite = existing.get();
             favorite.setFavorite(!favorite.isFavorite());
             userFavoriteRepository.save(favorite);
-            return Map.of("isFavorite", favorite.isFavorite());
+            return Map.of("is_favorite", favorite.isFavorite());
 
         } else {
             userFavoriteRepository.save(
@@ -39,7 +40,7 @@ public class UserFavoriteService {
                             .listing(listing)
                             .build()
             );
-            return Map.of("isFavorite", true);
+            return Map.of("is_favorite", true);
 
         }
     }

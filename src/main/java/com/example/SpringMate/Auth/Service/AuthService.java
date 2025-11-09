@@ -15,10 +15,10 @@ import com.example.SpringMate.Auth.Helper.AuthHelper;
 import com.example.SpringMate.Auth.Helper.SessionManagementHelper;
 import com.example.SpringMate.Auth.Repository.SessionLogRepository;
 import com.example.SpringMate.Auth.Repository.SessionRepository;
-import com.example.SpringMate.User.Repository.UserRepository;
 import com.example.SpringMate.Auth.Repository.VerificationCodeRepository;
 import com.example.SpringMate.Shared.Constants;
 import com.example.SpringMate.Shared.Enum.OTPType;
+import com.example.SpringMate.User.Service.CoreUserService;
 import com.example.SpringMate.Util.ResponseMapper;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -41,8 +41,8 @@ public class AuthService {
 
     private final SessionRepository sessionRepository;
     private final SessionLogRepository sessionLogRepository;
-    private final UserRepository userRepository;
     private final VerificationCodeRepository verificationCodeRepository;
+    private final CoreUserService coreUserService;
     private final ResponseMapper responseMapper;
     private final OtpNotificationDispatcher otpNotificationDispatcher;
     private final SessionManagementHelper sessionManagementHelper;
@@ -75,10 +75,9 @@ public class AuthService {
     public void generateAndSendOTP(OtpRequestDto loginDTO) throws MessagingException {
         Map<String, Object> responseMap = new HashMap<>();
         if (loginDTO.getType() == OTPType.LOGIN) {
-            Optional<User> userExists = userRepository.findByEmail(loginDTO.getEmail());
+            User user = coreUserService.getUserByEmail(loginDTO.getEmail());
 
-            if (userExists.isPresent()) {
-                User user = userExists.get();
+            if (user != null) {
                 Optional<VerificationCode> codeOptional =
                         verificationCodeRepository.
                                 findTopByUserAndTypeOrderByCreatedAtDesc(user, OTPType.LOGIN.name());
@@ -114,10 +113,9 @@ public class AuthService {
     public OtpLoginResponseDto
     verifyOtp(OtpLoginRequestDto loginDTO, HttpServletRequest request) {
         if (loginDTO.getType() == OTPType.LOGIN) {
-            Optional<User> userExists = userRepository.findByEmail(loginDTO.getEmail());
+            User user = coreUserService.getUserByEmail(loginDTO.getEmail());
 
-            if (userExists.isPresent()) {
-                User user = userExists.get();
+            if (user != null) {
                 Optional<VerificationCode> codeOptional = verificationCodeRepository
                         .findTopByUserAndTypeOrderByCreatedAtDesc(user, OTPType.LOGIN.name());
                 if (codeOptional.isPresent()) {

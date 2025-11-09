@@ -40,7 +40,8 @@ public class Urls {
 
     public static final class Listing {
         public static final String LISTING_BASE = BASE_URL + "/listing";
-        public static final String FETCH = "/fetch_all";
+        public static final String GET_ALL = "/get_all";
+        public static final String GET_BY_USER = "/get_by_user";
         public static final String CREATE_LISTING = "/create";
         public static final String UPDATE_LISTING = "/update";
         public static final String DELETE_LISTING = "/delete";
@@ -65,7 +66,7 @@ public class Urls {
 
     public static final class UserFavorites {
         public static final String FAVORITE_BASE = BASE_URL + "/favorite";
-        public static final String SET = "/set_unset";
+        public static final String SET_UNSET = "/set_unset";
 
     }
 
@@ -84,7 +85,8 @@ public class Urls {
             "/api/v1/category/**",
             "/api/v1/auth/request_login_otp",
             "/api/v1/auth/login_with_otp",
-            "/api/v1/listing/fetch_all",
+            "/api/v1/listing/get_all",
+            "/api/v1/listing/get_by_user",
             "/api/v1/location/**"
 
     };

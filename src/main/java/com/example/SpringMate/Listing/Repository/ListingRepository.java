@@ -79,4 +79,36 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
             Pageable pageable
     );
 
+    @Query("""
+                SELECT 
+                    l.id AS id,
+                    l.title AS title,
+                    l.description AS description,
+                    l.price AS price,
+                    l.postedAt AS postedAt,
+                    c AS category,
+                    (
+                        SELECT li.url 
+                        FROM ListingImage li 
+                        WHERE li.listing = l AND li.isCover = true
+                        ORDER BY li.createdAt ASC
+                        LIMIT 1
+                    ) AS coverImageUrl,
+                    loc AS location,
+                    false AS isFavorite
+                FROM Listing l
+                LEFT JOIN l.category c
+                LEFT JOIN l.location loc
+                LEFT JOIN loc.city city
+                LEFT JOIN loc.state state
+                LEFT JOIN loc.country country
+                WHERE l.deleted = false
+                  AND l.seller.id = :userId
+            """)
+    Page<FetchListingItemsProjection> findAllByUser(
+            @Param("userId") Long userId,
+            Pageable pageable
+    );
+
+
 }

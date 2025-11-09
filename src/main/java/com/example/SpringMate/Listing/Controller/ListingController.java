@@ -14,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(Urls.Listing.LISTING_BASE)
@@ -21,9 +23,9 @@ public class ListingController {
 
     private final ListingService listingService;
 
-    @GetMapping(Urls.Listing.FETCH)
+    @GetMapping(Urls.Listing.GET_ALL)
     public ResponseEntity<Response<PaginatedResponse<FetchListingItemsResponseDto>>>
-    fetchAll(
+    getAll(
             @RequestParam(value = "category_id", required = false) Long categoryId,
             @RequestParam(value = "min_price", required = false) Double minPrice,
             @RequestParam(value = "max_price", required = false) Double maxPrice,
@@ -31,10 +33,27 @@ public class ListingController {
             @RequestParam(defaultValue = "10") int size,
             @AuthenticationPrincipal User autheticatedUser
     ) {
+        //TODO :: Remove users self posts
         return ResponseEntity.ok(
-                new Response<>(listingService.fetchRecords(
-                        new FetchListingsRequestDto(categoryId,minPrice,maxPrice,page,size),
+                new Response<>(listingService.getAllRecords(
+                        new FetchListingsRequestDto(categoryId, minPrice, maxPrice, page, size),
                         autheticatedUser
+                ),
+                        "Listings fetched successfully"));
+    }
+
+    @GetMapping(Urls.Listing.GET_BY_USER)
+    public ResponseEntity<Response<PaginatedResponse<FetchListingItemsResponseDto>>>
+    getByUser(
+            @RequestParam(value = "user") UUID uuid,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(
+                new Response<>(listingService.getRecordsByUser(
+                        uuid,
+                        page,
+                        size
                 ),
                         "Listings fetched successfully"));
     }

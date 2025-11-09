@@ -31,11 +31,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final AwsS3Service awsS3Service;
     private final AuthHelper authHelper;
-    private final RoleRepository roleRepository;
     private final ResponseMapper responseMapper;
     private final ListingService listingService;
+    private final CoreUserService coreUserService;
 
     public CreateUserResponseDto createUser(CreateUserRequestDto userDetails) {
         Optional<User> user = userRepository.findByEmail(userDetails.getEmail());
@@ -75,7 +76,7 @@ public class UserService {
     public UserDetailsResponseDto
     getUserDetails(UUID uuid,
                    User authenticatedUser) {
-        User user = getUserOrThrowByUUID(uuid);
+        User user = coreUserService.getUserOrThrowByUUID(uuid);
         UserDetailsDto userDetails = responseMapper.mapUser(user);
         return new UserDetailsResponseDto(userDetails,
                 authHelper.compareUserDetails(user,
@@ -90,7 +91,7 @@ public class UserService {
         Long userId = null;
 
         if (uuid == null) {
-            userId = getUserOrThrowByEmail(authenticatedUser.getEmail()).getId();
+            userId = coreUserService.getUserOrThrowByEmail(authenticatedUser.getEmail()).getId();
         } else {
             Optional<User> userOpt = userRepository.findByUuidAndDeletedFalse(uuid);
             if (userOpt.isEmpty()) {
@@ -122,7 +123,7 @@ public class UserService {
     public UpdateUserResponseDto
     updateUser(UpdateUserRequestDto userDetails) {
 
-        User user = getUserOrThrowByUUID(userDetails.getUuid());
+        User user = coreUserService.getUserOrThrowByUUID(userDetails.getUuid());
         if (userDetails.getProfileImage() != null) {
             String oldProfilePicUrl = user.getProfileUrl();
             String imageUrl = awsS3Service.uploadImage(Constants.AWS.BUCKET_NAME,
@@ -153,20 +154,6 @@ public class UserService {
                         responseMapper.mapUser(updatedUser));
     }
 
-    public User getUserOrThrowById(Long id) {
-        return userRepository.findByIdAndDeletedFalse(id)
-                .orElseThrow(UserNotFoundException::new);
-    }
-
-    public User getUserOrThrowByEmail(String email) {
-        return userRepository.findByEmailAndDeletedFalse(email)
-                .orElseThrow(UserNotFoundException::new);
-    }
-
-    public User getUserOrThrowByUUID(UUID uuid) {
-        return userRepository.findByUuidAndDeletedFalse(uuid)
-                .orElseThrow(UserNotFoundException::new);
-    }
 
 
     private List<UserDetailsDto> injectSignedProfileUrl(List<User> users) {
