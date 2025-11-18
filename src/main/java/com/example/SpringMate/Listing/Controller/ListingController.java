@@ -30,6 +30,10 @@ public class ListingController {
             @RequestParam(value = "category_id", required = false) Long categoryId,
             @RequestParam(value = "min_price", required = false) Double minPrice,
             @RequestParam(value = "max_price", required = false) Double maxPrice,
+            @RequestParam(value = "country_id", required = false) Long countryId,
+            @RequestParam(value = "state_id", required = false) Long stateId,
+            @RequestParam(value = "city_id", required = false) Long cityId,
+            @RequestParam(value = "search", required = false) String searchString,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @AuthenticationPrincipal User autheticatedUser
@@ -37,7 +41,11 @@ public class ListingController {
         //TODO :: Remove users self posts
         return ResponseEntity.ok(
                 new Response<>(listingService.getAllRecords(
-                        new FetchListingsRequestDto(categoryId, minPrice, maxPrice, page, size),
+                        new FetchListingsRequestDto(
+                                categoryId, minPrice, maxPrice,
+                                countryId,stateId,cityId,
+                                searchString,
+                        page, size),
                         autheticatedUser
                 ),
                         "Listings fetched successfully"));

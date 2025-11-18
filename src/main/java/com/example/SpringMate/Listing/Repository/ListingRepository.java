@@ -66,16 +66,30 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
                 LEFT JOIN loc.country country
                 LEFT JOIN UserFavorite uf 
                     ON uf.listing = l AND (:userId IS NOT NULL AND uf.user.id = :userId)
-                WHERE l.deleted = false
-                  AND (:categoryId IS NULL OR l.category.id = :categoryId)
-                  AND (:minPrice IS NULL OR l.price >= :minPrice)
-                  AND (:maxPrice IS NULL OR l.price <= :maxPrice)
+                WHERE 
+                    l.deleted = false
+                    AND (:categoryId IS NULL OR l.category.id = :categoryId)
+                    AND (:minPrice IS NULL OR l.price >= :minPrice)
+                    AND (:maxPrice IS NULL OR l.price <= :maxPrice)
+                    AND (:countryId IS NULL OR country.id = :countryId)
+                    AND (:stateId IS NULL OR state.id = :stateId)
+                    AND (:cityId IS NULL OR city.id = :cityId)
+                    AND (
+                        :searchString IS NULL
+                        OR LOWER(l.title) LIKE LOWER(CONCAT('%', COALESCE(:searchString, ''), '%'))
+                        OR LOWER(COALESCE(l.description, '')) LIKE LOWER(CONCAT('%', COALESCE(:searchString, ''), '%'))
+                    )
+
             """)
     Page<FetchListingItemsProjection> findAllByFilters(
             @Param("userId") Long userId,
             @Param("categoryId") Long categoryId,
             @Param("minPrice") Double minPrice,
             @Param("maxPrice") Double maxPrice,
+            @Param("countryId") Long countryId,
+            @Param("stateId") Long stateId,
+            @Param("cityId") Long cityId,
+            @Param("searchString") String searchString,
             Pageable pageable
     );
 
@@ -109,6 +123,7 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
             @Param("userId") Long userId,
             Pageable pageable
     );
+
     @Query("""
                 SELECT 
                     l.id AS id,

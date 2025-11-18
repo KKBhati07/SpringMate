@@ -18,6 +18,18 @@ public class FetchListingsRequestDto {
     @JsonProperty("max_price")
     private Double maxPrice;
 
+    @JsonProperty("country_id")
+    private Long countryId;
+
+    @JsonProperty("state_id")
+    private Long stateId;
+
+    @JsonProperty("city_id")
+    private Long cityId;
+
+    @JsonProperty("search")
+    private String searchString;
+
     private int page = 0;
     private int size = 10;
 }

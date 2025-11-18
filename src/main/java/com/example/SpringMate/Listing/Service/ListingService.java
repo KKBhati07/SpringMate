@@ -53,12 +53,19 @@ public class ListingService {
                 Sort.by(Sort.Direction.DESC, "postedAt")
         );
 
+        String searchString = queryParams.getSearchString();
         Page<FetchListingItemsProjection> pagedRecords = listingRepository
                 .findAllByFilters(
                         authenticatedUser == null ? null : authenticatedUser.getId(),
                         queryParams.getCategoryId(),
                         queryParams.getMinPrice(),
                         queryParams.getMaxPrice(),
+                        queryParams.getCountryId(),
+                        queryParams.getStateId(),
+                        queryParams.getCityId(),
+                        (searchString == null
+                                || searchString.isEmpty()) ?
+                                "" : searchString,
                         pageable);
         return new PaginatedResponse<>(pagedRecords.getContent()
                 .stream()
