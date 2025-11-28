@@ -4,6 +4,7 @@ import com.example.SpringMate.Favorite.Entity.UserFavorite;
 import com.example.SpringMate.Favorite.Repository.UserFavoriteRepository;
 import com.example.SpringMate.Listing.Entity.Listing;
 import com.example.SpringMate.Listing.Service.ListingService;
+import com.example.SpringMate.Shared.Exception.BadRequestException;
 import com.example.SpringMate.User.Entity.User;
 import com.example.SpringMate.User.Service.CoreUserService;
 import lombok.RequiredArgsConstructor;
@@ -21,11 +22,14 @@ public class UserFavoriteService {
 
 
     public Map<String, Boolean> setUnsetFavorite(Long userId, Long listingId) {
-        System.out.println("Listing ID :: "+listingId);
         User user = coreUserService.getUserOrThrowById(userId);
         Listing listing = listingService.getByIdOrThrow(listingId);
         Optional<UserFavorite> existing = userFavoriteRepository
                 .findByUserAndListing(user, listing);
+
+        if(user.getId().equals(listing.getSeller().getId())){
+            throw  new BadRequestException("Cannot mark owned listings as favorite");
+        }
 
         if (existing.isPresent()) {
             UserFavorite favorite = existing.get();

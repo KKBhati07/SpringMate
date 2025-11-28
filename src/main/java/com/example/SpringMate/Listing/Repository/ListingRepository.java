@@ -30,6 +30,10 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
     void softDeleteById(@Param("id") Long id);
 
     @Modifying
+    @Query("UPDATE Listing l SET l.deleted = true WHERE l.id in :ids")
+    void softDeleteByIds(@Param("ids") List<Long> ids);
+
+    @Modifying
     @Query("UPDATE Listing l SET l.deleted = true WHERE l.seller.id = :userId")
     void softDeleteByUserId(@Param("userId") Long userId);
 
@@ -46,6 +50,7 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
                     l.price AS price,
                     l.postedAt AS postedAt,
                     c AS category,
+                    
                     (
                         SELECT li.url 
                         FROM ListingImage li 
@@ -68,6 +73,7 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
                     ON uf.listing = l AND (:userId IS NOT NULL AND uf.user.id = :userId)
                 WHERE 
                     l.deleted = false
+                    AND (:userId IS NULL OR l.seller.id != :userId)
                     AND (:categoryId IS NULL OR l.category.id = :categoryId)
                     AND (:minPrice IS NULL OR l.price >= :minPrice)
                     AND (:maxPrice IS NULL OR l.price <= :maxPrice)

@@ -38,7 +38,6 @@ public class ListingController {
             @RequestParam(defaultValue = "10") int size,
             @AuthenticationPrincipal User autheticatedUser
     ) {
-        //TODO :: Remove users self posts
         return ResponseEntity.ok(
                 new Response<>(listingService.getAllRecords(
                         new FetchListingsRequestDto(
@@ -102,13 +101,12 @@ public class ListingController {
     }
 
     @DeleteMapping(Urls.Listing.DELETE_LISTING)
-    public ResponseEntity<Response<Boolean>>
+    public ResponseEntity<Void>
     deleteListing(@PathVariable Long id,
                   @AuthenticationPrincipal User authenticatedUser
     ) {
         listingService.deleteRecord(id, authenticatedUser);
-        return ResponseEntity.ok(new Response<>(null,
-                "Item deleted successfully"));
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping(Urls.Listing.GET_DETAILS)

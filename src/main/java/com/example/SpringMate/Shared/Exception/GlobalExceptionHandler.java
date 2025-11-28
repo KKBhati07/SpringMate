@@ -12,6 +12,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 import java.util.List;
 import java.util.Map;
@@ -31,6 +32,13 @@ public class GlobalExceptionHandler {
                 .body(new Response<>(Map.of("message", "Validation failed", "errors", errors),"Error"));
 
     }
+
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<Response<?>> handleNoHandler(NoHandlerFoundException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new Response<>(null, "Do not have access to the resource"));
+    }
+
 
 
     @ExceptionHandler(UserNotFoundException.class)

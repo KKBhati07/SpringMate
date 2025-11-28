@@ -18,13 +18,15 @@ public class Urls {
         public static final String ADMIN_BASE = BASE_URL + "/admin";
 
         public static final class User {
-            public static final String FETCH_ALL = "/users/fetch_all";
+            public static final String GET_ALL = "/users/get_all";
             public static final String DELETE = "/users/delete_user/{uuid}";
             public static final String RESTORE = "/users/restore_user/{uuid}";
             public static final String UPDATE = "/users/update_user";
         }
 
         public static final class Listing {
+            public static final String GET_ALL = "/listings/get_all";
+            public static final String DELETE = "/listings/delete";
 
         }
     }

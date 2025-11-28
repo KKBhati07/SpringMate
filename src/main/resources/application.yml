@@ -4,6 +4,13 @@ spring:
     location-api-key: "api-key"
     name: springmate  # Sets the name of the Spring Boot application. Useful for identification in logs and admin tools.
 
+  web:
+    resources:
+      add-mappings: false # Disable static resources
+
+  mvc:
+    throw-exception-if-no-handler-found: true   # Throw NoHandlerFoundException for unknown routes
+
   datasource:
     url: ${DB_URL} # JDBC URL to connect to the PostgreSQL database
     username: ${DB_USERNAME}  # Database username

@@ -42,9 +42,10 @@ public class UserController {
     }
 
     @DeleteMapping(Urls.User.DELETE_USER)
-    public ResponseEntity<Response<Map<String, Boolean>>>
+    public ResponseEntity<Void>
     deleteUser(@AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(new Response<>(userService.deleteUser(null, user),"User deleted successfully"));
+        userService.deleteUser(null, user);
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping(value = Urls.User.UPDATE_USER, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

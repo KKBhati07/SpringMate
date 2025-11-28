@@ -85,9 +85,8 @@ public class UserService {
     }
 
     @Transactional
-    public Map<String, Boolean>
+    public void
     deleteUser(UUID uuid, User authenticatedUser) {
-        Map<String, Boolean> res = new HashMap<>();
         Long userId = null;
 
         if (uuid == null) {
@@ -103,21 +102,14 @@ public class UserService {
         userRepository.softDeleteByUuid(uuid != null ? uuid : authenticatedUser.getUuid());
         listingService.softDeleteByUserId(userId);
 
-
-        res.put("deleted", true);
-        return res;
-
     }
 
-    public Map<String, Boolean> restoreUser(UUID uuid) {
-        Map<String, Boolean> res = new HashMap<>();
+    public void restoreUser(UUID uuid) {
         User user = userRepository.findByUuid(uuid)
                 .orElseThrow(UserNotFoundException::new);
 
         user.setDeleted(false);
         userRepository.save(user);
-        res.put("restored", true);
-        return res;
     }
 
     public UpdateUserResponseDto
