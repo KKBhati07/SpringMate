@@ -17,6 +17,7 @@ public class FetchListingItemsResponseDto {
     private String title;
     private String description;
     private Double price;
+    private Boolean isDeleted;
     private LocalDateTime postedAt;
     private CategoryDto category;
     private String coverImageUrl;

@@ -20,7 +20,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -80,6 +79,7 @@ public class AdminController {
             @RequestParam(value = "state_id", required = false) Long stateId,
             @RequestParam(value = "city_id", required = false) Long cityId,
             @RequestParam(value = "search", required = false) String searchString,
+            @RequestParam(value = "deleted", required = false) Boolean deleted,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @AuthenticationPrincipal User autheticatedUser
@@ -91,7 +91,8 @@ public class AdminController {
                                 countryId,stateId,cityId,
                                 searchString,
                                 page, size),
-                        autheticatedUser
+                        autheticatedUser,
+                        deleted != null && deleted
                 ),
                         "Listings fetched successfully"));
     }

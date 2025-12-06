@@ -8,6 +8,7 @@ public interface FetchListingItemsProjection {
     String getTitle();
     String getDescription();
     Double getPrice();
+    Boolean getDeleted();
     LocalDateTime getPostedAt();
     CategoryProjection getCategory();
     String getCoverImageUrl();

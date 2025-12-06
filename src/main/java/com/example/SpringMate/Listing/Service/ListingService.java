@@ -42,7 +42,8 @@ public class ListingService {
 
     public PaginatedResponse<FetchListingItemsResponseDto> getAllRecords(
             FetchListingsRequestDto queryParams,
-            User authenticatedUser
+            User authenticatedUser,
+            Boolean deleted
     ) {
         Pageable pageable = PageRequest.of(
                 queryParams.getPage(),
@@ -63,6 +64,7 @@ public class ListingService {
                         (searchString == null
                                 || searchString.isEmpty()) ?
                                 "" : searchString,
+                        deleted,
                         pageable);
         return new PaginatedResponse<>(pagedRecords.getContent()
                 .stream()
@@ -228,6 +230,7 @@ public class ListingService {
                 .description(record.getDescription())
                 .price(record.getPrice())
                 .postedAt(record.getPostedAt())
+                .isDeleted(record.getDeleted())
                 .category(CategoryDto
                         .builder()
                         .id(record.getCategory().getId())

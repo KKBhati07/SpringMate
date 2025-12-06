@@ -49,8 +49,9 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
                     l.description AS description,
                     l.price AS price,
                     l.postedAt AS postedAt,
+                    COALESCE(l.deleted, false) AS deleted,
                     c AS category,
-                    
+            
                     (
                         SELECT li.url 
                         FROM ListingImage li 
@@ -72,7 +73,7 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
                 LEFT JOIN UserFavorite uf 
                     ON uf.listing = l AND (:userId IS NOT NULL AND uf.user.id = :userId)
                 WHERE 
-                    l.deleted = false
+                    l.deleted = :deleted
                     AND (:userId IS NULL OR l.seller.id != :userId)
                     AND (:categoryId IS NULL OR l.category.id = :categoryId)
                     AND (:minPrice IS NULL OR l.price >= :minPrice)
@@ -85,7 +86,7 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
                         OR LOWER(l.title) LIKE LOWER(CONCAT('%', COALESCE(:searchString, ''), '%'))
                         OR LOWER(COALESCE(l.description, '')) LIKE LOWER(CONCAT('%', COALESCE(:searchString, ''), '%'))
                     )
-
+            
             """)
     Page<FetchListingItemsProjection> findAllByFilters(
             @Param("userId") Long userId,
@@ -96,6 +97,7 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
             @Param("stateId") Long stateId,
             @Param("cityId") Long cityId,
             @Param("searchString") String searchString,
+            @Param("deleted") Boolean deleted,
             Pageable pageable
     );
 

@@ -42,10 +42,11 @@ public class ListingController {
                 new Response<>(listingService.getAllRecords(
                         new FetchListingsRequestDto(
                                 categoryId, minPrice, maxPrice,
-                                countryId,stateId,cityId,
+                                countryId, stateId, cityId,
                                 searchString,
-                        page, size),
-                        autheticatedUser
+                                page, size),
+                        autheticatedUser,
+                        false
                 ),
                         "Listings fetched successfully"));
     }
@@ -74,7 +75,7 @@ public class ListingController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        if(uuid == null){
+        if (uuid == null) {
             throw new BadRequestException("Invalid params!");
         }
         return ResponseEntity.ok(
