@@ -4,8 +4,8 @@ FROM maven:3.9-eclipse-temurin-17
 WORKDIR /app
 
 # pre-fetch dependencies
-COPY pom.xml .
-RUN mvn dependency:go-offline
+# COPY pom.xml .
+# RUN mvn dependency:go-offline
 
 # Start command
-CMD ["mvn", "spring-boot:run", "-e"]
+CMD ["mvn", "spring-boot:run", "-Dspring-boot.run.profiles=dev"]

@@ -77,6 +77,12 @@ public class GlobalExceptionHandler {
                 .body(new Response<>(null, ex.getMessage()));
     }
 
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<Response<?>> handleUnauthorizedRequest(BadRequestException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new Response<>(null, ex.getMessage()));
+    }
+
 
 //    @ExceptionHandler(InvalidListingException.class)
 //    public ResponseEntity<Response<?>> handleInvalidListing(InvalidListingException ex) {

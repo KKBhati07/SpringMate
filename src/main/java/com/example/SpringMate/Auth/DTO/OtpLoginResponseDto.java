@@ -9,7 +9,7 @@ import lombok.Data;
 @Builder
 @Data
 public class OtpLoginResponseDto {
-    private String sessionId;
+    private String authToken;
     private boolean authenticated;
     private UserDetailsDto userDetails;
 }

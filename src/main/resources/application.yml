@@ -4,6 +4,11 @@ spring:
     location-api-key: "api-key"
     name: springmate  # Sets the name of the Spring Boot application. Useful for identification in logs and admin tools.
 
+    jwt:
+      secret: ${JWT_SECRET} # JWT secret
+
+
+
   web:
     resources:
       add-mappings: false # Disable static resources
@@ -28,6 +33,9 @@ spring:
   devtools:
     restart:
       enabled: true  # Enables automatic restart with Spring DevTools
+      poll-interval: 1000
+      quiet-period: 400
+
 
   mail:                                   # Configuration specific to Spring's Mail support
     host: smtp.gmail.com                  # SMTP server host (Gmail's SMTP server)

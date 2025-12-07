@@ -7,8 +7,9 @@ import com.example.SpringMate.Auth.DTO.OtpRequestDto;
 import com.example.SpringMate.Auth.DTO.OtpLoginRequestDto;
 import com.example.SpringMate.Auth.Entity.Session;
 import com.example.SpringMate.Auth.Exception.TooManyRequestsException;
+import com.example.SpringMate.Config.JwtTokenProvider;
 import com.example.SpringMate.Shared.Exception.BadRequestException;
-import com.example.SpringMate.Shared.Exception.ForbiddenException;
+import com.example.SpringMate.Shared.Exception.UnauthorizedException;
 import com.example.SpringMate.User.Entity.User;
 import com.example.SpringMate.Auth.Entity.VerificationCode;
 import com.example.SpringMate.Auth.Helper.AuthHelper;
@@ -22,12 +23,11 @@ import com.example.SpringMate.User.Service.CoreUserService;
 import com.example.SpringMate.Util.ResponseMapper;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -46,11 +46,12 @@ public class AuthService {
     private final ResponseMapper responseMapper;
     private final OtpNotificationDispatcher otpNotificationDispatcher;
     private final SessionManagementHelper sessionManagementHelper;
+    private final JwtTokenProvider jwtTokenProvider;
     private final AuthHelper authHelper;
 
     @Transactional
     public Map<String, Boolean> logoutUser(String sessionId) {
-        Map<String, Boolean> responseMap = new HashMap<>();
+        if(sessionId == null) throw new BadRequestException("Invalid token");
         Optional<Session> sessionOpt = sessionRepository.findBySessionID(sessionId);
         if (sessionOpt.isPresent()) {
             Session session = sessionOpt.get();
@@ -58,14 +59,12 @@ public class AuthService {
             sessionLogRepository.updateLogoutTime(session.getSessionID(), LocalDateTime.now());
 
             SecurityContextHolder.clearContext();
-            responseMap.put("logged_out", true);
-            return responseMap;
+            return Map.of("logged_out",true);
         }
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid request");
+        throw new BadRequestException("Invalid request");
     }
 
     public AuthDetailsResponseDto authDetails(User authenticateUser) {
-        Map<String, Object> responseMap = new HashMap<>();
         return new AuthDetailsResponseDto(responseMapper
                 .mapUser(authenticateUser), true);
 
@@ -125,15 +124,16 @@ public class AuthService {
                         String sessionId = sessionManagementHelper.createSession(user, request);
                         if (sessionId != null) {
                             verificationCodeRepository.deleteByUserAndType(user, OTPType.LOGIN.name());
+                            String authToken = jwtTokenProvider.generateToken(sessionId);
                             return OtpLoginResponseDto.builder()
-                                    .authenticated(true).sessionId(sessionId)
+                                    .authenticated(true).authToken(authToken)
                                     .userDetails(responseMapper.mapUser(user))
                                     .build();
                         }
                     }
                 }
             }
-            throw new ForbiddenException("OTP verification failed");
+            throw new UnauthorizedException("OTP verification failed");
         }
         throw new BadRequestException("Ambiguous request type");
     }

@@ -54,6 +54,7 @@ public class User implements UserDetails {
     private String profileUrl;
 
     @Column(name = "is_deleted", nullable = false)
+    @Builder.Default
     private boolean deleted = false;
 
     @Column(name = "contact_no")
@@ -74,9 +75,11 @@ public class User implements UserDetails {
     private User updatedBy;
 
     @Column(name = "email_verified", nullable = false)
+    @Builder.Default
     private boolean emailVerified = false;
 
     @Column(name = "phone_verified", nullable = false)
+    @Builder.Default
     private boolean phoneVerified = false;
 
     @PrePersist

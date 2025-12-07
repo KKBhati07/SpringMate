@@ -1,11 +1,15 @@
 package com.example.SpringMate.Config;
 
 import com.example.SpringMate.Auth.Helper.SessionManagementHelper;
+import com.example.SpringMate.Shared.Constants;
 import com.example.SpringMate.Util.Response;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -14,19 +18,16 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.core.Authentication;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
+@RequiredArgsConstructor
 public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
     private final AuthenticationManager authenticationManager;
     private final SessionManagementHelper sessionManagementHelper;
-
-    public AuthenticationFilter(AuthenticationManager authenticationManager,
-                                SessionManagementHelper sessionManagementHelper) {
-        this.authenticationManager = authenticationManager;
-        this.sessionManagementHelper = sessionManagementHelper;
-    }
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest req, HttpServletResponse res) throws AuthenticationException {
@@ -61,11 +62,19 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException {
         String sessionId = sessionManagementHelper.getUserAndCreateSession(authResult.getName(), request);
         response.setContentType("application/json");
-        Map<String, Object> resMap = new HashMap<>();
-        resMap.put("sessionId", sessionId);
-        resMap.put("authenticated",true);
-        resMap.put("user_details",authResult.getPrincipal());
-        Response res=new Response(resMap,"Logged in successfully!");
+        String authToken = jwtTokenProvider.generateToken(sessionId);
+
+        // Jkarta Cookie does not support sameSite attribute, hence will blocked by browser in cross site
+        ResponseCookie cookie = ResponseCookie.from("auth_token", authToken)
+                .httpOnly(true)
+                .path("/")
+                .maxAge(Duration.ofDays(Constants.JWT_VALIDITY))
+                .sameSite("None")    // required for cross-site cookies
+                .secure(true)        // required for SameSite=None
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE,cookie.toString());
+        Response<Map<String,Boolean>> res=new Response<>(Map.of("authenticated",true),"Logged in successfully!");
         response.getWriter().write(new ObjectMapper().writeValueAsString(res));
     }
 
@@ -75,7 +84,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         response.setContentType("application/json");
         Map<String, Object> resMap = new HashMap<>();
         resMap.put("authenticated",false);
-        Response res = new Response(resMap, "Invalid credentials. Please try again.");
+        Response<Void> res = new Response<>(null, "Invalid credentials. Please try again.");
         response.getWriter().write(new ObjectMapper().writeValueAsString(res));
     }
 }
