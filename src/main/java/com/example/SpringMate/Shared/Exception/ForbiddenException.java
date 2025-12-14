@@ -1,8 +1,10 @@
 package com.example.SpringMate.Shared.Exception;
 
+import com.example.SpringMate.Shared.Constants;
+
 public class ForbiddenException extends RuntimeException {
     public ForbiddenException() {
-        super("Forbidden");
+        super(Constants.Messages.Error.FORBIDDEN);
     }
 
     public ForbiddenException(String message) {

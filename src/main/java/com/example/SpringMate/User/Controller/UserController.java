@@ -48,17 +48,29 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    @PutMapping(value = Urls.User.UPDATE_USER, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PutMapping(value = Urls.User.UPDATE_USER)
     public ResponseEntity<Response<UpdateUserResponseDto>> updateUserProfile(
-            @Valid @ModelAttribute UpdateUserRequestDto updatedUserDetails,
+            @Valid @RequestBody UpdateUserRequestDto updatedUserDetails,
             @AuthenticationPrincipal User authenticatedUser) {
-
         if (!authHelper.isSelfUUID(updatedUserDetails.getUuid(), authenticatedUser)) {
             throw new UnauthorizedUserUpdateException();
         }
 
         return ResponseEntity.ok(new Response<>(userService.updateUser(updatedUserDetails),
                 "User updated successfully"));
+    }
+
+    @PatchMapping(value = Urls.User.UPLOAD_IMAGE_FALLBACK, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Void> uploadProfileImageFallback(
+            @Valid @ModelAttribute FallbackUploadRequestDto dto,
+            @AuthenticationPrincipal User authenticatedUser) {
+
+        if (!authHelper.isSelfUUID(dto.getUuid(), authenticatedUser)) {
+            throw new UnauthorizedUserUpdateException();
+        }
+        userService.uploadProfileImage(dto);
+
+        return ResponseEntity.noContent().build();
     }
 
 }

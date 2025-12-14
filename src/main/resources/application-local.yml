@@ -1,0 +1,33 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+
+  datasource:
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+  devtools:
+    restart:
+      enabled: true # Enables automatic restart with Spring DevTools
+      poll-interval: 10000
+      quiet-period: 4000
+
+server:
+  tomcat:
+    threads:
+      max: 30        # Maximum number of worker threads that process HTTP requests concurrently
+      min-spare: 5   # Minimum number of idle threads kept ready to avoid request latency spikes
+
+    max-connections: 100  # Maximum number of simultaneous TCP socket connections (active + keep-alive) i.e how many clients can connec
+    accept-count: 20      # Number of requests that can wait in Tomcat’s queue when all threads are busy
+    backlog: 20           # OS-level TCP connection queue size before Tomcat accepts the connection
+
+logging:
+  level:
+    org.springframework.boot.devtools: DEBUG

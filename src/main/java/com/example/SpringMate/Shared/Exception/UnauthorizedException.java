@@ -1,8 +1,10 @@
 package com.example.SpringMate.Shared.Exception;
 
+import com.example.SpringMate.Shared.Constants;
+
 public class UnauthorizedException extends RuntimeException {
     public UnauthorizedException() {
-        super("Unauthorized");
+        super(Constants.Messages.Error.UNAUTHORIZED);
     }
 
     public UnauthorizedException(String message) {

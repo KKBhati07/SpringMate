@@ -59,11 +59,9 @@ public class AdminController {
         return ResponseEntity.noContent().build();
     }
 
-    @PutMapping(
-            value = Urls.Admin.User.UPDATE,
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PutMapping(value = Urls.Admin.User.UPDATE)
     public ResponseEntity<Response<UpdateUserResponseDto>>
-    updateUser(@ModelAttribute UpdateUserRequestDto updatedUser) {
+    updateUser(@RequestBody UpdateUserRequestDto updatedUser) {
         return ResponseEntity.ok(new Response<>(userService.updateUser(updatedUser),
                 "User updated successfully"));
     }

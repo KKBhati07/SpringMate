@@ -8,7 +8,8 @@ public class Constants {
     public static class AWS {
         public static String REGION = "ap-south-1";
         public static String BUCKET_NAME = "marketmatestore";
-        public static int SIGNED_URI_EXPIRATION = 10;
+        public static int GET_SIGNED_URI_EXPIRATION = 10;
+        public static int PUT_SIGNED_URI_EXPIRATION = 15;
     }
 
     public static class Origin {
@@ -31,12 +32,24 @@ public class Constants {
         public static final String LOGIN = "OTP Verification";
     }
 
+    public static class Images {
+        public static class Listing {
+            public static final int MAX_LIMIT = 6;
+
+        }
+    }
+
     public static final String DEFAULT_CATEGORY = "others";
 
     public static final class Messages {
         public static final class Error {
 
             public static final String SOMETHING_WENT_WRONG = "Something went wrong!";
+            public static final String BAD_REQUEST = "Bad Request!";
+            public static final String FORBIDDEN = "Forbidden";
+            public static final String UNAUTHORIZED = "Unauthorized";
+            public static final String NOT_FOUND = "Requested resource not found";
+
         }
     }
 }

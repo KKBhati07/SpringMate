@@ -30,23 +30,16 @@ spring:
       ddl-auto: update  # Automatically updates the database schema. OK for dev.
     # database-platform: org.hibernate.dialect.PostgreSQLDialect  # Uncomment and fix if needed
 
-  devtools:
-    restart:
-      enabled: true  # Enables automatic restart with Spring DevTools
-      poll-interval: 1000
-      quiet-period: 400
-
-
-  mail:                                   # Configuration specific to Spring's Mail support
+  mail: # Configuration specific to Spring's Mail support
     host: smtp.gmail.com                  # SMTP server host (Gmail's SMTP server)
     port: 587                             # Port for TLS/STARTTLS (Gmail requires 587)
     username: ${EMAIL_USERNAME}           # Email username (injected via environment variable or .env)
     password: ${EMAIL_PASSWORD}           # Email password or App Password (also from env or .env)
-    properties:                           # Additional mail-specific properties
-      mail:                               # Nesting for standard JavaMail properties
-        smtp:                             # SMTP-specific configuration
+    properties: # Additional mail-specific properties
+      mail: # Nesting for standard JavaMail properties
+        smtp: # SMTP-specific configuration
           auth: true                      # Enables SMTP authentication
-          starttls:                       # STARTTLS encryption config
+          starttls: # STARTTLS encryption config
             enable: true                  # Enables STARTTLS (encryption over port 587)
         debug: true                       # Enables detailed logging of the email sending process
 

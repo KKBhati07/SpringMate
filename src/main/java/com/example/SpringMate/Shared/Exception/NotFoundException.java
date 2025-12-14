@@ -1,10 +1,13 @@
 package com.example.SpringMate.Shared.Exception;
 
-public class NotFoundException extends RuntimeException{
-    public NotFoundException(){
-        super("Requested Resource not found");
+import com.example.SpringMate.Shared.Constants;
+
+public class NotFoundException extends RuntimeException {
+    public NotFoundException() {
+        super(Constants.Messages.Error.NOT_FOUND);
     }
-    public NotFoundException(String msg){
+
+    public NotFoundException(String msg) {
         super(msg);
     }
 

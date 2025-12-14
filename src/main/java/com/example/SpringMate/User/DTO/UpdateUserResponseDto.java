@@ -11,7 +11,4 @@ public class UpdateUserResponseDto {
     private boolean self;
     private UserDetailsDto userDetails;
 
-    public UpdateUserResponseDto(boolean updated){
-        this.updated = updated;
-    }
 }

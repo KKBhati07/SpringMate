@@ -2,7 +2,6 @@ package com.example.SpringMate.Listing.DTO;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -23,9 +22,4 @@ public class CreateListingRequestDto {
     private Long countryId;
     private List<ImageDto> images;
 
-    @Data
-    public static class ImageDto{
-        private MultipartFile image;
-        private boolean cover;
-    }
 }

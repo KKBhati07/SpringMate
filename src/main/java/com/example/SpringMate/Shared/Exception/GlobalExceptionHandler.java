@@ -21,7 +21,7 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Response<?>> handleValidationErrors(MethodArgumentNotValidException e){
+    public ResponseEntity<Response<?>> handleValidationErrors(MethodArgumentNotValidException e) {
         List<String> errors = e.getBindingResult().getFieldErrors()
                 .stream()
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
@@ -29,7 +29,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(new Response<>(Map.of("message", "Validation failed", "errors", errors),"Error"));
+                .body(new Response<>(Map.of("message", "Validation failed", "errors", errors), "Error"));
 
     }
 
@@ -38,7 +38,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(new Response<>(null, "Do not have access to the resource"));
     }
-
 
 
     @ExceptionHandler(UserNotFoundException.class)
@@ -78,7 +77,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(UnauthorizedException.class)
-    public ResponseEntity<Response<?>> handleUnauthorizedRequest(BadRequestException ex) {
+    public ResponseEntity<Response<?>> handleUnauthorizedRequest(UnauthorizedException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(new Response<>(null, ex.getMessage()));
     }
@@ -95,6 +94,13 @@ public class GlobalExceptionHandler {
         ex.printStackTrace();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new Response<>(null, Constants.Messages.Error.SOMETHING_WENT_WRONG));
+    }
+
+    @ExceptionHandler(InternalServerException.class)
+    public ResponseEntity<Response<?>> handleInternalServerException(Exception ex) {
+        ex.printStackTrace();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new Response<>(null, ex.getMessage()));
     }
 
     @ExceptionHandler(MissingRequestHeaderException.class)

@@ -3,8 +3,8 @@ package com.example.SpringMate.Util;
 import com.example.SpringMate.Listing.DTO.*;
 import com.example.SpringMate.Listing.Entity.Listing;
 import com.example.SpringMate.Shared.Constants;
+import com.example.SpringMate.Storage.Service.StorageService;
 import com.example.SpringMate.User.Entity.User;
-import com.example.SpringMate.Shared.Service.AwsS3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -14,7 +14,7 @@ import java.util.ArrayList;
 @RequiredArgsConstructor
 public class ResponseMapper {
 
-    private final AwsS3Service awsS3Service;
+    private final StorageService storageService;
 
     public UserDetailsDto mapUser(User user) {
         if (user == null) return null;
@@ -24,10 +24,10 @@ public class ResponseMapper {
                 .uuid(user.getUuid())
                 .isAdmin(user.isAdmin())
                 .contactNo(user.getContactNo())
-                .profileUrl(awsS3Service.getPreSignedUrl(
+                .profileUrl(storageService.getPreSignedUrl(
                         Constants.AWS.BUCKET_NAME,
                         user.getProfileUrl(),
-                        Constants.AWS.SIGNED_URI_EXPIRATION))
+                        Constants.AWS.GET_SIGNED_URI_EXPIRATION))
                 .build();
     }
 

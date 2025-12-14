@@ -1,7 +1,9 @@
 package com.example.SpringMate.User.Service;
 
 import com.example.SpringMate.Listing.Service.ListingService;
-import com.example.SpringMate.Shared.Service.AwsS3Service;
+import com.example.SpringMate.Shared.Enum.AwsS3Directory;
+import com.example.SpringMate.Shared.Exception.InternalServerException;
+import com.example.SpringMate.Storage.Service.StorageService;
 import com.example.SpringMate.User.DTO.*;
 import com.example.SpringMate.User.Entity.Role;
 import com.example.SpringMate.User.Entity.User;
@@ -11,7 +13,6 @@ import com.example.SpringMate.User.Exception.UserAlreadyExistsException;
 import com.example.SpringMate.User.Exception.UserNotFoundException;
 import com.example.SpringMate.User.Repository.RoleRepository;
 import com.example.SpringMate.User.Repository.UserRepository;
-import com.example.SpringMate.Shared.Enum.AwsS3Directory;
 import com.example.SpringMate.Shared.Constants;
 import com.example.SpringMate.Util.PaginatedResponse;
 import com.example.SpringMate.Util.ResponseMapper;
@@ -23,6 +24,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -32,11 +34,11 @@ import java.util.stream.Collectors;
 public class UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final AwsS3Service awsS3Service;
     private final AuthHelper authHelper;
     private final ResponseMapper responseMapper;
     private final ListingService listingService;
     private final CoreUserService coreUserService;
+    private final StorageService storageService;
 
     public CreateUserResponseDto createUser(CreateUserRequestDto userDetails) {
         Optional<User> user = userRepository.findByEmail(userDetails.getEmail());
@@ -116,19 +118,16 @@ public class UserService {
     updateUser(UpdateUserRequestDto userDetails) {
 
         User user = coreUserService.getUserOrThrowByUUID(userDetails.getUuid());
-        if (userDetails.getProfileImage() != null) {
-            String oldProfilePicUrl = user.getProfileUrl();
-            String imageUrl = awsS3Service.uploadImage(Constants.AWS.BUCKET_NAME,
-                    AwsS3Directory.PROFILE, userDetails.getProfileImage());
-            if (imageUrl == null) throw new RuntimeException("Upload Image failed");
-            user.setProfileUrl(imageUrl);
-            if (oldProfilePicUrl != null) {
-                awsS3Service.deleteImage(Constants.AWS.BUCKET_NAME, oldProfilePicUrl);
-            }
-        }
 
         if (userDetails.getName() != null) {
             user.setName(userDetails.getName());
+        }
+        if (userDetails.getProfileUrl() != null) {
+            String oldProfilePicUrl = user.getProfileUrl();
+            if (oldProfilePicUrl != null) {
+                storageService.deleteImage(Constants.AWS.BUCKET_NAME, oldProfilePicUrl);
+            }
+            user.setProfileUrl(userDetails.getProfileUrl());
         }
         if (userDetails.getEmail() != null) {
             Optional<User> existing = userRepository.findByEmail(userDetails.getEmail());
@@ -146,6 +145,34 @@ public class UserService {
                         responseMapper.mapUser(updatedUser));
     }
 
+    public void uploadProfileImage(FallbackUploadRequestDto dto) {
+
+        User user = coreUserService.getUserOrThrowByUUID(dto.getUuid());
+
+        MultipartFile file = dto.getFile();
+        if (file != null && !file.isEmpty()) {
+
+            String oldProfilePicUrl = user.getProfileUrl();
+
+            String imageKey = storageService.uploadImage(
+                    Constants.AWS.BUCKET_NAME,
+                    AwsS3Directory.PROFILE,
+                    file
+            );
+
+            if (imageKey == null) {
+                throw new InternalServerException("Upload image failed");
+            }
+
+            user.setProfileUrl(imageKey);
+
+            if (oldProfilePicUrl != null) {
+                storageService.deleteImage(Constants.AWS.BUCKET_NAME, oldProfilePicUrl);
+            }
+
+            userRepository.save(user);
+        }
+    }
 
 
     private List<UserDetailsDto> injectSignedProfileUrl(List<User> users) {

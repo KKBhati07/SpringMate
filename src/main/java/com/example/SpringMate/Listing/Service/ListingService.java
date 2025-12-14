@@ -10,21 +10,21 @@ import com.example.SpringMate.Listing.Repository.ListingRepository;
 import com.example.SpringMate.Location.Service.LocationService;
 import com.example.SpringMate.Shared.Constants;
 import com.example.SpringMate.Shared.Enum.AwsS3Directory;
-import com.example.SpringMate.Shared.Exception.BadRequestException;
-import com.example.SpringMate.Shared.Exception.ForbiddenException;
-import com.example.SpringMate.Shared.Exception.NotFoundException;
-import com.example.SpringMate.Shared.Service.AwsS3Service;
+import com.example.SpringMate.Shared.Exception.*;
+import com.example.SpringMate.Storage.Service.StorageService;
 import com.example.SpringMate.User.Entity.User;
 import com.example.SpringMate.User.Service.CoreUserService;
 import com.example.SpringMate.Util.PaginatedResponse;
 import com.example.SpringMate.Util.ResponseMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
 
@@ -37,7 +37,7 @@ public class ListingService {
     private final CategoryRepository categoryRepository;
     private final LocationService locationService;
     private final CoreUserService coreUserService;
-    private final AwsS3Service awsS3Service;
+    private final StorageService storageService;
     private final ResponseMapper responseMapper;
 
     public PaginatedResponse<FetchListingItemsResponseDto> getAllRecords(
@@ -106,22 +106,19 @@ public class ListingService {
     }
 
     @Transactional
-    public void createRecord(
+    public CreateListingResponseDto createRecord(
             CreateListingRequestDto requestDto,
             User authenticatedUser
     ) {
-        Category category;
-        if (requestDto.getCategoryId() != null) {
-            Optional<Category> categoryOptional = categoryRepository.findById(requestDto.getCategoryId());
-            if (categoryOptional.isEmpty()) {
-                throw new BadRequestException("Please select a valid category");
-            }
-            category = categoryOptional.get();
-        } else {
-            category = categoryRepository.findByName(Constants.DEFAULT_CATEGORY)
-                    .orElseThrow(() -> new RuntimeException("Default category not found"));
-
+        if (requestDto.getImages() != null && requestDto.getImages().size() > Constants.Images.Listing.MAX_LIMIT) {
+            throw new BadRequestException("Max 6 images allowed");
         }
+
+        Category category = (requestDto.getCategoryId() != null)
+                ? categoryRepository.findById(requestDto.getCategoryId())
+                .orElseThrow(() -> new BadRequestException("Please select a valid category"))
+                : categoryRepository.findByName(Constants.DEFAULT_CATEGORY)
+                .orElseThrow(() -> new InternalServerException("Default category not found"));
 
         Listing item = Listing.builder()
                 .price(requestDto.getPrice())
@@ -137,19 +134,133 @@ public class ListingService {
                 .build();
 
         Listing savedItem = listingRepository.save(item);
+
         List<ListingImage> listingImages = new ArrayList<>();
-        if (requestDto.getImages() != null) {
-            for (CreateListingRequestDto.ImageDto imageDto : requestDto.getImages()) {
-                String imgUrl = awsS3Service.uploadImage(Constants.AWS.BUCKET_NAME,
-                        AwsS3Directory.LISTINGS, imageDto.getImage());
-                listingImages.add(ListingImage.builder().url(imgUrl)
-                        .listing(savedItem)
+        List<String> keysToCleanup = new ArrayList<>();
+
+        if (requestDto.getImages() != null && !requestDto.getImages().isEmpty()) {
+            try {
+                for (ImageDto imageDto : requestDto.getImages()) {
+                    String objectKey = getString(imageDto);
+
+                    keysToCleanup.add(objectKey);
+
+                    listingImages.add(ListingImage.builder()
+                            .url(objectKey)
+                            .listing(savedItem)
+                            .isCover(imageDto.isCover())
+                            .build());
+                }
+
+                long coverCount = listingImages.stream().filter(ListingImage::isCover).count();
+                if (coverCount == 0) {
+                    listingImages.get(0).setCover(true);
+                } else if (coverCount > 1) {
+                    boolean firstSeen = false;
+                    for (ListingImage li : listingImages) {
+                        if (li.isCover()) {
+                            if (!firstSeen) firstSeen = true;
+                            else li.setCover(false);
+                        }
+                    }
+                }
+
+                listingImageRepository.saveAll(listingImages);
+
+            } catch (RuntimeException ex) {
+                for (String key : keysToCleanup) {
+                    try {
+                        storageService.deleteImage(Constants.AWS.BUCKET_NAME, key);
+                    } catch (Exception cleanupEx) {
+                        cleanupEx.printStackTrace();
+                    }
+                }
+                throw new InternalServerException();
+            }
+        }
+
+        return new CreateListingResponseDto(savedItem.getId());
+    }
+
+    @NotNull
+    private static String getString(ImageDto imageDto) {
+        String objectKey = imageDto.getObjectKey();
+
+        if (objectKey == null || objectKey.isBlank()) {
+            throw new BadRequestException("Each image must contain an objectKey");
+        }
+
+        if (!objectKey.startsWith(AwsS3Directory.LISTINGS.getName() + "/")) {
+            throw new BadRequestException("Invalid objectKey for listing image: " + objectKey);
+        }
+        return objectKey;
+    }
+
+    @Transactional
+    public void uploadListingImages(FallbackImageUploadDto dto, User authenticatedUser) {
+        if (dto.getImages() == null || dto.getImages().isEmpty()) {
+            throw new BadRequestException("Invalid request body");
+        }
+
+        Listing listing = listingRepository.findByIdAndDeletedFalse(dto.getListingId())
+                .orElseThrow(() -> new BadRequestException("Listing not found"));
+
+        if (!listing.getSeller().getUuid().equals(authenticatedUser.getUuid())) {
+            throw new UnauthorizedException();
+        }
+
+        List<ListingImage> listingImages = new ArrayList<>();
+        List<String> uploadedKeys = new ArrayList<>();
+
+        try {
+            for (ImageDto imageDto : dto.getImages()) {
+                MultipartFile file = imageDto.getImage();
+                if (file == null || file.isEmpty()) {
+                    throw new BadRequestException("Empty image provided");
+                }
+
+                String imgKey = storageService.uploadImage(Constants.AWS.BUCKET_NAME,
+                        AwsS3Directory.LISTINGS, file);
+                if (imgKey == null) {
+                    throw new InternalServerException("Upload failed for file: " + file.getOriginalFilename());
+                }
+
+                uploadedKeys.add(imgKey);
+
+                listingImages.add(ListingImage.builder()
+                        .url(imgKey)
+//                        .listing(listingRepository.getReferenceById(listing.getId())) // can use if fetching the item is not needed!
+                        .listing(listing)
                         .isCover(imageDto.isCover())
                         .build());
             }
+
+            long coverCount = listingImages.stream().filter(ListingImage::isCover).count();
+            if (coverCount > 1) {
+                boolean firstMarked = false;
+                for (ListingImage li : listingImages) {
+                    if (li.isCover()) {
+                        if (!firstMarked) firstMarked = true;
+                        else li.setCover(false);
+                    }
+                }
+            }
+
+            listingImageRepository.saveAll(listingImages);
+
+        } catch (RuntimeException ex) {
+            ex.printStackTrace();
+            for (String key : uploadedKeys) {
+                try {
+                    storageService.deleteImage(Constants.AWS.BUCKET_NAME, key);
+                } catch (Exception deleteEx) {
+                    deleteEx.printStackTrace();
+                }
+            }
+            throw new InternalServerException("Images upload failed!");
         }
-        listingImageRepository.saveAll(listingImages);
     }
+
 
     @Transactional
     public void deleteRecord(
@@ -236,10 +347,10 @@ public class ListingService {
                         .id(record.getCategory().getId())
                         .name(record.getCategory().getName())
                         .build())
-                .coverImageUrl(awsS3Service.getPreSignedUrl(
+                .coverImageUrl(storageService.getPreSignedUrl(
                         Constants.AWS.BUCKET_NAME,
                         record.getCoverImageUrl(),
-                        Constants.AWS.SIGNED_URI_EXPIRATION))
+                        Constants.AWS.GET_SIGNED_URI_EXPIRATION))
                 .isFavorite(record.getIsFavorite())
                 .location(locationDTO)
                 .build();

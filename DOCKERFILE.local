@@ -8,4 +8,4 @@ WORKDIR /app
 # RUN mvn dependency:go-offline
 
 # Start command
-CMD ["mvn", "spring-boot:run", "-Dspring-boot.run.profiles=dev"]
+CMD ["mvn", "spring-boot:run", "-Plocal"]

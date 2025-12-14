@@ -1,7 +1,8 @@
 package com.example.SpringMate.Shared;
 
 public class Urls {
-    private Urls(){}
+    private Urls() {
+    }
 
     public static final String BASE_URL = "/api/v1";
 
@@ -35,6 +36,7 @@ public class Urls {
         public static final String USER_BASE = BASE_URL + "/user";
         public static final String CREATE_USER = "/create_user";
         public static final String UPDATE_USER = "/update_user";
+        public static final String UPLOAD_IMAGE_FALLBACK = "/upload_image_fallback";
         public static final String DELETE_USER = "/delete_user";
         public static final String GET_DETAILS = "/{uuid}/get_details";
 
@@ -48,6 +50,7 @@ public class Urls {
         public static final String CREATE_LISTING = "/create";
         public static final String UPDATE_LISTING = "/update";
         public static final String DELETE_LISTING = "/delete";
+        public static final String IMAGE_UPLOAD_FALLBACK = "/image_upload_fallback";
         public static final String GET_DETAILS = "/{uuid}/get_details";
 
     }
@@ -56,6 +59,12 @@ public class Urls {
     public static final class Category {
         public static final String CATEGORY_BASE = BASE_URL + "/category";
         public static final String GET_ALL = "/get_all";
+    }
+
+    public static final class Storage {
+        public static final String STORAGE_BASE = BASE_URL + "/storage";
+        public static final String PRESIGN_URL = "/presign_url";
+        public static final String OBJECT_EXISTS = "/object_exists";
     }
 
     public static final class Location {

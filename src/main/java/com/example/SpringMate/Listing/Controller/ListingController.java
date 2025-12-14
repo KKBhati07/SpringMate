@@ -88,18 +88,31 @@ public class ListingController {
                         "Listings fetched successfully"));
     }
 
-    @PostMapping(value = Urls.Listing.CREATE_LISTING,
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Response<Boolean>>
+    @PostMapping(value = Urls.Listing.CREATE_LISTING)
+    public ResponseEntity<Response<CreateListingResponseDto>>
     createListing(@Valid
-                  @ModelAttribute CreateListingRequestDto requestDto,
+                  @RequestBody CreateListingRequestDto requestDto,
                   @AuthenticationPrincipal User authenticatedUser
     ) {
-        listingService.createRecord(requestDto, authenticatedUser);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new Response<>(null,
+                .body(new Response<>(listingService.createRecord(requestDto, authenticatedUser),
                         "Listing created successfully"));
     }
+
+
+    @PatchMapping(
+            value = Urls.Listing.IMAGE_UPLOAD_FALLBACK,
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<Void> fallbackImageUpload(
+            @Valid @ModelAttribute FallbackImageUploadDto requestDto,
+            @AuthenticationPrincipal User authenticatedUser
+    ) {
+        listingService.uploadListingImages(requestDto, authenticatedUser);
+
+        return ResponseEntity.noContent().build();
+    }
+
 
     @DeleteMapping(Urls.Listing.DELETE_LISTING)
     public ResponseEntity<Void>

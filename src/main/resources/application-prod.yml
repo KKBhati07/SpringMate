@@ -1,0 +1,23 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    hikari:
+      maximum-pool-size: 20
+
+  jpa:
+    hibernate:
+      ddl-auto: validate     # NEVER update in prod
+
+server:
+  tomcat:
+    threads:
+      max: 200
+      min-spare: 20
+
+    max-connections: 500
+    accept-count: 100
+    backlog: 100
+

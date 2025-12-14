@@ -3,7 +3,7 @@ services:
   frontend:
     build:
       context: ./MM                        # Path to frontend source code
-      dockerfile: DOCKERFILE.dev          # Dockerfile to use for frontend
+      dockerfile: DOCKERFILE.local          # Dockerfile to use for frontend
     container_name: mm-frontend           # Name of the frontend container
     ports:
       - "4200:4200"                       # Map host port 4200 to container port 4200
@@ -17,7 +17,7 @@ services:
   backend:
     build:
       context: ./SpringMate/SpringMate    # Path to backend (Spring Boot) source code
-      dockerfile: DOCKERFILE.dev          # Dockerfile to use for backend
+      dockerfile: DOCKERFILE.local          # Dockerfile to use for backend
     container_name: local-backend         # Name of the backend container
     ports:
       - "8080:8080"                       # Map host port 8080 to container port 8080
@@ -26,8 +26,11 @@ services:
       - ${HOME}/.m2:/root/.m2         # Mount local Maven repo to cache dependencies
     env_file:
       - ./SpringMate/SpringMate/src/main/java/com/example/SpringMate/env/.env
+    environment:
+      SPRING_PROFILES_ACTIVE: local
     depends_on:
       - postgres                          # Wait for postgres service before starting
+    pids_limit: 512
 
   postgres:
     image: postgres:15                    # Use PostgreSQL version 15 image
@@ -41,6 +44,7 @@ services:
       - pgdata:/var/lib/postgresql/data  # Persist PostgreSQL data
     ports:
       - "5432:5432"                       # Map host port 5432 to container port 5432
+    pids_limit: 512
 
 volumes:
   pgdata:                                 # Named volume for PostgreSQL data
