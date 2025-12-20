@@ -50,8 +50,8 @@ public class AuthService {
     private final AuthHelper authHelper;
 
     @Transactional
-    public Map<String, Boolean> logoutUser(String sessionId) {
-        if(sessionId == null) throw new BadRequestException("Invalid token");
+    public void logoutUser(String sessionId) {
+        if (sessionId == null) throw new BadRequestException("Invalid token");
         Optional<Session> sessionOpt = sessionRepository.findBySessionID(sessionId);
         if (sessionOpt.isPresent()) {
             Session session = sessionOpt.get();
@@ -59,9 +59,7 @@ public class AuthService {
             sessionLogRepository.updateLogoutTime(session.getSessionID(), LocalDateTime.now());
 
             SecurityContextHolder.clearContext();
-            return Map.of("logged_out",true);
         }
-        throw new BadRequestException("Invalid request");
     }
 
     public AuthDetailsResponseDto authDetails(User authenticateUser) {

@@ -1,15 +1,13 @@
 package com.example.SpringMate.Config;
 
+import com.example.SpringMate.Auth.Helper.AuthHelper;
 import com.example.SpringMate.Auth.Helper.SessionManagementHelper;
-import com.example.SpringMate.Shared.Constants;
 import com.example.SpringMate.Util.Response;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,7 +16,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.core.Authentication;
 
 import java.io.IOException;
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,6 +25,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     private final AuthenticationManager authenticationManager;
     private final SessionManagementHelper sessionManagementHelper;
     private final JwtTokenProvider jwtTokenProvider;
+    private final AuthHelper authHelper;
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest req, HttpServletResponse res) throws AuthenticationException {
@@ -63,18 +61,9 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         String sessionId = sessionManagementHelper.getUserAndCreateSession(authResult.getName(), request);
         response.setContentType("application/json");
         String authToken = jwtTokenProvider.generateToken(sessionId);
+        authHelper.injectAuthCookie(response, authToken);
 
-        // Jkarta Cookie does not support sameSite attribute, hence will blocked by browser in cross site
-        ResponseCookie cookie = ResponseCookie.from("auth_token", authToken)
-                .httpOnly(true)
-                .path("/")
-                .maxAge(Duration.ofDays(Constants.JWT_VALIDITY))
-                .sameSite("None")    // required for cross-site cookies
-                .secure(true)        // required for SameSite=None
-                .build();
-
-        response.addHeader(HttpHeaders.SET_COOKIE,cookie.toString());
-        Response<Map<String,Boolean>> res=new Response<>(Map.of("authenticated",true),"Logged in successfully!");
+        Response<Map<String, Boolean>> res = new Response<>(Map.of("authenticated", true), "Logged in successfully!");
         response.getWriter().write(new ObjectMapper().writeValueAsString(res));
     }
 
@@ -83,7 +72,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json");
         Map<String, Object> resMap = new HashMap<>();
-        resMap.put("authenticated",false);
+        resMap.put("authenticated", false);
         Response<Void> res = new Response<>(null, "Invalid credentials. Please try again.");
         response.getWriter().write(new ObjectMapper().writeValueAsString(res));
     }

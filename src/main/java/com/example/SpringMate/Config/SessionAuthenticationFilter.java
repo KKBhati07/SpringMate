@@ -1,7 +1,10 @@
 package com.example.SpringMate.Config;
+
 import com.example.SpringMate.Auth.Entity.Session;
+import com.example.SpringMate.Auth.Helper.AuthHelper;
 import com.example.SpringMate.Auth.Helper.SessionHelper;
 import com.example.SpringMate.Auth.Repository.SessionRepository;
+import com.example.SpringMate.Shared.Urls;
 import com.example.SpringMate.Util.Response;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.JwtException;
@@ -16,11 +19,13 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.WebUtils;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Optional;
 
 @Component
@@ -30,6 +35,8 @@ public class SessionAuthenticationFilter extends OncePerRequestFilter {
     private final SessionRepository sessionRepository;
     private final SessionHelper sessionHelper;
     private final JwtTokenProvider jwtTokenProvider;
+    private final AuthHelper authHelper;
+    private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     @Override
     protected void doFilterInternal(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response,
@@ -40,11 +47,13 @@ public class SessionAuthenticationFilter extends OncePerRequestFilter {
 
             try {
                 if (!jwtTokenProvider.validateToken(authToken)) {
+                    authHelper.clearAuthCookie(response);
                     sendUnauthorized(response, "Invalid or expired token!");
                     return;
                 }
 
             } catch (JwtException e) {
+                authHelper.clearAuthCookie(response);
                 sendUnauthorized(response, "Invalid token!");
                 return;
             }
@@ -55,6 +64,7 @@ public class SessionAuthenticationFilter extends OncePerRequestFilter {
             if (sessionOpt.isPresent()) {
                 Session session = sessionOpt.get();
                 if (session.getExpiresAt().isBefore(LocalDateTime.now())) {
+                    authHelper.clearAuthCookie(response);
                     sendUnauthorized(response, "Session expired. Please log in again.");
                     return;
                 }
@@ -66,12 +76,22 @@ public class SessionAuthenticationFilter extends OncePerRequestFilter {
                 );
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } else {
+                authHelper.clearAuthCookie(response);
                 sendUnauthorized(response, "Session expired. Please log in again.");
                 return;
             }
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return Arrays.stream(Urls.FILTER_EXCLUDED_ENDPOINTS)
+                .anyMatch(pattern ->
+                        pathMatcher.match(pattern, path)
+                );
     }
 
     private String extractToken(HttpServletRequest request) {

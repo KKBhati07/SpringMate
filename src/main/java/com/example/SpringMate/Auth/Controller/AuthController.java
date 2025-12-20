@@ -4,8 +4,8 @@ import com.example.SpringMate.Auth.DTO.AuthDetailsResponseDto;
 import com.example.SpringMate.Auth.DTO.OtpLoginResponseDto;
 import com.example.SpringMate.Auth.DTO.OtpRequestDto;
 import com.example.SpringMate.Auth.DTO.OtpLoginRequestDto;
+import com.example.SpringMate.Auth.Helper.AuthHelper;
 import com.example.SpringMate.Config.JwtTokenProvider;
-import com.example.SpringMate.Shared.Exception.BadRequestException;
 import com.example.SpringMate.User.Entity.User;
 import com.example.SpringMate.Util.Response;
 import com.example.SpringMate.Auth.Service.AuthService;
@@ -15,13 +15,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Duration;
 import java.util.Map;
 
 @RestController
@@ -31,6 +28,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final JwtTokenProvider jwtTokenProvider;
+    private final AuthHelper authHelper;
 
     @PostMapping(Urls.Auth.LOGOUT)
     public ResponseEntity<Response<Map<String, Boolean>>>
@@ -46,25 +44,14 @@ public class AuthController {
             token = authHeader.split(" ")[1];
         }
 
-        if (token == null || token.isBlank()) {
-            throw new BadRequestException("Missing authentication token");
+        if (token != null && !token.isBlank() && jwtTokenProvider.validateToken(token)) {
+            String sessionId = jwtTokenProvider.getSessionIdFromToken(token);
+            authService.logoutUser(sessionId);
         }
 
-        if (!jwtTokenProvider.validateToken(token)) {
-            throw new BadRequestException("Invalid Token");
-        }
-
-        Map<String, Boolean> res = authService.logoutUser(jwtTokenProvider.getSessionIdFromToken(token));
-        ResponseCookie deleteCookie = ResponseCookie.from("auth_token", "")
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .maxAge(Duration.ZERO)
-                .sameSite("None")
-                .build();
-        response.addHeader(HttpHeaders.SET_COOKIE, deleteCookie.toString());
+        authHelper.clearAuthCookie(response);
         return ResponseEntity.ok(
-                new Response<>(res,
+                new Response<>(Map.of("logged_out", true),
                         "Logged out successfully"));
     }
 

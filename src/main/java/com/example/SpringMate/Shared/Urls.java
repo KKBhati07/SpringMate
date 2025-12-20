@@ -102,4 +102,10 @@ public class Urls {
             "/api/v1/location/**"
 
     };
+
+    public static final String[] FILTER_EXCLUDED_ENDPOINTS = {
+            "/api/v1/user/create_user",
+            "/api/v1/location/**"
+    };
+
 }

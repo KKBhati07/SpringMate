@@ -1,8 +1,7 @@
 package com.example.SpringMate.Config;
 
-import com.example.SpringMate.Auth.Helper.SessionHelper;
+import com.example.SpringMate.Auth.Helper.AuthHelper;
 import com.example.SpringMate.Auth.Helper.SessionManagementHelper;
-import com.example.SpringMate.Auth.Repository.SessionRepository;
 import com.example.SpringMate.Shared.Constants;
 import com.example.SpringMate.User.Service.UserDetailServiceImpl;
 import com.example.SpringMate.Shared.Urls;
@@ -35,14 +34,14 @@ import java.util.List;
 public class SecurityConfig {
 
     private final UserDetailServiceImpl userDetailService;
-    private final SessionRepository sessionRepository;
-    private final SessionHelper sessionHelper;
     private final SessionManagementHelper sessionManagementHelper;
+    private final SessionAuthenticationFilter sessionAuthenticationFilter;
     private final JwtTokenProvider jwtTokenProvider;
+    private final AuthHelper authHelper;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        AuthenticationFilter authFilter = new AuthenticationFilter(authenticationManager(http),sessionManagementHelper,jwtTokenProvider);
+        AuthenticationFilter authFilter = new AuthenticationFilter(authenticationManager(http), sessionManagementHelper, jwtTokenProvider, authHelper);
         authFilter.setFilterProcessesUrl(Urls.Auth.AUTH_BASE + Urls.Auth.LOGIN_WITH_PASS);
 
         http.cors(Customizer.withDefaults())
@@ -52,7 +51,7 @@ public class SecurityConfig {
                                 .requestMatchers(Urls.PUBLIC_ENDPOINTS).permitAll()
                                 .anyRequest().authenticated()
                 )
-                .addFilterBefore(new SessionAuthenticationFilter(sessionRepository, sessionHelper, jwtTokenProvider),
+                .addFilterBefore(sessionAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
                 .sessionManagement(sessionManagement ->
