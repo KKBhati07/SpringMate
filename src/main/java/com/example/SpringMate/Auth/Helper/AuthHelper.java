@@ -66,7 +66,8 @@ public class AuthHelper {
                 .httpOnly(true)
                 .path("/")
                 .maxAge(Duration.ofDays(Constants.JWT_VALIDITY))
-                .sameSite("None")    // required for cross-site cookies
+//                .sameSite("None")    // required for cross-site cookies // Not required anymore as local setup is samesite now
+                .domain(".marketmate.local")
                 .secure(true)        // required for SameSite=None
                 .build();
 

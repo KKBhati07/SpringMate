@@ -47,21 +47,6 @@ public class SessionManagementHelper {
         Session createdSession = sessionRepository.save(session);
         createSessionLog(createdSession.getCreatedAt(),user, sessionId, request);
         return createdSession.getSessionID();
-//        return userRepository.findByEmail(email)
-//                .map(user -> {
-//                    String sessionId = CoreHelper.generateUUID().toUpperCase();
-//                    Session session = Session.builder()
-//                            .sessionID(sessionId)
-//                            .user(user)
-//                            .createdAt(LocalDateTime.now())
-//                            .lastAccessedAt(LocalDateTime.now())
-//                            .expiresAt(LocalDateTime.now().plusDays(Constants.SESSION_VALIDITY))
-//                            .build();
-//                    Session createdSession = sessionRepository.save(session);
-//                    createSessionLog(createdSession.getCreatedAt(),user, sessionId, request);
-//                    return createdSession.getSessionID();
-//                })
-//                .orElse(null);
     }
     public String createSession(String email, HttpServletRequest request) {
         User user = coreUserService.getUserByEmail(email);
@@ -79,7 +64,7 @@ public class SessionManagementHelper {
         return createdSession.getSessionID();
     }
 
-    private boolean createSessionLog(LocalDateTime loginAt, User user,
+    private void createSessionLog(LocalDateTime loginAt, User user,
                                      String sessionId, HttpServletRequest request) {
         try {
             String ipAddress = getClientIp(request);
@@ -93,10 +78,8 @@ public class SessionManagementHelper {
                     .build();
 
             sessionLogRepository.save(sessionLog);
-            return true;
         } catch (Exception e) {
             e.printStackTrace();
-            return false;
         }
     }
 

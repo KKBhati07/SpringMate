@@ -8,6 +8,7 @@ import com.example.SpringMate.Util.Response;
 import com.example.SpringMate.User.Exception.UserNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -35,6 +36,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(NoHandlerFoundException.class)
     public ResponseEntity<Response<?>> handleNoHandler(NoHandlerFoundException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new Response<>(null, "Do not have access to the resource"));
+    }
+
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<Response<?>> handleAccessDenied(NoHandlerFoundException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(new Response<>(null, "Do not have access to the resource"));
     }

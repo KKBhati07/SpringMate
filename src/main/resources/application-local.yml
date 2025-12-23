@@ -19,6 +19,12 @@ spring:
       quiet-period: 4000
 
 server:
+  ssl:
+    enabled: true
+    key-store: classpath:marketmate-local.p12
+    key-store-password: ${SSL_KEYSTORE_PASSWORD:changeit}
+    key-store-type: PKCS12
+    key-alias: marketmate
   tomcat:
     threads:
       max: 30        # Maximum number of worker threads that process HTTP requests concurrently

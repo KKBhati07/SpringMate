@@ -13,6 +13,16 @@ public class Constants {
     }
 
     public static class Origin {
+        public static class Frontend {
+//            public static final String DEV = "http://localhost:4200";
+            public static final String DEV = "https://marketmate.local:4200";
+        }
+
+        public static class AdminPortal {
+//            public static final String DEV = "http://localhost:4300";
+            public static final String DEV = "https://admin.marketmate.local:4300";
+        }
+
         public static final String DEV = "http://localhost:4200";
         public static final String PROD = "";
     }
@@ -37,6 +47,12 @@ public class Constants {
             public static final int MAX_LIMIT = 6;
 
         }
+    }
+
+    public static class AppContext {
+        public static final String ADMIN = "ADMIN";
+        public static final String PUBLIC = "PUBLIC";
+
     }
 
     public static final String DEFAULT_CATEGORY = "others";

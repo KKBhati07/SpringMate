@@ -2,21 +2,22 @@
 services:
   frontend:
     build:
-      context: ./MM                        # Path to frontend source code
-      dockerfile: DOCKERFILE.local         # Dockerfile to use for frontend
-    container_name: mm-frontend           # Name of the frontend container
+      context: ./MM                         # Path to frontend source code
+      dockerfile: DOCKERFILE.local          # Dockerfile to use for frontend
+    container_name: mm-frontend             # Name of the frontend container
     ports:
-      - "4200:4200"                       # Map host port 4200 to container port 4200
+      - "4200:4200"                         # Map host port 4200 to container port 4200
     volumes:
-      - ./MM:/app:cached       # Mount local frontend code into container
-      - mm_node_modules:/app/node_modules              # Persist node_modules as volume (mapping the container to volume)
+      - ./MM:/app:cached                    # Mount local frontend code into container
+      - ./MM/certs:/certs:ro                # readonly, container cannot write into this folder
+      - mm_node_modules:/app/node_modules   # Persist node_modules as volume (mapping the container to volume)
     environment:
       - CHOKIDAR_USEPOLLING=true          # Enable polling for file changes (fixes issues on some hosts)
       - PORT=4200
       - APP_NAME=marketmate
       # command: npm start                  # Optional custom start command (currently commented)
 
-  admin-frontend:
+  admin:
     build:
       context: ./MM                        # Path to frontend source code
       dockerfile: DOCKERFILE.local         # Dockerfile to use for frontend
@@ -24,8 +25,9 @@ services:
     ports:
       - "4300:4201"                       # Map host port 4200 to container port 4200
     volumes:
-      - ./MM:/app:cached       # Mount local frontend code into container
-      - mm_admin_node_modules:/app/node_modules              # Persist node_modules as volume
+      - ./MM:/app:cached                  # Mount local frontend code into container
+      - ./MM/certs:/certs:ro
+      - mm_admin_node_modules:/app/node_modules
     environment:
       - CHOKIDAR_USEPOLLING=true          # Enable polling for file changes (fixes issues on some hosts)
       - PORT=4201
