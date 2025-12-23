@@ -57,6 +57,8 @@ public class Constants {
 
     public static final String DEFAULT_CATEGORY = "others";
 
+    public static final String COOKIE_DOMAIN = ".marketmate.local";
+
     public static final class Messages {
         public static final class Error {
 

@@ -49,25 +49,33 @@ public class AuthHelper {
     }
 
     public void clearAuthCookie(HttpServletResponse response) {
-        ResponseCookie deleteCookie = ResponseCookie.from("auth_token", "")
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .maxAge(0)
-                .sameSite("None")
-                .build();
-
-        response.addHeader(HttpHeaders.SET_COOKIE, deleteCookie.toString());
+        injectCookie(response,
+                "auth_token",
+                "",
+                Duration.ZERO,
+                Constants.COOKIE_DOMAIN);
     }
 
     public void injectAuthCookie(HttpServletResponse response, String authToken) {
+        injectCookie(response,
+                "auth_token",
+                authToken,
+                Duration.ofDays(Constants.JWT_VALIDITY),
+                Constants.COOKIE_DOMAIN);
+    }
+
+    private void injectCookie(HttpServletResponse response,
+                              String name,
+                              String value,
+                              Duration maxAge,
+                              String domain){
         // Jkarta Cookie does not support sameSite attribute, hence will blocked by browser in cross site
-        ResponseCookie cookie = ResponseCookie.from("auth_token", authToken)
-                .httpOnly(true)
+        ResponseCookie cookie = ResponseCookie.from(name, value)
+//                .httpOnly(true)
                 .path("/")
-                .maxAge(Duration.ofDays(Constants.JWT_VALIDITY))
+                .maxAge(maxAge)
 //                .sameSite("None")    // required for cross-site cookies // Not required anymore as local setup is samesite now
-                .domain(".marketmate.local")
+                .domain(domain)
                 .secure(true)        // required for SameSite=None
                 .build();
 
