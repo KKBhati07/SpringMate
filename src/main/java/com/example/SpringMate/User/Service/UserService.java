@@ -19,6 +19,7 @@ import com.example.SpringMate.Util.ResponseMapper;
 import com.example.SpringMate.Util.UserDetailsDto;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -29,6 +30,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -53,11 +55,18 @@ public class UserService {
         );
 
         if (role.isEmpty()) {
-            throw new RuntimeException("Unable to fetch role");
+            log.error("Error fetching roles");
+            throw new InternalServerException("Unable to fetch role");
         }
 
         User newUser = new User(userDetails, role.get());
         userRepository.save(newUser);
+        log.info(
+                "User created user=[UUID {}] role={}",
+                newUser.getUuid(),
+                role.get().getName()
+        );
+
 
         return new CreateUserResponseDto(true, false);
     }
@@ -66,6 +75,7 @@ public class UserService {
     public PaginatedResponse<UserDetailsDto> fetchAll(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("name"));
         Page<User> pagedUsers = userRepository.findAll(pageable);
+
 
         return new PaginatedResponse<>(
                 injectSignedProfileUrl(pagedUsers.getContent()),
@@ -102,6 +112,11 @@ public class UserService {
         }
 
         userRepository.softDeleteByUuid(uuid != null ? uuid : authenticatedUser.getUuid());
+        log.warn(
+                "User deleted targetUser=[UUID {}] deletedBy=[UUID {}]",
+                uuid != null ? uuid : authenticatedUser.getUuid(),
+                authenticatedUser.getUuid()
+        );
         listingService.softDeleteByUserId(userId);
 
     }
@@ -111,6 +126,10 @@ public class UserService {
                 .orElseThrow(UserNotFoundException::new);
 
         user.setDeleted(false);
+        log.info(
+                "Restored user=[UUID {}]",
+                uuid
+        );
         userRepository.save(user);
     }
 
@@ -140,6 +159,10 @@ public class UserService {
             user.setContactNo(userDetails.getContactNo());
         }
         User updatedUser = this.userRepository.save(user);
+        log.warn(
+                "Updated user=[UUID {}]",
+                updatedUser.getUuid()
+        );
         return
                 new UpdateUserResponseDto(true, true,
                         responseMapper.mapUser(updatedUser));
@@ -169,6 +192,10 @@ public class UserService {
             if (oldProfilePicUrl != null) {
                 storageService.deleteImage(Constants.AWS.BUCKET_NAME, oldProfilePicUrl);
             }
+            log.info(
+                    "Profile image updated for user=[UUID {}]",
+                    user.getUuid()
+            );
 
             userRepository.save(user);
         }

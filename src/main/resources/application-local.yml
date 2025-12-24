@@ -9,6 +9,9 @@ spring:
       minimum-idle: 1
 
   jpa:
+    properties:
+      hibernate:
+        format_sql: true   # Pretty SQL for easier debugging in local
     hibernate:
       ddl-auto: update
 
@@ -37,3 +40,9 @@ server:
 logging:
   level:
     org.springframework.boot.devtools: DEBUG
+    org:
+      hibernate:
+        SQL: DEBUG          # Logs generated SQL statements without excessive verbosity
+        orm:
+          jdbc:
+            bind: TRACE     # Disables logging of query parameter values to avoid sensitive data leaks

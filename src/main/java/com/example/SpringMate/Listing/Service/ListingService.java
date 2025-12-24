@@ -18,6 +18,7 @@ import com.example.SpringMate.Util.PaginatedResponse;
 import com.example.SpringMate.Util.ResponseMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -28,6 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ListingService {
@@ -168,16 +170,31 @@ public class ListingService {
                 listingImageRepository.saveAll(listingImages);
 
             } catch (RuntimeException ex) {
+                log.error(
+                        "Listing image processing failed, rolling back uploads listing=[ID {}]",
+                        savedItem.getId(),
+                        ex
+                );
                 for (String key : keysToCleanup) {
                     try {
                         storageService.deleteImage(Constants.AWS.BUCKET_NAME, key);
                     } catch (Exception cleanupEx) {
-                        cleanupEx.printStackTrace();
+                        log.error(
+                                "Upload rollback failed listing=[ ID {}]",
+                                savedItem.getId(),
+                                cleanupEx
+                        );
                     }
                 }
                 throw new InternalServerException();
             }
         }
+
+        log.info(
+                "Listing created listing=[ID {}] seller=[ UUID {}]",
+                savedItem.getId(),
+                authenticatedUser.getUuid()
+        );
 
         return new CreateListingResponseDto(savedItem.getId());
     }
@@ -206,6 +223,11 @@ public class ListingService {
                 .orElseThrow(() -> new BadRequestException("Listing not found"));
 
         if (!listing.getSeller().getUuid().equals(authenticatedUser.getUuid())) {
+            log.warn(
+                    "Unauthorized image upload attempt listing=[ ID {}] user=[ UUID {}]",
+                    dto.getListingId(),
+                    authenticatedUser.getUuid()
+            );
             throw new UnauthorizedException();
         }
 
@@ -247,14 +269,28 @@ public class ListingService {
             }
 
             listingImageRepository.saveAll(listingImages);
+            log.info(
+                    "Listing images uploaded listing=[ID {}] imageCount={}",
+                    dto.getListingId(),
+                    dto.getImages().size()
+            );
+
 
         } catch (RuntimeException ex) {
-            ex.printStackTrace();
+            log.error(
+                    "Listing image upload failed, performing cleanup listing=[ID {}]",
+                    dto.getListingId(),
+                    ex
+            );
             for (String key : uploadedKeys) {
                 try {
                     storageService.deleteImage(Constants.AWS.BUCKET_NAME, key);
                 } catch (Exception deleteEx) {
-                    deleteEx.printStackTrace();
+                    log.error(
+                            "Upload rollback failed listing=[ ID {}]",
+                            dto.getListingId(),
+                            deleteEx
+                    );
                 }
             }
             throw new InternalServerException("Images upload failed!");
@@ -267,6 +303,13 @@ public class ListingService {
             Long itemId,
             User authenticatedUser
     ) {
+
+        log.warn(
+                "Listing deleted listing=[ID {}] deletedBy=[UUID {}] admin={}",
+                itemId,
+                authenticatedUser.getUuid(),
+                authenticatedUser.isAdmin()
+        );
 
         Listing listing = getByIdOrThrow(itemId);
 
@@ -287,6 +330,12 @@ public class ListingService {
             List<Long> ids,
             User authenticatedUser
     ) {
+
+        log.warn(
+                "Bulk listing delete count={} admin=[UUID {}]",
+                ids.size(),
+                authenticatedUser.getId()
+        );
 
         if (authenticatedUser.isAdmin()) {
             listingRepository.softDeleteByIds(ids);

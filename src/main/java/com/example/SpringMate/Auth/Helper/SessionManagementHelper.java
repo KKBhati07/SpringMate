@@ -10,11 +10,13 @@ import com.example.SpringMate.Shared.Constants;
 import com.example.SpringMate.User.Service.CoreUserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class SessionManagementHelper {
@@ -46,6 +48,10 @@ public class SessionManagementHelper {
                 .build();
         Session createdSession = sessionRepository.save(session);
         createSessionLog(createdSession.getCreatedAt(),user, sessionId, request);
+        log.info(
+                "SESSION_CREATED user=[UUID {}]",
+                user.getUuid()
+        );
         return createdSession.getSessionID();
     }
     public String createSession(String email, HttpServletRequest request) {
@@ -61,6 +67,10 @@ public class SessionManagementHelper {
                 .build();
         Session createdSession = sessionRepository.save(session);
         createSessionLog(createdSession.getCreatedAt(),user, sessionId, request);
+        log.info(
+                "SESSION_CREATED user=[UUID {}]",
+                user.getUuid()
+        );
         return createdSession.getSessionID();
     }
 
@@ -79,7 +89,10 @@ public class SessionManagementHelper {
 
             sessionLogRepository.save(sessionLog);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.info(
+                    "Filed to create session log user=[UUID {}]",
+                    user.getUuid()
+            );
         }
     }
 

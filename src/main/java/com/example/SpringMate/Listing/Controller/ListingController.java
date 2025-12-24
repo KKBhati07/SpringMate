@@ -9,6 +9,7 @@ import com.example.SpringMate.Util.PaginatedResponse;
 import com.example.SpringMate.Util.Response;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(Urls.Listing.LISTING_BASE)
@@ -94,6 +96,11 @@ public class ListingController {
                   @RequestBody CreateListingRequestDto requestDto,
                   @AuthenticationPrincipal User authenticatedUser
     ) {
+        log.info(
+                "Creating listing user=[ UUID {}]",
+                authenticatedUser.getUuid()
+        );
+
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new Response<>(listingService.createRecord(requestDto, authenticatedUser),
                         "Listing created successfully"));
@@ -108,6 +115,11 @@ public class ListingController {
             @Valid @ModelAttribute FallbackImageUploadDto requestDto,
             @AuthenticationPrincipal User authenticatedUser
     ) {
+        log.info(
+                "Fallback image upload listing=[ID {}] user=[UUID {}]",
+                requestDto.getListingId(),
+                authenticatedUser.getUuid()
+        );
         listingService.uploadListingImages(requestDto, authenticatedUser);
 
         return ResponseEntity.noContent().build();
@@ -119,6 +131,11 @@ public class ListingController {
     deleteListing(@PathVariable Long id,
                   @AuthenticationPrincipal User authenticatedUser
     ) {
+        log.info(
+                "Deleting listing=[ID {}] user=[UUID {}]",
+                id,
+                authenticatedUser.getUuid()
+        );
         listingService.deleteRecord(id, authenticatedUser);
         return ResponseEntity.noContent().build();
     }

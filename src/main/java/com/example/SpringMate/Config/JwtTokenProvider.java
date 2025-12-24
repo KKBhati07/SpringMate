@@ -43,7 +43,6 @@ public class JwtTokenProvider {
             Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
             return true;
         } catch (JwtException | IllegalArgumentException ex) {
-            // TODO :: Logging!!
             return false;
         }
     }

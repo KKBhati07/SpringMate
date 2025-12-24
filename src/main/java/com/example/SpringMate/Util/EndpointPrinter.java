@@ -1,20 +1,23 @@
 package com.example.SpringMate.Util;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
+@Slf4j
 @Component
+@RequiredArgsConstructor
 public class EndpointPrinter implements CommandLineRunner {
 
-    @Autowired
-    private RequestMappingHandlerMapping handlerMapping;
+    private final RequestMappingHandlerMapping handlerMapping;
 
     @Override
     public void run(String... args) {
-        handlerMapping.getHandlerMethods().forEach((key, value) -> {
-            System.out.println(key + " --> " + value);
+        log.info("Registered endpoints:");
+        handlerMapping.getHandlerMethods().forEach((mapping, handler) -> {
+            log.debug("{} -> {}", mapping, handler.getMethod().getName());;
         });
     }
 }

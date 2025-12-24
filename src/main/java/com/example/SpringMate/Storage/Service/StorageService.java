@@ -5,6 +5,7 @@ import com.example.SpringMate.Shared.Enum.AwsS3Directory;
 import com.example.SpringMate.Shared.Exception.BadRequestException;
 import com.example.SpringMate.Storage.DTO.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -13,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class StorageService {
@@ -37,7 +39,11 @@ public class StorageService {
                 successes.add(getPresignPutUrl(fileReq, directory));
 
             } catch (Exception e) {
-                e.printStackTrace();
+                log.warn(
+                        "Presign URL generation failed fileName={} reason={}",
+                        fileReq.getFileName(),
+                        e.getMessage()
+                );
 
                 String reason;
                 if (e instanceof BadRequestException) {

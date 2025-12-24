@@ -9,6 +9,7 @@ import com.example.SpringMate.Location.Service.LocationService;
 import com.example.SpringMate.Shared.Urls;
 import com.example.SpringMate.Util.Response;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
+@Slf4j
 @RestController()
 @RequestMapping(Urls.Location.LOCATION_BASE)
 @RequiredArgsConstructor
@@ -35,9 +37,15 @@ public class LocationController {
     @PostMapping(Urls.Location.SEED)
     public String seedLocations(@RequestHeader("x-seed-key") String key) {
         if (key == null || key.isEmpty() || !seedSecret.equals(key)) {
+            log.warn("LOCATION_SEED_FORBIDDEN invalid seed key");
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Unauthorized access");
         }
-        return locationSeederService.seedLocations(locationApikey);
+        log.info("LOCATION_SEED_STARTED");
+
+        String res = locationSeederService.seedLocations(locationApikey);
+
+        log.info("LOCATION_SEED_COMPLETED");
+        return res;
     }
 
     @GetMapping(Urls.Location.GET_COUNTRIES)

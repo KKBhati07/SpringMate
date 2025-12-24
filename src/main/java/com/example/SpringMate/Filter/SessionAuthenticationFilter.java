@@ -1,9 +1,10 @@
-package com.example.SpringMate.Config;
+package com.example.SpringMate.Filter;
 
 import com.example.SpringMate.Auth.Entity.Session;
 import com.example.SpringMate.Auth.Helper.AuthHelper;
 import com.example.SpringMate.Auth.Helper.SessionHelper;
 import com.example.SpringMate.Auth.Repository.SessionRepository;
+import com.example.SpringMate.Config.JwtTokenProvider;
 import com.example.SpringMate.Shared.Urls;
 import com.example.SpringMate.Util.Response;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,6 +15,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -28,6 +30,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Optional;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class SessionAuthenticationFilter extends OncePerRequestFilter {
@@ -47,12 +50,14 @@ public class SessionAuthenticationFilter extends OncePerRequestFilter {
 
             try {
                 if (!jwtTokenProvider.validateToken(authToken)) {
+                    log.warn("AUTH_INVALID_TOKEN");
                     authHelper.clearAuthCookie(response);
                     sendUnauthorized(response, "Invalid or expired token!");
                     return;
                 }
 
             } catch (JwtException e) {
+                log.warn("AUTH_TOKEN_EXCEPTION");
                 authHelper.clearAuthCookie(response);
                 sendUnauthorized(response, "Invalid token!");
                 return;
@@ -65,6 +70,7 @@ public class SessionAuthenticationFilter extends OncePerRequestFilter {
                 Session session = sessionOpt.get();
                 if (session.getExpiresAt().isBefore(LocalDateTime.now())) {
                     authHelper.clearAuthCookie(response);
+                    log.warn("AUTH_SESSION_EXPIRED");
                     sendUnauthorized(response, "Session expired. Please log in again.");
                     return;
                 }
@@ -76,6 +82,7 @@ public class SessionAuthenticationFilter extends OncePerRequestFilter {
                 );
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } else {
+                log.warn("AUTH_SESSION_NOT_FOUND");
                 authHelper.clearAuthCookie(response);
                 sendUnauthorized(response, "Session expired. Please log in again.");
                 return;

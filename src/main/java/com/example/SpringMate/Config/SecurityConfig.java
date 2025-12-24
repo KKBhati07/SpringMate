@@ -2,6 +2,8 @@ package com.example.SpringMate.Config;
 
 import com.example.SpringMate.Auth.Helper.AuthHelper;
 import com.example.SpringMate.Auth.Helper.SessionManagementHelper;
+import com.example.SpringMate.Filter.AuthenticationFilter;
+import com.example.SpringMate.Filter.SessionAuthenticationFilter;
 import com.example.SpringMate.Shared.Constants;
 import com.example.SpringMate.User.Service.UserDetailServiceImpl;
 import com.example.SpringMate.Shared.Urls;

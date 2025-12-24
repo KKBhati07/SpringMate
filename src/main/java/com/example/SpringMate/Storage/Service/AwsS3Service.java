@@ -6,6 +6,7 @@ import com.example.SpringMate.Storage.DTO.PresignResult;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 
 
 // Migrated to SDK v2
+@Slf4j
 @Service
 @RequiredArgsConstructor
 class AwsS3Service {
@@ -88,8 +90,13 @@ class AwsS3Service {
                             imageFile.getSize()
                     ));
             return objectKey;
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException ex) {
+            log.error(
+                    "S3 upload failed bucket={} fileName={}",
+                    bucketName,
+                    imageFile.getOriginalFilename(),
+                    ex
+            );
             return null;
         }
     }
@@ -153,13 +160,20 @@ class AwsS3Service {
                     .key(objectKey)
                     .build();
             s3Client.deleteObject(deleteRequest);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ex) {
+            log.error(
+                    "Failed to delete image objectKey={}",
+                    objectKey,
+                    ex
+            );
         }
     }
 
     public String uploadFallback(Exception ex) {
-        ex.printStackTrace();
+        log.error(
+                "Image upload failed after retries (fallback triggered)",
+                ex
+        );
         return null;
     }
 

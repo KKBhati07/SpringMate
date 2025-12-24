@@ -15,12 +15,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(Urls.Auth.AUTH_BASE)
@@ -37,6 +39,11 @@ public class AuthController {
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             HttpServletResponse response
     ) {
+        log.info(
+                "action=LOGOUT_REQUEST source={}",
+                authCookie != null ? "COOKIE" :
+                        authHeader != null ? "HEADER" : "NONE"
+        );
         String token = null;
         if (authCookie != null && !authCookie.isBlank()) {
             token = authCookie;
@@ -50,6 +57,7 @@ public class AuthController {
         }
 
         authHelper.clearAuthCookie(response);
+        log.info("action=LOGOUT_SUCCESS sessionInvalidated");
         return ResponseEntity.ok(
                 new Response<>(Map.of("logged_out", true),
                         "Logged out successfully"));
@@ -58,6 +66,10 @@ public class AuthController {
     @GetMapping(Urls.Auth.AUTH_DETAILS)
     public ResponseEntity<Response<AuthDetailsResponseDto>>
     getAuthDetails(@AuthenticationPrincipal User authenticatedUser) {
+        log.info(
+                "action=FETCH_AUTH_DETAILS userId={}",
+                authenticatedUser.getUuid()
+        );
         return ResponseEntity.ok(
                 new Response<>(authService.authDetails(authenticatedUser)
                         , "Data fetched successfully"));
@@ -67,6 +79,11 @@ public class AuthController {
     public ResponseEntity<Response<Object>>
     requestLoginOTP(@Valid @RequestBody OtpRequestDto otpRequestDTO)
             throws MessagingException {
+        log.info(
+                "action=REQUEST_LOGIN_OTP identifierType={}",
+                otpRequestDTO.getType()
+        );
+
         authService.generateAndSendOTP(otpRequestDTO);
 
         // Always return a generic message (for security)
@@ -79,10 +96,21 @@ public class AuthController {
     @PostMapping(Urls.Auth.OTP_LOGIN)
     public ResponseEntity<Response<OtpLoginResponseDto>> loginWithOTP(
             @Valid @RequestBody OtpLoginRequestDto loginDTO,
-            HttpServletRequest request) {
-        return ResponseEntity.ok(new Response<>(
-                authService.verifyOtp(loginDTO, request),
-                "Logged in successfully!"));
+            HttpServletRequest request
+    ) {
+        log.info("action=OTP_LOGIN_ATTEMPT");
+
+        OtpLoginResponseDto response =
+                authService.verifyOtp(loginDTO, request);
+
+        log.info(
+                "action=OTP_LOGIN_SUCCESS [UUID {}]",
+                response.getUserDetails().getUuid()
+        );
+
+        return ResponseEntity.ok(
+                new Response<>(response, "Logged in successfully!")
+        );
     }
 
 

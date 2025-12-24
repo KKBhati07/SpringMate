@@ -14,6 +14,9 @@ import com.example.SpringMate.User.Service.UserService;
 import com.example.SpringMate.Shared.Urls;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -21,24 +24,35 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(Urls.Admin.ADMIN_BASE)
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
+//          **Using Lombok annotation (@Slf4j) to do the same**
+//    Logger log = LoggerFactory.getLogger(AdminController.class);
+
     private final UserService userService;
     private final ListingService listingService;
 
-//    ---- USER ROUTES
+    //    ---- USER ROUTES
     @GetMapping(value = Urls.Admin.User.GET_ALL)
     public ResponseEntity<Response<PaginatedResponse<UserDetailsDto>>> fetchAll(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "10") int size,
+            @AuthenticationPrincipal User authenticatedUser
     ) {
+        log.info(
+                "ADMIN_ACTION action=FETCH_USERS user=[ UUID : {}] page={} size={}",
+                authenticatedUser.getUuid(),
+                page,
+                size
+        );
         return ResponseEntity.ok(
                 new Response<>(userService.fetchAll(page, size),
-                "Users fetched successfully")
+                        "Users fetched successfully")
         );
     }
 
@@ -48,24 +62,47 @@ public class AdminController {
             @PathVariable UUID uuid,
             @AuthenticationPrincipal User authenticatedUser
     ) {
+        log.warn(
+                "ADMIN_ACTION action=DELETE_USER user=[ UUID : {}] targetUser=user=[ UUID : {}]",
+                authenticatedUser.getUuid(),
+                uuid
+        );
+
         userService.deleteUser(uuid, authenticatedUser);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping(value = Urls.Admin.User.RESTORE)
-    public ResponseEntity<Void> restoreUser(@PathVariable UUID uuid) {
+    public ResponseEntity<Void> restoreUser(
+            @PathVariable UUID uuid,
+            @AuthenticationPrincipal User authenticatedUser
+    ) {
+        log.warn(
+                "ADMIN_ACTION action=RESTORE_USER user=[ UUID : {}] targetUser=user=[ UUID : {}]",
+                authenticatedUser.getUuid(),
+                uuid
+        );
         userService.restoreUser(uuid);
         return ResponseEntity.noContent().build();
     }
 
     @PutMapping(value = Urls.Admin.User.UPDATE)
     public ResponseEntity<Response<UpdateUserResponseDto>>
-    updateUser(@RequestBody UpdateUserRequestDto updatedUser) {
+    updateUser(
+            @RequestBody UpdateUserRequestDto updatedUser,
+            @AuthenticationPrincipal User authenticatedUser
+    ) {
+        log.info(
+                "ADMIN_ACTION action=UPDATE_USER user=[ UUID : {}] targetUser=user=[ UUID : {}]",
+                authenticatedUser.getUuid(),
+                updatedUser.getUuid()
+        );
+        log.info("[ UPDATED DATA ] : {}", updatedUser);
         return ResponseEntity.ok(new Response<>(userService.updateUser(updatedUser),
                 "User updated successfully"));
     }
 
-//    ------- LISTING ROUTES
+    //    ------- LISTING ROUTES
     @GetMapping(value = Urls.Admin.Listing.GET_ALL)
     public ResponseEntity<Response<PaginatedResponse<FetchListingItemsResponseDto>>>
     getAllListings(
@@ -79,16 +116,25 @@ public class AdminController {
             @RequestParam(value = "deleted", required = false) Boolean deleted,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @AuthenticationPrincipal User autheticatedUser
+            @AuthenticationPrincipal User authenticatedUser
     ) {
+        log.info(
+                "ADMIN_ACTION action=FETCH_LISTINGS user=[ UUID : {}] page={} size={} deleted={} search={}",
+                authenticatedUser.getUuid(),
+                page,
+                size,
+                deleted,
+                searchString
+        );
+
         return ResponseEntity.ok(
                 new Response<>(listingService.getAllRecords(
                         new FetchListingsRequestDto(
                                 categoryId, minPrice, maxPrice,
-                                countryId,stateId,cityId,
+                                countryId, stateId, cityId,
                                 searchString,
                                 page, size),
-                        autheticatedUser,
+                        authenticatedUser,
                         deleted != null && deleted
                 ),
                         "Listings fetched successfully"));
@@ -99,6 +145,11 @@ public class AdminController {
             @Valid @RequestBody DeleteListingRequestDto dto,
             @AuthenticationPrincipal User authenticatedUser
     ) {
+        log.warn(
+                "ADMIN_ACTION action=DELETE_LISTING user=[ UUID : {}] listingCount=[ {} ]",
+                authenticatedUser.getUuid(),
+                dto.getIds().size()
+        );
         listingService.deleteRecords(dto.getIds(), authenticatedUser);
         return ResponseEntity.noContent().build();
     }

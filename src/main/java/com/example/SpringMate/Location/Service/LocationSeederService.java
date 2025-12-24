@@ -8,6 +8,7 @@ import com.example.SpringMate.Location.Repository.CountryRepository;
 import com.example.SpringMate.Location.Repository.StateRepository;
 import com.example.SpringMate.Shared.Urls;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class LocationSeederService {
@@ -31,11 +33,20 @@ public class LocationSeederService {
     String[] countriesIso = {"IN"};
 
     public String seedLocations(String locationApiKey) {
+        log.info("Location seeding started");
+
         this.locationApiKey = locationApiKey;
         List<Map<String, Object>> countries =
                 getApiResponse(Urls.ExternalApi.Locations.COUNTRIES).getBody();
 
-        if (countries == null) return "Countries not found!";
+
+        if (countries == null) {
+            log.warn("No countries returned from external API");
+            return "Countries not found!";
+        }
+
+        log.info("Fetched {} countries from external API", countries.size());
+
         countryRepository.saveAll(countries.stream()
                 .map(c -> Country.builder()
                         .iso2((String) c.get("iso2"))
@@ -52,12 +63,14 @@ public class LocationSeederService {
     }
 
     private void seedStatesAndCitiesByCountry(Country country) {
+        log.info("Seeding locations for country iso={}", country.getIso2());
+
         List<Map<String, Object>> states = getApiResponse(
                 Urls.ExternalApi.Locations.STATES_BY_COUNTRY
                         .replace("{iso2}", country.getIso2())).getBody();
 
         if (states == null) {
-            System.out.println("States not found!!");
+            log.warn("No states found for country iso={}", country.getIso2());
             return;
         }
         states.forEach(s -> {
@@ -72,11 +85,25 @@ public class LocationSeederService {
                     .replace("{state_iso2}", state.getIso2());
 
             List<Map<String, Object>> cities = getApiResponse(getCitiesUrl).getBody();
+            if (cities == null) {
+                log.warn(
+                        "No cities found for state={} country={}",
+                        state.getIso2(),
+                        country.getIso2()
+                );
+                return;
+            }
 
             cityRepository.saveAll(cities.stream().map(c -> City.builder()
                     .name((String) c.get("name"))
                     .state(state).build()).toList());
 
+            log.debug(
+                    "Saved {} cities for state={} country={}",
+                    cities.size(),
+                    state.getIso2(),
+                    country.getIso2()
+            );
 
         });
 
@@ -84,15 +111,21 @@ public class LocationSeederService {
     }
 
     private ResponseEntity<List> getApiResponse(String url) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("X-CSCAPI-KEY", locationApiKey);
-        HttpEntity<String> entity = new HttpEntity<>(headers);
-        return restTemplate.exchange(
-                url,
-                HttpMethod.GET,
-                entity,
-                List.class
-        );
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("X-CSCAPI-KEY", locationApiKey);
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            return restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    List.class
+            );
+        } catch (Exception ex) {
+            log.error("External API call failed url={}", url, ex);
+            throw ex;
+        }
     }
 
 

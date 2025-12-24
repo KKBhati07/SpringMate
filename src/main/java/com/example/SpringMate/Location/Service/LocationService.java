@@ -28,11 +28,11 @@ public class LocationService {
 
     public Location getOrCreateOne(Long cityId, Long stateId, Long countryId) {
         Country country = countryRepository.findById(countryId)
-                .orElseThrow(() -> new RuntimeException("Country not found"));
+                .orElseThrow(() -> new NotFoundException("Country not found"));
         State state = stateRepository.findById(stateId)
-                .orElseThrow(() -> new RuntimeException("State not found"));
+                .orElseThrow(() -> new NotFoundException("State not found"));
         City city = this.cityRepository.findById(cityId)
-                .orElseThrow(() -> new RuntimeException("City not found"));
+                .orElseThrow(() -> new NotFoundException("City not found"));
 
         return locationRepository.findByCityAndStateAndCountry(city, state, country)
                 .orElseGet(() -> locationRepository.save(

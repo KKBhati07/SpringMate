@@ -26,6 +26,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -35,6 +36,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -51,7 +53,10 @@ public class AuthService {
 
     @Transactional
     public void logoutUser(String sessionId) {
-        if (sessionId == null) throw new BadRequestException("Invalid token");
+        if (sessionId == null) {
+            log.warn("action=LOGOUT_SESSION reason=NULL_SESSION_ID");
+            throw new BadRequestException("Invalid token");
+        }
         Optional<Session> sessionOpt = sessionRepository.findBySessionID(sessionId);
         if (sessionOpt.isPresent()) {
             Session session = sessionOpt.get();
@@ -59,6 +64,9 @@ public class AuthService {
             sessionLogRepository.updateLogoutTime(session.getSessionID(), LocalDateTime.now());
 
             SecurityContextHolder.clearContext();
+            log.info("action=LOGOUT_SESSION result=SUCCESS");
+        } else {
+            log.info("action=LOGOUT_SESSION result=SESSION_NOT_FOUND");
         }
     }
 
@@ -73,34 +81,39 @@ public class AuthService {
         Map<String, Object> responseMap = new HashMap<>();
         if (loginDTO.getType() == OTPType.LOGIN) {
             User user = coreUserService.getUserByEmail(loginDTO.getEmail());
-
-            if (user != null) {
-                Optional<VerificationCode> codeOptional =
-                        verificationCodeRepository.
-                                findTopByUserAndTypeOrderByCreatedAtDesc(user, OTPType.LOGIN.name());
-                if (codeOptional.isPresent()) {
-                    LocalDateTime lastSentAt = codeOptional.get().getCreatedAt();
-                    if (ChronoUnit.SECONDS.between(lastSentAt, LocalDateTime.now()) < 60) {
-                        throw new TooManyRequestsException("Please wait before requesting another OTP.");
-                    }
-                }
-                verificationCodeRepository.deleteByUserAndType(user, OTPType.LOGIN.name());
-
-                String otp = authHelper.generateOTP();
-                VerificationCode code = VerificationCode.builder()
-                        .code(otp).type(OTPType.LOGIN.name())
-                        .user(user).build();
-                verificationCodeRepository.save(code);
-
-                otpNotificationDispatcher.dispatchEmail(
-                        loginDTO.getEmail(),
-                        Constants.EmailHeaders.LOGIN,
-                        otp
-                );
+            if (user == null) {
+                log.info("action=OTP_REQUEST result=USER_NOT_FOUND");
+                return;
             }
 
+            Optional<VerificationCode> codeOptional =
+                    verificationCodeRepository.
+                            findTopByUserAndTypeOrderByCreatedAtDesc(user, OTPType.LOGIN.name());
+            if (codeOptional.isPresent()) {
+                LocalDateTime lastSentAt = codeOptional.get().getCreatedAt();
+                if (ChronoUnit.SECONDS.between(lastSentAt, LocalDateTime.now()) < 60) {
+                    log.warn("action=OTP_REQUEST result=RATE_LIMITED");
+                    throw new TooManyRequestsException("Please wait before requesting another OTP.");
+                }
+            }
+            verificationCodeRepository.deleteByUserAndType(user, OTPType.LOGIN.name());
+
+            String otp = authHelper.generateOTP();
+            VerificationCode code = VerificationCode.builder()
+                    .code(otp).type(OTPType.LOGIN.name())
+                    .user(user).build();
+            verificationCodeRepository.save(code);
+
+            otpNotificationDispatcher.dispatchEmail(
+                    loginDTO.getEmail(),
+                    Constants.EmailHeaders.LOGIN,
+                    otp
+            );
+
+            log.info("action=OTP_REQUEST result=SENT");
             return;
         }
+        log.warn("action=OTP_REQUEST reason=INVALID_TYPE");
         throw new BadRequestException("Ambiguous request type");
 
 
@@ -109,6 +122,7 @@ public class AuthService {
     @Transactional
     public OtpLoginResponseDto
     verifyOtp(OtpLoginRequestDto loginDTO, HttpServletRequest request) {
+        log.info("action=OTP_VERIFY_ATTEMPT");
         if (loginDTO.getType() == OTPType.LOGIN) {
             User user = coreUserService.getUserByEmail(loginDTO.getEmail());
 
@@ -122,6 +136,10 @@ public class AuthService {
                         String sessionId = sessionManagementHelper.createSession(user, request);
                         if (sessionId != null) {
                             verificationCodeRepository.deleteByUserAndType(user, OTPType.LOGIN.name());
+                            log.info(
+                                    "action=OTP_VERIFY_SUCCESS user=[UUID {}]",
+                                    user.getUuid()
+                            );
                             String authToken = jwtTokenProvider.generateToken(sessionId);
                             return OtpLoginResponseDto.builder()
                                     .authenticated(true).authToken(authToken)
@@ -131,8 +149,10 @@ public class AuthService {
                     }
                 }
             }
+            log.warn("action=OTP_VERIFY_FAILED");
             throw new UnauthorizedException("OTP verification failed");
         }
+        log.warn("action=OTP_VERIFY reason=INVALID_TYPE");
         throw new BadRequestException("Ambiguous request type");
     }
 }

@@ -9,15 +9,15 @@ import com.example.SpringMate.User.Service.UserService;
 import com.example.SpringMate.Shared.Urls;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
 import java.util.UUID;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(Urls.User.USER_BASE)
@@ -44,6 +44,11 @@ public class UserController {
     @DeleteMapping(Urls.User.DELETE_USER)
     public ResponseEntity<Void>
     deleteUser(@AuthenticationPrincipal User user) {
+        log.warn(
+                "USER_DELETE requested user=[UUID {}]",
+                user.getUuid()
+        );
+
         userService.deleteUser(null, user);
         return ResponseEntity.noContent().build();
     }
@@ -53,6 +58,11 @@ public class UserController {
             @Valid @RequestBody UpdateUserRequestDto updatedUserDetails,
             @AuthenticationPrincipal User authenticatedUser) {
         if (!authHelper.isSelfUUID(updatedUserDetails.getUuid(), authenticatedUser)) {
+            log.warn(
+                    "UNAUTHORIZED_USER_UPDATE attempt targetUser={} actor={}",
+                    updatedUserDetails.getUuid(),
+                    authenticatedUser.getUuid()
+            );
             throw new UnauthorizedUserUpdateException();
         }
 
@@ -66,6 +76,11 @@ public class UserController {
             @AuthenticationPrincipal User authenticatedUser) {
 
         if (!authHelper.isSelfUUID(dto.getUuid(), authenticatedUser)) {
+            log.warn(
+                    "UNAUTHORIZED_PROFILE_IMAGE_UPLOAD targetUser={} actor={}",
+                    dto.getUuid(),
+                    authenticatedUser.getUuid()
+            );
             throw new UnauthorizedUserUpdateException();
         }
         userService.uploadProfileImage(dto);

@@ -19,6 +19,8 @@ public class CategoryController {
 
     @GetMapping(Urls.Category.GET_ALL)
     public ResponseEntity<Response<FetchCategoriesResponseDto>> getCategories() {
-        return categoryService.getAllCategory();
+        return ResponseEntity.ok(
+                new Response<>(categoryService.getAllCategory(),
+                        "Categories fetched successfully"));
     }
 }
