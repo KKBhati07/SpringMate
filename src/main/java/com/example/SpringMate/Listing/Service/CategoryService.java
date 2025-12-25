@@ -8,12 +8,12 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 @Service
-// value - a logical bucket inside your cache -> categories::all
-@Cacheable(value = Constants.CacheNamespace.CATEGORY, key = "'all'")
 @RequiredArgsConstructor
 public class CategoryService {
     private final CategoryRepository categoryRepository;
 
+    // value - a logical bucket inside your cache -> categories::all
+    @Cacheable(value = Constants.CacheNamespace.CATEGORY, key = "'all'")
     public FetchCategoriesResponseDto getAllCategory() {
         return new FetchCategoriesResponseDto(categoryRepository.findAll());
     }
