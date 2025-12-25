@@ -12,14 +12,23 @@ import java.time.LocalDateTime;
 @Setter
 @AllArgsConstructor
 @Builder
-@Table(name = "sessions")
+@Table(
+        name = "sessions",
+        indexes = {
+                @Index(
+                        name = "idx_sessions_session_id",
+                        columnList = "session_id",
+                        unique = true
+                )
+        }
+)
 public class Session {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "session_id", unique = true,nullable = false)
+    @Column(name = "session_id",nullable = false)
     private String sessionId;
 
     @JoinColumn(name = "user_id", nullable = false)
