@@ -1,10 +1,13 @@
-package com.example.SpringMate.Filter;
+package com.example.SpringMate.Auth.Filter;
 
+import com.example.SpringMate.Auth.Cache.AuthCacheService;
+import com.example.SpringMate.Auth.Entity.Session;
 import com.example.SpringMate.Auth.Helper.AuthHelper;
 import com.example.SpringMate.Auth.Helper.SessionManagementHelper;
-import com.example.SpringMate.Config.JwtTokenProvider;
+import com.example.SpringMate.Auth.jwt.JwtTokenProvider;
 import com.example.SpringMate.Shared.Constants;
 import com.example.SpringMate.Shared.Exception.UnauthorizedException;
+import com.example.SpringMate.User.Entity.User;
 import com.example.SpringMate.Util.Response;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
@@ -29,6 +32,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     private final AuthenticationManager authenticationManager;
     private final SessionManagementHelper sessionManagementHelper;
     private final JwtTokenProvider jwtTokenProvider;
+    private final AuthCacheService authCacheService;
     private final AuthHelper authHelper;
 
     @Override
@@ -82,9 +86,11 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
             }
         }
 
-        String sessionId = sessionManagementHelper.getUserAndCreateSession(authResult.getName(), request);
+        User user = sessionManagementHelper.getUser(authResult.getName());
+        Session session = sessionManagementHelper.createSession(user, request);
+        authCacheService.cacheAuthenticatedUser(session.getSessionId(), user, session.getExpiresAt());
         response.setContentType("application/json");
-        String authToken = jwtTokenProvider.generateToken(sessionId);
+        String authToken = jwtTokenProvider.generateToken(session.getSessionId());
         authHelper.injectAuthCookie(response, authToken);
 
         Response<Map<String, Boolean>> res = new Response<>(Map.of("authenticated", true), "Logged in successfully!");

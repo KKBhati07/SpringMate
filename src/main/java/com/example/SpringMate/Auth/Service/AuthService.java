@@ -1,20 +1,20 @@
 package com.example.SpringMate.Auth.Service;
 
 
+import com.example.SpringMate.Auth.Cache.AuthCacheService;
 import com.example.SpringMate.Auth.DTO.AuthDetailsResponseDto;
 import com.example.SpringMate.Auth.DTO.OtpLoginResponseDto;
 import com.example.SpringMate.Auth.DTO.OtpRequestDto;
 import com.example.SpringMate.Auth.DTO.OtpLoginRequestDto;
 import com.example.SpringMate.Auth.Entity.Session;
 import com.example.SpringMate.Auth.Exception.TooManyRequestsException;
-import com.example.SpringMate.Config.JwtTokenProvider;
+import com.example.SpringMate.Auth.jwt.JwtTokenProvider;
 import com.example.SpringMate.Shared.Exception.BadRequestException;
 import com.example.SpringMate.Shared.Exception.UnauthorizedException;
 import com.example.SpringMate.User.Entity.User;
 import com.example.SpringMate.Auth.Entity.VerificationCode;
 import com.example.SpringMate.Auth.Helper.AuthHelper;
 import com.example.SpringMate.Auth.Helper.SessionManagementHelper;
-import com.example.SpringMate.Auth.Repository.SessionLogRepository;
 import com.example.SpringMate.Auth.Repository.SessionRepository;
 import com.example.SpringMate.Auth.Repository.VerificationCodeRepository;
 import com.example.SpringMate.Shared.Constants;
@@ -35,6 +35,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -42,12 +43,12 @@ import java.util.Optional;
 public class AuthService {
 
     private final SessionRepository sessionRepository;
-    private final SessionLogRepository sessionLogRepository;
     private final VerificationCodeRepository verificationCodeRepository;
     private final CoreUserService coreUserService;
     private final ResponseMapper responseMapper;
     private final OtpNotificationDispatcher otpNotificationDispatcher;
     private final SessionManagementHelper sessionManagementHelper;
+    private final AuthCacheService authCacheService;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthHelper authHelper;
 
@@ -57,11 +58,11 @@ public class AuthService {
             log.warn("action=LOGOUT_SESSION reason=NULL_SESSION_ID");
             throw new BadRequestException("Invalid token");
         }
-        Optional<Session> sessionOpt = sessionRepository.findBySessionID(sessionId);
+        Optional<Session> sessionOpt = sessionRepository.findBySessionId(sessionId);
         if (sessionOpt.isPresent()) {
             Session session = sessionOpt.get();
             sessionRepository.delete(session);
-            sessionLogRepository.updateLogoutTime(session.getSessionID(), LocalDateTime.now());
+            sessionManagementHelper.updateSessionLogoutTime(session.getSessionId());
 
             SecurityContextHolder.clearContext();
             log.info("action=LOGOUT_SESSION result=SUCCESS");
@@ -70,9 +71,9 @@ public class AuthService {
         }
     }
 
-    public AuthDetailsResponseDto authDetails(User authenticateUser) {
+    public AuthDetailsResponseDto authDetails(UUID uuid) {
         return new AuthDetailsResponseDto(responseMapper
-                .mapUser(authenticateUser), true);
+                .mapUser(coreUserService.getUserOrThrowByUUID(uuid)), true);
 
     }
 
@@ -121,7 +122,7 @@ public class AuthService {
 
     @Transactional
     public OtpLoginResponseDto
-    verifyOtp(OtpLoginRequestDto loginDTO, HttpServletRequest request) {
+    verifyOtp(OtpLoginRequestDto loginDTO, HttpServletRequest request, HttpServletResponse response) {
         log.info("action=OTP_VERIFY_ATTEMPT");
         if (loginDTO.getType() == OTPType.LOGIN) {
             User user = coreUserService.getUserByEmail(loginDTO.getEmail());
@@ -133,17 +134,19 @@ public class AuthService {
                     VerificationCode codeObj = codeOptional.get();
                     if (codeObj.getExpiresAt().isAfter(LocalDateTime.now()) &&
                             codeObj.getCode().equals(loginDTO.getOtp())) {
-                        String sessionId = sessionManagementHelper.createSession(user, request);
-                        if (sessionId != null) {
+                        Session session = sessionManagementHelper.createSession(user, request);
+                        if (session != null) {
+                            authCacheService.cacheAuthenticatedUser(session.getSessionId(), user, session.getExpiresAt());
                             verificationCodeRepository.deleteByUserAndType(user, OTPType.LOGIN.name());
                             log.info(
                                     "action=OTP_VERIFY_SUCCESS user=[UUID {}]",
                                     user.getUuid()
                             );
-                            String authToken = jwtTokenProvider.generateToken(sessionId);
+                            String authToken = jwtTokenProvider.generateToken(session.getSessionId());
+                            authHelper.injectAuthCookie(response, authToken);
                             return OtpLoginResponseDto.builder()
-                                    .authenticated(true).authToken(authToken)
-                                    .userDetails(responseMapper.mapUser(user))
+                                    .userUuid(user.getUuid())
+                                    .authenticated(true)
                                     .build();
                         }
                     }

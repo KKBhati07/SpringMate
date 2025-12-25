@@ -5,8 +5,8 @@ import com.example.SpringMate.Auth.DTO.OtpLoginResponseDto;
 import com.example.SpringMate.Auth.DTO.OtpRequestDto;
 import com.example.SpringMate.Auth.DTO.OtpLoginRequestDto;
 import com.example.SpringMate.Auth.Helper.AuthHelper;
-import com.example.SpringMate.Config.JwtTokenProvider;
-import com.example.SpringMate.User.Entity.User;
+import com.example.SpringMate.Auth.jwt.JwtTokenProvider;
+import com.example.SpringMate.Util.AuthenticatedUser;
 import com.example.SpringMate.Util.Response;
 import com.example.SpringMate.Auth.Service.AuthService;
 import com.example.SpringMate.Shared.Urls;
@@ -65,13 +65,13 @@ public class AuthController {
 
     @GetMapping(Urls.Auth.AUTH_DETAILS)
     public ResponseEntity<Response<AuthDetailsResponseDto>>
-    getAuthDetails(@AuthenticationPrincipal User authenticatedUser) {
+    getAuthDetails(@AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
         log.info(
                 "action=FETCH_AUTH_DETAILS userId={}",
-                authenticatedUser.getUuid()
+                authenticatedUser.uuid()
         );
         return ResponseEntity.ok(
-                new Response<>(authService.authDetails(authenticatedUser)
+                new Response<>(authService.authDetails(authenticatedUser.uuid())
                         , "Data fetched successfully"));
     }
 
@@ -96,20 +96,21 @@ public class AuthController {
     @PostMapping(Urls.Auth.OTP_LOGIN)
     public ResponseEntity<Response<OtpLoginResponseDto>> loginWithOTP(
             @Valid @RequestBody OtpLoginRequestDto loginDTO,
-            HttpServletRequest request
+            HttpServletRequest request,
+            HttpServletResponse response
     ) {
         log.info("action=OTP_LOGIN_ATTEMPT");
 
-        OtpLoginResponseDto response =
-                authService.verifyOtp(loginDTO, request);
+        OtpLoginResponseDto res =
+                authService.verifyOtp(loginDTO, request, response);
 
         log.info(
                 "action=OTP_LOGIN_SUCCESS [UUID {}]",
-                response.getUserDetails().getUuid()
+                res.getUserUuid()
         );
 
         return ResponseEntity.ok(
-                new Response<>(response, "Logged in successfully!")
+                new Response<>(res, "Logged in successfully!")
         );
     }
 

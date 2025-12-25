@@ -4,7 +4,7 @@ import com.example.SpringMate.Listing.DTO.*;
 import com.example.SpringMate.Listing.Service.ListingService;
 import com.example.SpringMate.Shared.Exception.BadRequestException;
 import com.example.SpringMate.Shared.Urls;
-import com.example.SpringMate.User.Entity.User;
+import com.example.SpringMate.Util.AuthenticatedUser;
 import com.example.SpringMate.Util.PaginatedResponse;
 import com.example.SpringMate.Util.Response;
 import jakarta.validation.Valid;
@@ -38,7 +38,7 @@ public class ListingController {
             @RequestParam(value = "search", required = false) String searchString,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @AuthenticationPrincipal User autheticatedUser
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser
     ) {
         return ResponseEntity.ok(
                 new Response<>(listingService.getAllRecords(
@@ -47,7 +47,7 @@ public class ListingController {
                                 countryId, stateId, cityId,
                                 searchString,
                                 page, size),
-                        autheticatedUser,
+                        authenticatedUser,
                         false
                 ),
                         "Listings fetched successfully"));
@@ -94,11 +94,11 @@ public class ListingController {
     public ResponseEntity<Response<CreateListingResponseDto>>
     createListing(@Valid
                   @RequestBody CreateListingRequestDto requestDto,
-                  @AuthenticationPrincipal User authenticatedUser
+                  @AuthenticationPrincipal AuthenticatedUser authenticatedUser
     ) {
         log.info(
                 "Creating listing user=[ UUID {}]",
-                authenticatedUser.getUuid()
+                authenticatedUser.uuid()
         );
 
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -113,12 +113,12 @@ public class ListingController {
     )
     public ResponseEntity<Void> fallbackImageUpload(
             @Valid @ModelAttribute FallbackImageUploadDto requestDto,
-            @AuthenticationPrincipal User authenticatedUser
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser
     ) {
         log.info(
                 "Fallback image upload listing=[ID {}] user=[UUID {}]",
                 requestDto.getListingId(),
-                authenticatedUser.getUuid()
+                authenticatedUser.uuid()
         );
         listingService.uploadListingImages(requestDto, authenticatedUser);
 
@@ -129,12 +129,12 @@ public class ListingController {
     @DeleteMapping(Urls.Listing.DELETE_LISTING)
     public ResponseEntity<Void>
     deleteListing(@PathVariable Long id,
-                  @AuthenticationPrincipal User authenticatedUser
+                  @AuthenticationPrincipal AuthenticatedUser authenticatedUser
     ) {
         log.info(
                 "Deleting listing=[ID {}] user=[UUID {}]",
                 id,
-                authenticatedUser.getUuid()
+                authenticatedUser.uuid()
         );
         listingService.deleteRecord(id, authenticatedUser);
         return ResponseEntity.noContent().build();

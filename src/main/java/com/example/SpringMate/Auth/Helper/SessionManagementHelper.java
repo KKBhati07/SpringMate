@@ -27,55 +27,35 @@ public class SessionManagementHelper {
 
     public Session checkIfSessionExists(String email) {
         User user = coreUserService.getUserByEmail(email);
-        if (user == null ) return null;
+        if (user == null) return null;
         List<Session> sessions = sessionRepository.findByUserId(user.getId());
         return !sessions.isEmpty() ? sessions.get(sessions.size() - 1) : null;
     }
 
-    public String getUserAndCreateSession(String email, HttpServletRequest request){
-        User user = coreUserService.getUserByEmail(email);
-        return user != null ? createSession(user,request) : null;
+    public User getUser(String email) {
+        return coreUserService.getUserByEmail(email);
     }
 
-    public String createSession(User user, HttpServletRequest request) {
+    public Session createSession(User user, HttpServletRequest request) {
         String sessionId = CoreHelper.generateUUID().toString().toUpperCase();
         Session session = Session.builder()
-                .sessionID(sessionId)
+                .sessionId(sessionId)
                 .user(user)
                 .createdAt(LocalDateTime.now())
                 .lastAccessedAt(LocalDateTime.now())
                 .expiresAt(LocalDateTime.now().plusDays(Constants.SESSION_VALIDITY))
                 .build();
         Session createdSession = sessionRepository.save(session);
-        createSessionLog(createdSession.getCreatedAt(),user, sessionId, request);
+        createSessionLog(createdSession.getCreatedAt(), user, sessionId, request);
         log.info(
                 "SESSION_CREATED user=[UUID {}]",
                 user.getUuid()
         );
-        return createdSession.getSessionID();
-    }
-    public String createSession(String email, HttpServletRequest request) {
-        User user = coreUserService.getUserByEmail(email);
-        if(user == null) return null;
-        String sessionId = CoreHelper.generateUUID().toString().toUpperCase();
-        Session session = Session.builder()
-                .sessionID(sessionId)
-                .user(user)
-                .createdAt(LocalDateTime.now())
-                .lastAccessedAt(LocalDateTime.now())
-                .expiresAt(LocalDateTime.now().plusDays(Constants.SESSION_VALIDITY))
-                .build();
-        Session createdSession = sessionRepository.save(session);
-        createSessionLog(createdSession.getCreatedAt(),user, sessionId, request);
-        log.info(
-                "SESSION_CREATED user=[UUID {}]",
-                user.getUuid()
-        );
-        return createdSession.getSessionID();
+        return createdSession;
     }
 
     private void createSessionLog(LocalDateTime loginAt, User user,
-                                     String sessionId, HttpServletRequest request) {
+                                  String sessionId, HttpServletRequest request) {
         try {
             String ipAddress = getClientIp(request);
 
@@ -92,6 +72,17 @@ public class SessionManagementHelper {
             log.info(
                     "Filed to create session log user=[UUID {}]",
                     user.getUuid()
+            );
+        }
+    }
+
+    public void updateSessionLogoutTime(String sessionId) {
+        try {
+            sessionLogRepository.updateLogoutTime(sessionId, LocalDateTime.now());
+        } catch (Exception e) {
+            log.info(
+                    "[SESSION LOG] Filed to update logout time log sessionId=[{}]",
+                    sessionId
             );
         }
     }

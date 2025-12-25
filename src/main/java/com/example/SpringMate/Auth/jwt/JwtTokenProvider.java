@@ -1,4 +1,4 @@
-package com.example.SpringMate.Config;
+package com.example.SpringMate.Auth.jwt;
 
 import com.example.SpringMate.Shared.Constants;
 import io.jsonwebtoken.*;

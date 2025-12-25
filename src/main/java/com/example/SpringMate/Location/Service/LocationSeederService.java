@@ -6,9 +6,12 @@ import com.example.SpringMate.Location.Entity.State;
 import com.example.SpringMate.Location.Repository.CityRepository;
 import com.example.SpringMate.Location.Repository.CountryRepository;
 import com.example.SpringMate.Location.Repository.StateRepository;
+import com.example.SpringMate.Shared.Constants;
 import com.example.SpringMate.Shared.Urls;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -32,6 +35,12 @@ public class LocationSeederService {
     String locationApiKey;
     String[] countriesIso = {"IN"};
 
+    @Transactional
+    @CacheEvict(value = {
+            Constants.CacheNamespace.COUNTRY,
+            Constants.CacheNamespace.STATE,
+            Constants.CacheNamespace.CITY},
+            allEntries = true) //beforeInvocation = true; to evict before method invocation (default is after invocation)
     public String seedLocations(String locationApiKey) {
         log.info("Location seeding started");
 
@@ -58,6 +67,10 @@ public class LocationSeederService {
             Optional<Country> c = countryRepository.findByIso2(iso);
             c.ifPresent(this::seedStatesAndCitiesByCountry);
         }
+
+        log.info(
+                "LOCATION_SEED_COMPLETED cacheEvicted=[COUNTRY, STATE, CITY]"
+        );
 
         return "Location data seeded successfully.";
     }

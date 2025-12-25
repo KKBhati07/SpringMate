@@ -6,7 +6,7 @@ import com.example.SpringMate.Listing.DTO.FetchListingsRequestDto;
 import com.example.SpringMate.Listing.Service.ListingService;
 import com.example.SpringMate.User.DTO.UpdateUserRequestDto;
 import com.example.SpringMate.User.DTO.UpdateUserResponseDto;
-import com.example.SpringMate.User.Entity.User;
+import com.example.SpringMate.Util.AuthenticatedUser;
 import com.example.SpringMate.Util.UserDetailsDto;
 import com.example.SpringMate.Util.PaginatedResponse;
 import com.example.SpringMate.Util.Response;
@@ -42,11 +42,11 @@ public class AdminController {
     public ResponseEntity<Response<PaginatedResponse<UserDetailsDto>>> fetchAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @AuthenticationPrincipal User authenticatedUser
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser
     ) {
         log.info(
                 "ADMIN_ACTION action=FETCH_USERS user=[ UUID : {}] page={} size={}",
-                authenticatedUser.getUuid(),
+                authenticatedUser.uuid(),
                 page,
                 size
         );
@@ -60,11 +60,11 @@ public class AdminController {
     public ResponseEntity<Void>
     deleteUser(
             @PathVariable UUID uuid,
-            @AuthenticationPrincipal User authenticatedUser
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser
     ) {
         log.warn(
                 "ADMIN_ACTION action=DELETE_USER user=[ UUID : {}] targetUser=user=[ UUID : {}]",
-                authenticatedUser.getUuid(),
+                authenticatedUser.uuid(),
                 uuid
         );
 
@@ -75,11 +75,11 @@ public class AdminController {
     @PatchMapping(value = Urls.Admin.User.RESTORE)
     public ResponseEntity<Void> restoreUser(
             @PathVariable UUID uuid,
-            @AuthenticationPrincipal User authenticatedUser
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser
     ) {
         log.warn(
                 "ADMIN_ACTION action=RESTORE_USER user=[ UUID : {}] targetUser=user=[ UUID : {}]",
-                authenticatedUser.getUuid(),
+                authenticatedUser.uuid(),
                 uuid
         );
         userService.restoreUser(uuid);
@@ -90,11 +90,11 @@ public class AdminController {
     public ResponseEntity<Response<UpdateUserResponseDto>>
     updateUser(
             @RequestBody UpdateUserRequestDto updatedUser,
-            @AuthenticationPrincipal User authenticatedUser
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser
     ) {
         log.info(
                 "ADMIN_ACTION action=UPDATE_USER user=[ UUID : {}] targetUser=user=[ UUID : {}]",
-                authenticatedUser.getUuid(),
+                authenticatedUser.uuid(),
                 updatedUser.getUuid()
         );
         log.info("[ UPDATED DATA ] : {}", updatedUser);
@@ -116,11 +116,11 @@ public class AdminController {
             @RequestParam(value = "deleted", required = false) Boolean deleted,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @AuthenticationPrincipal User authenticatedUser
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser
     ) {
         log.info(
                 "ADMIN_ACTION action=FETCH_LISTINGS user=[ UUID : {}] page={} size={} deleted={} search={}",
-                authenticatedUser.getUuid(),
+                authenticatedUser.uuid(),
                 page,
                 size,
                 deleted,
@@ -143,11 +143,11 @@ public class AdminController {
     @DeleteMapping(value = Urls.Admin.Listing.DELETE)
     public ResponseEntity<Void> deleteListings(
             @Valid @RequestBody DeleteListingRequestDto dto,
-            @AuthenticationPrincipal User authenticatedUser
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser
     ) {
         log.warn(
                 "ADMIN_ACTION action=DELETE_LISTING user=[ UUID : {}] listingCount=[ {} ]",
-                authenticatedUser.getUuid(),
+                authenticatedUser.uuid(),
                 dto.getIds().size()
         );
         listingService.deleteRecords(dto.getIds(), authenticatedUser);

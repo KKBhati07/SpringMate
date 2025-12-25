@@ -50,7 +50,7 @@ services:
       SPRING_PROFILES_ACTIVE: local
     depends_on:
       - postgres                          # Wait for postgres service before starting
-    pids_limit: 512
+      - redis                          # Wait for redis service before starting
 
   postgres:
     image: postgres:15                    # Use PostgreSQL version 15 image
@@ -66,7 +66,21 @@ services:
       - "5432:5432"                       # Map host port 5432 to container port 5432
     pids_limit: 512
 
+  redis:
+    image: redis:7-alpine
+    container_name: local-redis
+    command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+    restart: unless-stopped
+
 volumes:
   pgdata:                                 # Named volume for PostgreSQL data
   mm_node_modules:                        # Named volume for frontend node_modules
   mm_admin_node_modules:                  # Named volume for admin frontend node_modules
+  redis_data:                             # Named volume for redis persistance
+
+

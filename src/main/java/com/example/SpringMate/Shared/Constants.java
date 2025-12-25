@@ -14,12 +14,12 @@ public class Constants {
 
     public static class Origin {
         public static class Frontend {
-//            public static final String DEV = "http://localhost:4200";
+            //            public static final String DEV = "http://localhost:4200";
             public static final String DEV = "https://marketmate.local:4200";
         }
 
         public static class AdminPortal {
-//            public static final String DEV = "http://localhost:4300";
+            //            public static final String DEV = "http://localhost:4300";
             public static final String DEV = "https://admin.marketmate.local:4300";
         }
 
@@ -30,6 +30,13 @@ public class Constants {
     public static final class UserRole {
         public static final String USER = "USER";
         public static final String ADMIN = "ADMIN";
+    }
+
+    public static final class CacheNamespace {
+        public static final String CATEGORY = "categories";
+        public static final String COUNTRY = "countries";
+        public static final String STATE = "states";
+        public static final String CITY = "cities";
     }
 
     public static final String[] CATEGORIES = {"cars", "bikes", "mobile_phones", "electronic", "furniture", "property", "others"};

@@ -3,7 +3,7 @@ package com.example.SpringMate.Favorite.Controller;
 import com.example.SpringMate.Favorite.DTO.FavoriteRequestDto;
 import com.example.SpringMate.Favorite.Service.UserFavoriteService;
 import com.example.SpringMate.Shared.Urls;
-import com.example.SpringMate.User.Entity.User;
+import com.example.SpringMate.Util.AuthenticatedUser;
 import com.example.SpringMate.Util.Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,11 +25,11 @@ public class UserFavoriteController {
     @PostMapping(Urls.UserFavorites.SET_UNSET)
     public ResponseEntity<Response<Map<String, Boolean>>> setUnsetFavorite(
             @RequestBody FavoriteRequestDto dto,
-            @AuthenticationPrincipal User authenticatedUser
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser
     ) {
         log.info(
                 "User toggling favorite user=[UUID {}] listing=[ID {}]",
-                authenticatedUser.getUuid(),
+                authenticatedUser.uuid(),
                 dto.getListingId()
         );
 
@@ -37,7 +37,7 @@ public class UserFavoriteController {
                         HttpStatus.CREATED)
                 .body(new Response<>
                         (userFavoriteService.setUnsetFavorite(
-                                authenticatedUser.getId(),
+                                authenticatedUser.id(),
                                 dto.getListingId()),
                                 "Request successful")
                 );

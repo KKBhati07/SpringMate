@@ -20,7 +20,7 @@ public class Session {
     private Long id;
 
     @Column(name = "session_id", unique = true,nullable = false)
-    private String sessionID;
+    private String sessionId;
 
     @JoinColumn(name = "user_id", nullable = false)
     @ManyToOne

@@ -8,6 +8,17 @@ spring:
       maximum-pool-size: 5
       minimum-idle: 1
 
+  data:
+    redis:
+      host: redis          # The network address or hostname of your Redis server.
+      port: 6379           # The port number on which your Redis server is listening.
+      database: 0          # The index of the logical database to use (Redis usually has 16, from 0-15).
+      timeout: 60s         # Max time to wait for a command to complete before throwing a timeout exception.
+      lettuce:             # Section for Lettuce-specific (the default driver) client settings.
+        pool:              # Enables and configures connection pooling for better performance.
+          max-active: 8    # Maximum number of concurrent connections the pool can provide at once.
+          max-idle: 8      # Maximum number of "sleeping" connections to keep in the pool even when not in use.
+
   jpa:
     properties:
       hibernate:
@@ -17,7 +28,7 @@ spring:
 
   devtools:
     restart:
-      enabled: true # Enables automatic restart with Spring DevTools
+      enabled: false # Enables automatic restart with Spring DevTools
       poll-interval: 10000
       quiet-period: 4000
 
@@ -40,6 +51,7 @@ server:
 logging:
   level:
     org.springframework.boot.devtools: DEBUG
+    org.springframework.data.redis: DEBUG
     org:
       hibernate:
         SQL: DEBUG          # Logs generated SQL statements without excessive verbosity

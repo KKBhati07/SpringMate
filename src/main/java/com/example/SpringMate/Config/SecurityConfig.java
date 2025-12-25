@@ -1,9 +1,11 @@
 package com.example.SpringMate.Config;
 
+import com.example.SpringMate.Auth.Cache.AuthCacheService;
 import com.example.SpringMate.Auth.Helper.AuthHelper;
 import com.example.SpringMate.Auth.Helper.SessionManagementHelper;
-import com.example.SpringMate.Filter.AuthenticationFilter;
-import com.example.SpringMate.Filter.SessionAuthenticationFilter;
+import com.example.SpringMate.Auth.Filter.AuthenticationFilter;
+import com.example.SpringMate.Auth.Filter.SessionAuthenticationFilter;
+import com.example.SpringMate.Auth.jwt.JwtTokenProvider;
 import com.example.SpringMate.Shared.Constants;
 import com.example.SpringMate.User.Service.UserDetailServiceImpl;
 import com.example.SpringMate.Shared.Urls;
@@ -39,11 +41,17 @@ public class SecurityConfig {
     private final SessionManagementHelper sessionManagementHelper;
     private final SessionAuthenticationFilter sessionAuthenticationFilter;
     private final JwtTokenProvider jwtTokenProvider;
+    private final AuthCacheService authCacheService;
     private final AuthHelper authHelper;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        AuthenticationFilter authFilter = new AuthenticationFilter(authenticationManager(http), sessionManagementHelper, jwtTokenProvider, authHelper);
+        AuthenticationFilter authFilter = new AuthenticationFilter
+                (authenticationManager(http),
+                        sessionManagementHelper,
+                        jwtTokenProvider,
+                        authCacheService,
+                        authHelper);
         authFilter.setFilterProcessesUrl(Urls.Auth.AUTH_BASE + Urls.Auth.LOGIN_WITH_PASS);
 
         http.cors(Customizer.withDefaults())

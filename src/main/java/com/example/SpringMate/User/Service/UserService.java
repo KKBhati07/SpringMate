@@ -14,6 +14,7 @@ import com.example.SpringMate.User.Exception.UserNotFoundException;
 import com.example.SpringMate.User.Repository.RoleRepository;
 import com.example.SpringMate.User.Repository.UserRepository;
 import com.example.SpringMate.Shared.Constants;
+import com.example.SpringMate.Util.AuthenticatedUser;
 import com.example.SpringMate.Util.PaginatedResponse;
 import com.example.SpringMate.Util.ResponseMapper;
 import com.example.SpringMate.Util.UserDetailsDto;
@@ -87,22 +88,22 @@ public class UserService {
 
     public UserDetailsResponseDto
     getUserDetails(UUID uuid,
-                   User authenticatedUser) {
+                   AuthenticatedUser authenticatedUser) {
         User user = coreUserService.getUserOrThrowByUUID(uuid);
         UserDetailsDto userDetails = responseMapper.mapUser(user);
         return new UserDetailsResponseDto(userDetails,
-                authHelper.compareUserDetails(user,
-                        authenticatedUser));
+                authHelper.isSelfUUID(user.getUuid(),
+                        authenticatedUser.uuid()));
 
     }
 
     @Transactional
     public void
-    deleteUser(UUID uuid, User authenticatedUser) {
+    deleteUser(UUID uuid, AuthenticatedUser authenticatedUser) {
         Long userId = null;
 
         if (uuid == null) {
-            userId = coreUserService.getUserOrThrowByEmail(authenticatedUser.getEmail()).getId();
+            userId = coreUserService.getUserOrThrowByEmail(authenticatedUser.email()).getId();
         } else {
             Optional<User> userOpt = userRepository.findByUuidAndDeletedFalse(uuid);
             if (userOpt.isEmpty()) {
@@ -111,11 +112,12 @@ public class UserService {
             userId = userOpt.get().getId();
         }
 
-        userRepository.softDeleteByUuid(uuid != null ? uuid : authenticatedUser.getUuid());
+        UUID toDeleteUuid = uuid != null ? uuid : authenticatedUser.uuid();
+        userRepository.softDeleteByUuid(toDeleteUuid);
         log.warn(
                 "User deleted targetUser=[UUID {}] deletedBy=[UUID {}]",
-                uuid != null ? uuid : authenticatedUser.getUuid(),
-                authenticatedUser.getUuid()
+                toDeleteUuid,
+                authenticatedUser.uuid()
         );
         listingService.softDeleteByUserId(userId);
 

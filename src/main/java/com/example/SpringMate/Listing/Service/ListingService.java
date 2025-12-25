@@ -14,6 +14,7 @@ import com.example.SpringMate.Shared.Exception.*;
 import com.example.SpringMate.Storage.Service.StorageService;
 import com.example.SpringMate.User.Entity.User;
 import com.example.SpringMate.User.Service.CoreUserService;
+import com.example.SpringMate.Util.AuthenticatedUser;
 import com.example.SpringMate.Util.PaginatedResponse;
 import com.example.SpringMate.Util.ResponseMapper;
 import jakarta.transaction.Transactional;
@@ -44,7 +45,7 @@ public class ListingService {
 
     public PaginatedResponse<FetchListingItemsResponseDto> getAllRecords(
             FetchListingsRequestDto queryParams,
-            User authenticatedUser,
+            AuthenticatedUser authenticatedUser,
             Boolean deleted
     ) {
         Pageable pageable = PageRequest.of(
@@ -56,7 +57,7 @@ public class ListingService {
         String searchString = queryParams.getSearchString();
         Page<FetchListingItemsProjection> pagedRecords = listingRepository
                 .findAllByFilters(
-                        authenticatedUser == null ? null : authenticatedUser.getId(),
+                        authenticatedUser == null ? null : authenticatedUser.id(),
                         queryParams.getCategoryId(),
                         queryParams.getMinPrice(),
                         queryParams.getMaxPrice(),
@@ -110,7 +111,7 @@ public class ListingService {
     @Transactional
     public CreateListingResponseDto createRecord(
             CreateListingRequestDto requestDto,
-            User authenticatedUser
+            AuthenticatedUser authenticatedUser
     ) {
         if (requestDto.getImages() != null && requestDto.getImages().size() > Constants.Images.Listing.MAX_LIMIT) {
             throw new BadRequestException("Max 6 images allowed");
@@ -122,11 +123,13 @@ public class ListingService {
                 : categoryRepository.findByName(Constants.DEFAULT_CATEGORY)
                 .orElseThrow(() -> new InternalServerException("Default category not found"));
 
+        User user = coreUserService.getUserOrThrowByUUID(authenticatedUser.uuid());
+
         Listing item = Listing.builder()
                 .price(requestDto.getPrice())
                 .title(requestDto.getTitle())
                 .description(requestDto.getDescription())
-                .seller(authenticatedUser)
+                .seller(user)
                 .location(locationService.getOrCreateOne(
                         requestDto.getCityId(),
                         requestDto.getStateId(),
@@ -193,7 +196,7 @@ public class ListingService {
         log.info(
                 "Listing created listing=[ID {}] seller=[ UUID {}]",
                 savedItem.getId(),
-                authenticatedUser.getUuid()
+                authenticatedUser.uuid()
         );
 
         return new CreateListingResponseDto(savedItem.getId());
@@ -214,7 +217,7 @@ public class ListingService {
     }
 
     @Transactional
-    public void uploadListingImages(FallbackImageUploadDto dto, User authenticatedUser) {
+    public void uploadListingImages(FallbackImageUploadDto dto, AuthenticatedUser authenticatedUser) {
         if (dto.getImages() == null || dto.getImages().isEmpty()) {
             throw new BadRequestException("Invalid request body");
         }
@@ -222,11 +225,11 @@ public class ListingService {
         Listing listing = listingRepository.findByIdAndDeletedFalse(dto.getListingId())
                 .orElseThrow(() -> new BadRequestException("Listing not found"));
 
-        if (!listing.getSeller().getUuid().equals(authenticatedUser.getUuid())) {
+        if (!listing.getSeller().getUuid().equals(authenticatedUser.uuid())) {
             log.warn(
                     "Unauthorized image upload attempt listing=[ ID {}] user=[ UUID {}]",
                     dto.getListingId(),
-                    authenticatedUser.getUuid()
+                    authenticatedUser.uuid()
             );
             throw new UnauthorizedException();
         }
@@ -301,13 +304,13 @@ public class ListingService {
     @Transactional
     public void deleteRecord(
             Long itemId,
-            User authenticatedUser
+            AuthenticatedUser authenticatedUser
     ) {
 
         log.warn(
                 "Listing deleted listing=[ID {}] deletedBy=[UUID {}] admin={}",
                 itemId,
-                authenticatedUser.getUuid(),
+                authenticatedUser.uuid(),
                 authenticatedUser.isAdmin()
         );
 
@@ -317,7 +320,7 @@ public class ListingService {
             listingRepository.softDeleteById(itemId);
         } else {
             if (listing.getSeller().getUuid()
-                    .equals(authenticatedUser.getUuid())) {
+                    .equals(authenticatedUser.uuid())) {
                 listingRepository.softDeleteById(itemId);
             } else {
                 throw new ForbiddenException();
@@ -328,13 +331,13 @@ public class ListingService {
     @Transactional
     public void deleteRecords(
             List<Long> ids,
-            User authenticatedUser
+            AuthenticatedUser authenticatedUser
     ) {
 
         log.warn(
                 "Bulk listing delete count={} admin=[UUID {}]",
                 ids.size(),
-                authenticatedUser.getId()
+                authenticatedUser.id()
         );
 
         if (authenticatedUser.isAdmin()) {

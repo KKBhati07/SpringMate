@@ -11,12 +11,16 @@ import com.example.SpringMate.Location.Repository.CityRepository;
 import com.example.SpringMate.Location.Repository.CountryRepository;
 import com.example.SpringMate.Location.Repository.LocationRepository;
 import com.example.SpringMate.Location.Repository.StateRepository;
+import com.example.SpringMate.Shared.Constants;
 import com.example.SpringMate.Shared.Exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class LocationService {
@@ -44,6 +48,7 @@ public class LocationService {
                 );
     }
 
+    @Cacheable(value = Constants.CacheNamespace.COUNTRY, key = "'IN_US'")
     public List<CountryResponseDto> getCountries() {
         List<Country> countries = countryRepository
                 .findAllByIso2In(List.of("IN", "US"));
@@ -60,10 +65,9 @@ public class LocationService {
                 .toList();
     }
 
+    @Cacheable(value = Constants.CacheNamespace.STATE, key = "#countryId")
     public List<StateResponseDto> getStates(long countryId) {
-        if (!countryRepository.existsById(countryId)) {
-            throw new NotFoundException("Country not found");
-        }
+        log.info("STATE_CACHE_MISS countryId={}", countryId);
 
         List<State> states = stateRepository.findAllByCountryIdOrderByNameAsc(countryId);
 
@@ -79,10 +83,9 @@ public class LocationService {
                 .toList();
     }
 
+    @Cacheable(value = Constants.CacheNamespace.CITY, key = "#stateId")
     public List<CityResponseDto> getCities(long stateId) {
-        if (!stateRepository.existsById(stateId)) {
-            throw new NotFoundException("State not found");
-        }
+        log.info("CITY_CACHE_MISS stateId={}", stateId);
 
         List<City> cities = cityRepository.findAllByStateIdOrderByNameAsc(stateId);
 

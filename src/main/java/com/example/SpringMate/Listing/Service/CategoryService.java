@@ -2,10 +2,14 @@ package com.example.SpringMate.Listing.Service;
 
 import com.example.SpringMate.Listing.DTO.FetchCategoriesResponseDto;
 import com.example.SpringMate.Listing.Repository.CategoryRepository;
+import com.example.SpringMate.Shared.Constants;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 @Service
+// value - a logical bucket inside your cache -> categories::all
+@Cacheable(value = Constants.CacheNamespace.CATEGORY, key = "'all'")
 @RequiredArgsConstructor
 public class CategoryService {
     private final CategoryRepository categoryRepository;

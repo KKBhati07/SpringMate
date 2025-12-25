@@ -68,7 +68,7 @@ public class AuthHelper {
                               String name,
                               String value,
                               Duration maxAge,
-                              String domain){
+                              String domain) {
         // Jkarta Cookie does not support sameSite attribute, hence will blocked by browser in cross site
         ResponseCookie cookie = ResponseCookie.from(name, value)
 //                .httpOnly(true)
@@ -85,5 +85,9 @@ public class AuthHelper {
 
     public boolean isSelfUUID(UUID uuid, User authenticatedUser) {
         return uuid.equals(authenticatedUser.getUuid());
+    }
+
+    public boolean isSelfUUID(UUID uuid, UUID authenticatedUserUUid) {
+        return uuid.equals(authenticatedUserUUid);
     }
 }
