@@ -1,0 +1,60 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+
+  datasource:
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+
+  data:
+    redis:
+      host: redis          # The network address or hostname of your Redis server.
+      port: 6379           # The port number on which your Redis server is listening.
+      database: 0          # The index of the logical database to use (Redis usually has 16, from 0-15).
+      timeout: 60s         # Max time to wait for a command to complete before throwing a timeout exception.
+      lettuce:             # Section for Lettuce-specific (the default driver) client settings.
+        pool:              # Enables and configures connection pooling for better performance.
+          max-active: 8    # Maximum number of concurrent connections the pool can provide at once.
+          max-idle: 8      # Maximum number of "sleeping" connections to keep in the pool even when not in use.
+
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true   # Pretty SQL for easier debugging in local
+    hibernate:
+      ddl-auto: update
+
+  devtools:
+    restart:
+      enabled: false # Enables automatic restart with Spring DevTools
+      poll-interval: 10000
+      quiet-period: 4000
+
+server:
+  ssl:
+    enabled: true
+    key-store: classpath:marketmate-local.p12
+    key-store-password: ${SSL_KEYSTORE_PASSWORD:changeit}
+    key-store-type: PKCS12
+    key-alias: marketmate
+  tomcat:
+    threads:
+      max: 30        # Maximum number of worker threads that process HTTP requests concurrently
+      min-spare: 5   # Minimum number of idle threads kept ready to avoid request latency spikes
+
+    max-connections: 100  # Maximum number of simultaneous TCP socket connections (active + keep-alive) i.e how many clients can connec
+    accept-count: 20      # Number of requests that can wait in Tomcat’s queue when all threads are busy
+    backlog: 20           # OS-level TCP connection queue size before Tomcat accepts the connection
+
+logging:
+  level:
+    org.springframework.boot.devtools: DEBUG
+    org.springframework.data.redis: DEBUG
+    org:
+      hibernate:
+        SQL: DEBUG          # Logs generated SQL statements without excessive verbosity
+        orm:
+          jdbc:
+            bind: TRACE     # Disables logging of query parameter values to avoid sensitive data leaks

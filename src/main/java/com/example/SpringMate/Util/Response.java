@@ -1,13 +1,17 @@
 package com.example.SpringMate.Util;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 
 @Data
-public class Response {
-    private Object data;
+@AllArgsConstructor
+@Builder
+public class Response<T> {
+    private T data;
     private String message;
-    public Response(Object data, String message) {
-        this.data = data;
+
+    public Response(String message){
         this.message = message;
     }
 }

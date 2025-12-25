@@ -69,3 +69,10 @@ logs
 *.jar
 *.war
 *.ear
+
+### Local SSL keystores ###
+**/*.p12
+**/*.jks
+**/*.keystore
+
+src/main/java/com/example/SpringMate/env/.env

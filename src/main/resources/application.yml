@@ -1,0 +1,69 @@
+spring:
+  application:
+    seed-secret: ${SEED_SECRET}
+    location-api-key: "api-key"
+    name: springmate  # Sets the name of the Spring Boot application. Useful for identification in logs and admin tools.
+
+    jwt:
+      secret: ${JWT_SECRET} # JWT secret
+
+
+
+  web:
+    resources:
+      add-mappings: false # Disable static resources
+
+  mvc:
+    throw-exception-if-no-handler-found: true   # Throw NoHandlerFoundException for unknown routes
+
+  datasource:
+    url: ${DB_URL} # JDBC URL to connect to the PostgreSQL database
+    username: ${DB_USERNAME}  # Database username
+    password: ${DB_PASSWORD}  # Database password
+    driver-class-name: org.postgresql.Driver  # PostgreSQL JDBC driver class
+
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+
+  jpa:
+    hibernate:
+      ddl-auto: update  # Automatically updates the database schema. OK for dev.
+    # database-platform: org.hibernate.dialect.PostgreSQLDialect  # Uncomment and fix if needed
+
+  mail: # Configuration specific to Spring's Mail support
+    host: smtp.gmail.com                  # SMTP server host (Gmail's SMTP server)
+    port: 587                             # Port for TLS/STARTTLS (Gmail requires 587)
+    username: ${EMAIL_USERNAME}           # Email username (injected via environment variable or .env)
+    password: ${EMAIL_PASSWORD}           # Email password or App Password (also from env or .env)
+    properties: # Additional mail-specific properties
+      mail: # Nesting for standard JavaMail properties
+        smtp: # SMTP-specific configuration
+          auth: true                      # Enables SMTP authentication
+          starttls: # STARTTLS encryption config
+            enable: true                  # Enables STARTTLS (encryption over port 587)
+        debug: true                       # Enables detailed logging of the email sending process
+
+
+  resilience4j.retry:
+    instances:
+      s3Upload:
+        max-attempts: 3               # Number of retry attempts (1 initial + 2 retries)
+        wait-duration: 1s            # Wait duration between retry attempts
+      sendEmail:
+        max-attempts: 3               # Number of retry attempts (1 initial + 2 retries)
+        wait-duration: 1s            # Wait duration between retry attempts
+
+  resilience4j.circuitbreaker:
+    instances:
+      s3Upload:
+        register-health-indicator: true     # Exposes circuit breaker metrics to actuator
+        sliding-window-size: 5              # Number of calls to consider for calculating failure rate
+        minimum-number-of-calls: 5          # Minimum number of calls required before calculating failure rate
+        failure-rate-threshold: 50          # Percentage of failures to trip the circuit
+        wait-duration-in-open-state: 10s    # Time to wait before transitioning from OPEN to HALF_OPEN
+      sendEmail:
+        register-health-indicator: true     # Exposes circuit breaker metrics to actuator
+        sliding-window-size: 5              # Number of calls to consider for calculating failure rate
+        minimum-number-of-calls: 5          # Minimum number of calls required before calculating failure rate
+        failure-rate-threshold: 50          # Percentage of failures to trip the circuit
+        wait-duration-in-open-state: 10s    # Time to wait before transitioning from OPEN to HALF_OPEN
