@@ -1,4 +1,4 @@
-# Put it in the parent of both apps and run
+# Put it in the parent of all apps and run
 services:
   frontend:
     build:
@@ -32,6 +32,23 @@ services:
       - CHOKIDAR_USEPOLLING=true          # Enable polling for file changes (fixes issues on some hosts)
       - PORT=4201
       - APP_NAME=mm-admin-portal
+    # command: npm start                  # Optional custom start command (currently commented)
+
+  chat-engine:
+    build:
+      context: ./mm-chat-service           # Path to frontend source code
+      dockerfile: DOCKERFILE.local         # Dockerfile to use for frontend
+    container_name: chat-engine            # Name of the frontend container
+    ports:
+      - "3100:3000"                       # Map host port 4200 to container port 4200
+    volumes:
+      - ./mm-chat-service:/app:cached     # Mount local frontend code into container
+      #      - ./MM/certs:/certs:ro
+      - chat_engine_node_modules:/app/node_modules
+    env_file:
+      - ./mm-chat-service/src/env/.env
+    environment:
+      - NODE_ENV=development             # Enable polling for file changes (fixes issues on some hosts)
     # command: npm start                  # Optional custom start command (currently commented)
 
   backend:
@@ -81,6 +98,7 @@ volumes:
   pgdata:                                 # Named volume for PostgreSQL data
   mm_node_modules:                        # Named volume for frontend node_modules
   mm_admin_node_modules:                  # Named volume for admin frontend node_modules
+  chat_engine_node_modules:               # Named volume for chat engine node_modules
   redis_data:                             # Named volume for redis persistance
 
 
