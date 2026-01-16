@@ -1,6 +1,6 @@
 package com.example.SpringMate.Storage.Service;
 
-import com.example.SpringMate.Shared.Constants;
+import com.example.SpringMate.Config.AppProperties;
 import com.example.SpringMate.Shared.Enum.AwsS3Directory;
 import com.example.SpringMate.Shared.Exception.BadRequestException;
 import com.example.SpringMate.Storage.DTO.*;
@@ -20,6 +20,7 @@ import java.util.Map;
 public class StorageService {
 
     private final AwsS3Service awsS3Service;
+    private final AppProperties appProperties;
 
     public PresignBatchResponseDto getPresignPutUrls(PresignBatchRequestDto batchRequest) {
 
@@ -80,12 +81,13 @@ public class StorageService {
             throw new BadRequestException("contentType is required for file: " + presignRequestDto.getFileName());
         }
 
+        AppProperties.Aws awsConfig = appProperties.getAws();
         PresignResult res = awsS3Service.generatePresignedPutUrl(
                 directory,
-                Constants.AWS.BUCKET_NAME,
+                awsConfig.getBucketName(),
                 presignRequestDto.getFileName(),
                 presignRequestDto.getContentType(),
-                Constants.AWS.PUT_SIGNED_URI_EXPIRATION
+                awsConfig.getPresign().getPutExpiryMinutes()
         );
 
         if (res == null) {
@@ -109,20 +111,69 @@ public class StorageService {
                 .build();
     }
 
+    /**
+     * Delete an image from S3 bucket.
+     */
+    public void deleteImage(String objectKey) {
+        awsS3Service.deleteImage(getBucketName(), objectKey);
+    }
 
+    /**
+     * Upload an image to the S3 bucket.
+     */
+    public String uploadImage(AwsS3Directory directoryName, MultipartFile imageFile) {
+        return awsS3Service.uploadImage(getBucketName(), directoryName, imageFile);
+    }
+
+    /**
+     * Get a presigned GET URL for an object using bucket and expiry.
+     */
+    public String getPreSignedUrl(String objectKey) {
+        return awsS3Service.getPreSignedUrl(
+                getBucketName(),
+                objectKey,
+                appProperties.getAws().getPresign().getGetExpiryMinutes()
+        );
+    }
+
+    /**
+     * Check if an object exists in S3 bucket.
+     */
+    public boolean doesObjectExist(String objectKey) {
+        return awsS3Service.doesObjectExist(getBucketName(), objectKey);
+    }
+
+    @Deprecated(forRemoval = true)
     public void deleteImage(String bucketName, String objectKey) {
         awsS3Service.deleteImage(bucketName, objectKey);
     }
 
+    @Deprecated(forRemoval = true)
     public String uploadImage(String bucketName, AwsS3Directory directoryName, MultipartFile imageFile) {
         return awsS3Service.uploadImage(bucketName, directoryName, imageFile);
     }
 
+    @Deprecated(forRemoval = true)
     public String getPreSignedUrl(String bucketName, String objectKey, long expiryMinutes) {
         return awsS3Service.getPreSignedUrl(bucketName, objectKey, expiryMinutes);
     }
 
+    @Deprecated(forRemoval = true)
     public boolean doesObjectExists(String bucketName, String objectKey) {
         return awsS3Service.doesObjectExist(bucketName, objectKey);
+    }
+
+    /**
+     * Get the S3 bucket name.
+     */
+    public String getBucketName() {
+        return appProperties.getAws().getBucketName();
+    }
+
+    /**
+     * Get the presigned URL expiry for GET requests.
+     */
+    public int getGetExpiryMinutes() {
+        return appProperties.getAws().getPresign().getGetExpiryMinutes();
     }
 }

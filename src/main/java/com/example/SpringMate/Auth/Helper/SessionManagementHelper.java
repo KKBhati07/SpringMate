@@ -2,11 +2,11 @@ package com.example.SpringMate.Auth.Helper;
 
 import com.example.SpringMate.Auth.Entity.Session;
 import com.example.SpringMate.Auth.Entity.SessionLog;
+import com.example.SpringMate.Config.AppProperties;
 import com.example.SpringMate.Shared.Helper.CoreHelper;
 import com.example.SpringMate.User.Entity.User;
 import com.example.SpringMate.Auth.Repository.SessionLogRepository;
 import com.example.SpringMate.Auth.Repository.SessionRepository;
-import com.example.SpringMate.Shared.Constants;
 import com.example.SpringMate.User.Service.CoreUserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +24,7 @@ public class SessionManagementHelper {
     private final CoreUserService coreUserService;
     private final SessionRepository sessionRepository;
     private final SessionLogRepository sessionLogRepository;
+    private final AppProperties appProperties;
 
     public Session checkIfSessionExists(String email) {
         User user = coreUserService.getUserByEmail(email);
@@ -38,12 +39,14 @@ public class SessionManagementHelper {
 
     public Session createSession(User user, HttpServletRequest request) {
         String sessionId = CoreHelper.generateUUID().toString().toUpperCase();
+        int sessionValidityDays = appProperties.getAuth().getSession().getValidityDays();
+
         Session session = Session.builder()
                 .sessionId(sessionId)
                 .user(user)
                 .createdAt(LocalDateTime.now())
                 .lastAccessedAt(LocalDateTime.now())
-                .expiresAt(LocalDateTime.now().plusDays(Constants.SESSION_VALIDITY))
+                .expiresAt(LocalDateTime.now().plusDays(sessionValidityDays))
                 .build();
         Session createdSession = sessionRepository.save(session);
         createSessionLog(createdSession.getCreatedAt(), user, sessionId, request);

@@ -1,11 +1,11 @@
 package com.example.SpringMate.Auth.Helper;
 
-import com.example.SpringMate.Shared.Constants;
+import com.example.SpringMate.Config.AppProperties;
 import com.example.SpringMate.User.Entity.User;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
@@ -19,8 +19,10 @@ import java.util.Random;
 import java.util.UUID;
 
 @Component
-@NoArgsConstructor
+@RequiredArgsConstructor
 public class AuthHelper {
+
+    private final AppProperties appProperties;
 
     public static String failureResponse(String message, String status) throws JsonProcessingException {
         Map<String, String> map = new HashMap<>();
@@ -49,34 +51,41 @@ public class AuthHelper {
     }
 
     public void clearAuthCookie(HttpServletResponse response) {
+        AppProperties.Cookie cookieConfig = appProperties.getCookie();
         injectCookie(response,
                 "auth_token",
                 "",
                 Duration.ZERO,
-                Constants.COOKIE_DOMAIN);
+                cookieConfig.getDomain(),
+                cookieConfig.isSecure());
     }
 
     public void injectAuthCookie(HttpServletResponse response, String authToken) {
+        AppProperties.Cookie cookieConfig = appProperties.getCookie();
+        int jwtValidityDays = appProperties.getAuth().getJwt().getValidityDays();
+
         injectCookie(response,
                 "auth_token",
                 authToken,
-                Duration.ofDays(Constants.JWT_VALIDITY),
-                Constants.COOKIE_DOMAIN);
+                Duration.ofDays(jwtValidityDays),
+                cookieConfig.getDomain(),
+                cookieConfig.isSecure());
     }
 
     private void injectCookie(HttpServletResponse response,
                               String name,
                               String value,
                               Duration maxAge,
-                              String domain) {
-        // Jkarta Cookie does not support sameSite attribute, hence will blocked by browser in cross site
+                              String domain,
+                              boolean secure) {
+        // Jakarta Cookie does not support sameSite attribute, hence will be blocked by browser in cross site
         ResponseCookie cookie = ResponseCookie.from(name, value)
 //                .httpOnly(true)
-                .path("/")
+                .path(appProperties.getCookie().getPath())
                 .maxAge(maxAge)
 //                .sameSite("None")    // required for cross-site cookies // Not required anymore as local setup is samesite now
                 .domain(domain)
-                .secure(true)        // required for SameSite=None
+                .secure(secure)
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());

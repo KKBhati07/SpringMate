@@ -58,3 +58,13 @@ logging:
         orm:
           jdbc:
             bind: TRACE     # Disables logging of query parameter values to avoid sensitive data leaks
+app:
+  cors:
+    # Local development origins
+    allowed-origins:
+      - https://marketmate.local:4200
+      - https://admin.marketmate.local:4300
+
+  cookie:
+    domain: .marketmate.local
+    secure: true  # Using HTTPS locally with self-signed cert

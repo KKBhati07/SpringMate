@@ -2,7 +2,6 @@ package com.example.SpringMate.Util;
 
 import com.example.SpringMate.Listing.DTO.*;
 import com.example.SpringMate.Listing.Entity.Listing;
-import com.example.SpringMate.Shared.Constants;
 import com.example.SpringMate.Storage.Service.StorageService;
 import com.example.SpringMate.User.Entity.User;
 import lombok.RequiredArgsConstructor;
@@ -24,10 +23,7 @@ public class ResponseMapper {
                 .uuid(user.getUuid())
                 .isAdmin(user.isAdmin())
                 .contactNo(user.getContactNo())
-                .profileUrl(storageService.getPreSignedUrl(
-                        Constants.AWS.BUCKET_NAME,
-                        user.getProfileUrl(),
-                        Constants.AWS.GET_SIGNED_URI_EXPIRATION))
+                .profileUrl(storageService.getPreSignedUrl(user.getProfileUrl()))
                 .build();
     }
 

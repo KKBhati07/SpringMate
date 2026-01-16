@@ -7,5 +7,8 @@ WORKDIR /app
 # COPY pom.xml .
 # RUN mvn dependency:go-offline
 
+# Disable DevTools restart in Docker (volume mounts trigger false positives)
+ENV SPRING_DEVTOOLS_RESTART_ENABLED=false
+
 # Start command
 CMD ["mvn", "spring-boot:run", "-Plocal"]

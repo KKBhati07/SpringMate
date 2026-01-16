@@ -33,3 +33,14 @@ logging:
           jdbc:
             bind: OFF
 
+app:
+  aws:
+    region: ${AWS_REGION}
+    bucket-name: ${AWS_BUCKET_NAME}
+
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS}
+
+  cookie:
+    domain: ${COOKIE_DOMAIN}
+    secure: true

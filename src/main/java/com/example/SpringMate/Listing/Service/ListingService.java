@@ -180,7 +180,7 @@ public class ListingService {
                 );
                 for (String key : keysToCleanup) {
                     try {
-                        storageService.deleteImage(Constants.AWS.BUCKET_NAME, key);
+                        storageService.deleteImage(key);
                     } catch (Exception cleanupEx) {
                         log.error(
                                 "Upload rollback failed listing=[ ID {}]",
@@ -244,8 +244,7 @@ public class ListingService {
                     throw new BadRequestException("Empty image provided");
                 }
 
-                String imgKey = storageService.uploadImage(Constants.AWS.BUCKET_NAME,
-                        AwsS3Directory.LISTINGS, file);
+                String imgKey = storageService.uploadImage(AwsS3Directory.LISTINGS, file);
                 if (imgKey == null) {
                     throw new InternalServerException("Upload failed for file: " + file.getOriginalFilename());
                 }
@@ -287,7 +286,7 @@ public class ListingService {
             );
             for (String key : uploadedKeys) {
                 try {
-                    storageService.deleteImage(Constants.AWS.BUCKET_NAME, key);
+                    storageService.deleteImage(key);
                 } catch (Exception deleteEx) {
                     log.error(
                             "Upload rollback failed listing=[ ID {}]",
@@ -399,10 +398,7 @@ public class ListingService {
                         .id(record.getCategory().getId())
                         .name(record.getCategory().getName())
                         .build())
-                .coverImageUrl(storageService.getPreSignedUrl(
-                        Constants.AWS.BUCKET_NAME,
-                        record.getCoverImageUrl(),
-                        Constants.AWS.GET_SIGNED_URI_EXPIRATION))
+                .coverImageUrl(storageService.getPreSignedUrl(record.getCoverImageUrl()))
                 .isFavorite(record.getIsFavorite())
                 .location(locationDTO)
                 .build();

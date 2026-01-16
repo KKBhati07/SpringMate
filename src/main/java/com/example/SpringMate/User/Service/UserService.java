@@ -146,7 +146,7 @@ public class UserService {
         if (userDetails.getProfileUrl() != null) {
             String oldProfilePicUrl = user.getProfileUrl();
             if (oldProfilePicUrl != null) {
-                storageService.deleteImage(Constants.AWS.BUCKET_NAME, oldProfilePicUrl);
+                storageService.deleteImage(oldProfilePicUrl);
             }
             user.setProfileUrl(userDetails.getProfileUrl());
         }
@@ -179,11 +179,7 @@ public class UserService {
 
             String oldProfilePicUrl = user.getProfileUrl();
 
-            String imageKey = storageService.uploadImage(
-                    Constants.AWS.BUCKET_NAME,
-                    AwsS3Directory.PROFILE,
-                    file
-            );
+            String imageKey = storageService.uploadImage(AwsS3Directory.PROFILE, file);
 
             if (imageKey == null) {
                 throw new InternalServerException("Upload image failed");
@@ -192,7 +188,7 @@ public class UserService {
             user.setProfileUrl(imageKey);
 
             if (oldProfilePicUrl != null) {
-                storageService.deleteImage(Constants.AWS.BUCKET_NAME, oldProfilePicUrl);
+                storageService.deleteImage(oldProfilePicUrl);
             }
             log.info(
                     "Profile image updated for user=[UUID {}]",

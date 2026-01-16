@@ -1,6 +1,6 @@
 package com.example.SpringMate.Auth.Entity;
 
-import com.example.SpringMate.Shared.Constants;
+import com.example.SpringMate.Config.AppConfigHolder;
 import com.example.SpringMate.User.Entity.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -42,6 +42,6 @@ public class VerificationCode {
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
-        this.expiresAt = this.createdAt.plusMinutes(Constants.OTP_EXPIRATION_MINUTES);
+        this.expiresAt = this.createdAt.plusMinutes(AppConfigHolder.getOtpExpirationMinutes());
     }
 }
