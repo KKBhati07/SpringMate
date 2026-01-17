@@ -20,7 +20,7 @@ import java.util.UUID;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(Urls.User.USER_BASE)
+@RequestMapping(Urls.User.BASE)
 public class UserController {
 
     private final UserService userService;
@@ -28,7 +28,7 @@ public class UserController {
 
     @PostMapping(value = Urls.User.CREATE_USER, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Response<CreateUserResponseDto>> createUser(@Valid @RequestBody CreateUserRequestDto userDetails) {
-        return ResponseEntity.ok(new Response<>(userService.createUser(userDetails), "User created successfully"));
+        return ResponseEntity.ok(Response.success(userService.createUser(userDetails), "User created successfully"));
     }
 
 
@@ -36,7 +36,7 @@ public class UserController {
     public ResponseEntity<Response<UserDetailsResponseDto>>
     getUserDetails(@PathVariable UUID uuid,
                    @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
-        return ResponseEntity.ok(new Response<>(userService
+        return ResponseEntity.ok(Response.success(userService
                 .getUserDetails(uuid, authenticatedUser),
                 "User details fetched successfully"));
     }
@@ -66,7 +66,7 @@ public class UserController {
             throw new UnauthorizedUserUpdateException();
         }
 
-        return ResponseEntity.ok(new Response<>(userService.updateUser(updatedUserDetails),
+        return ResponseEntity.ok(Response.success(userService.updateUser(updatedUserDetails),
                 "User updated successfully"));
     }
 

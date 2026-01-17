@@ -21,7 +21,7 @@ import java.util.UUID;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(Urls.Listing.LISTING_BASE)
+@RequestMapping(Urls.Listing.BASE)
 public class ListingController {
 
     private final ListingService listingService;
@@ -41,7 +41,7 @@ public class ListingController {
             @AuthenticationPrincipal AuthenticatedUser authenticatedUser
     ) {
         return ResponseEntity.ok(
-                new Response<>(listingService.getAllRecords(
+                Response.success(listingService.getAllRecords(
                         new FetchListingsRequestDto(
                                 categoryId, minPrice, maxPrice,
                                 countryId, stateId, cityId,
@@ -61,7 +61,7 @@ public class ListingController {
             @RequestParam(defaultValue = "10") int size
     ) {
         return ResponseEntity.ok(
-                new Response<>(listingService.getRecordsByUser(
+                Response.success(listingService.getRecordsByUser(
                         uuid,
                         page,
                         size,
@@ -81,7 +81,7 @@ public class ListingController {
             throw new BadRequestException("Invalid params!");
         }
         return ResponseEntity.ok(
-                new Response<>(listingService.getRecordsByUser(
+                Response.success(listingService.getRecordsByUser(
                         uuid,
                         page,
                         size,
@@ -90,7 +90,7 @@ public class ListingController {
                         "Listings fetched successfully"));
     }
 
-    @PostMapping(value = Urls.Listing.CREATE_LISTING)
+    @PostMapping(value = Urls.Listing.CREATE)
     public ResponseEntity<Response<CreateListingResponseDto>>
     createListing(@Valid
                   @RequestBody CreateListingRequestDto requestDto,
@@ -102,7 +102,7 @@ public class ListingController {
         );
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new Response<>(listingService.createRecord(requestDto, authenticatedUser),
+                .body(Response.success(listingService.createRecord(requestDto, authenticatedUser),
                         "Listing created successfully"));
     }
 
@@ -126,7 +126,7 @@ public class ListingController {
     }
 
 
-    @DeleteMapping(Urls.Listing.DELETE_LISTING)
+    @DeleteMapping(Urls.Listing.DELETE)
     public ResponseEntity<Void>
     deleteListing(@PathVariable Long id,
                   @AuthenticationPrincipal AuthenticatedUser authenticatedUser
@@ -145,7 +145,7 @@ public class ListingController {
     // due to back ref Listing -> Images -> Listing
     public ResponseEntity<Response<ListingResponseDto>>
     fetchOne(@PathVariable Long id) {
-        return ResponseEntity.ok(new Response<>(
+        return ResponseEntity.ok(Response.success(
                 listingService.getOne(id),
                 "Item fetched successfully"));
     }

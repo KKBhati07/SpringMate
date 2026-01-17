@@ -179,7 +179,7 @@ public class SessionAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        return Arrays.stream(Urls.FILTER_EXCLUDED_ENDPOINTS)
+        return Arrays.stream(Urls.Security.FILTER_EXCLUDED_ENDPOINTS)
                 .anyMatch(pattern ->
                         pathMatcher.match(pattern, path)
                 );
@@ -196,7 +196,7 @@ public class SessionAuthenticationFilter extends OncePerRequestFilter {
 
     private void sendUnauthorized(HttpServletResponse response, String message) throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        Response<Void> res = new Response<>(null, message);
+        Response<Void> res = Response.error(message);
         response.setContentType("application/json");
         response.getWriter().write(new ObjectMapper().writeValueAsString(res));
     }

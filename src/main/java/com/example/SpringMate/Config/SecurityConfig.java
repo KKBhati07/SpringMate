@@ -50,13 +50,13 @@ public class SecurityConfig {
                         jwtTokenProvider,
                         authCacheService,
                         authHelper);
-        authFilter.setFilterProcessesUrl(Urls.Auth.AUTH_BASE + Urls.Auth.LOGIN_WITH_PASS);
+        authFilter.setFilterProcessesUrl(Urls.Auth.BASE + Urls.Auth.LOGIN_WITH_PASS);
 
         http.cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers(Urls.PUBLIC_ENDPOINTS).permitAll()
+                                .requestMatchers(Urls.Security.PUBLIC_ENDPOINTS).permitAll()
                                 .anyRequest().authenticated()
                 )
                 .addFilterBefore(sessionAuthenticationFilter,

@@ -20,7 +20,7 @@ import java.util.List;
 
 @Slf4j
 @RestController()
-@RequestMapping(Urls.Location.LOCATION_BASE)
+@RequestMapping(Urls.Location.BASE)
 @RequiredArgsConstructor
 public class LocationController {
 
@@ -52,7 +52,7 @@ public class LocationController {
     public ResponseEntity<Response<List<CountryResponseDto>>>
     getCountries() {
         return ResponseEntity.ok(
-                new Response<>(locationService.getCountries(),
+                Response.success(locationService.getCountries(),
                         "Countries fetched successfully"));
     }
 
@@ -60,7 +60,7 @@ public class LocationController {
     public ResponseEntity<Response<List<StateResponseDto>>>
     getStates(@RequestParam(name = "country_id") long countryId) {
         return ResponseEntity.ok(
-                new Response<>(locationService.getStates(countryId),
+                Response.success(locationService.getStates(countryId),
                         "States fetched successfully"));
     }
 
@@ -68,7 +68,7 @@ public class LocationController {
     public ResponseEntity<Response<List<CityResponseDto>>>
     getCities(@RequestParam(name = "state_id") long stateId) {
         return ResponseEntity.ok(
-                new Response<>(locationService.getCities(stateId),
+                Response.success(locationService.getCities(stateId),
                         "Cities fetched successfully"));
     }
 

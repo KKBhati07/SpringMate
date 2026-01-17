@@ -16,7 +16,7 @@ import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping(Urls.UserFavorites.FAVORITE_BASE)
+@RequestMapping(Urls.UserFavorites.BASE)
 @RequiredArgsConstructor
 public class UserFavoriteController {
 
@@ -35,11 +35,11 @@ public class UserFavoriteController {
 
         return ResponseEntity.status(
                         HttpStatus.CREATED)
-                .body(new Response<>
-                        (userFavoriteService.setUnsetFavorite(
+                .body(Response.success(
+                        userFavoriteService.setUnsetFavorite(
                                 authenticatedUser.id(),
                                 dto.getListingId()),
-                                "Request successful")
+                        "Request successful")
                 );
     }
 }

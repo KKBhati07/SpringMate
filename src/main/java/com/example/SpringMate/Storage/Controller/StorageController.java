@@ -14,7 +14,7 @@ import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(Urls.Storage.STORAGE_BASE)
+@RequestMapping(Urls.Storage.BASE)
 public class StorageController {
 
     private final StorageService storageService;
@@ -23,7 +23,7 @@ public class StorageController {
     public ResponseEntity<Response<Map<String, Boolean>>>
     doesObjectExists(@RequestParam(value = "object_key") String objectKey) {
         return ResponseEntity.ok(
-                new Response<>(
+                Response.success(
                         Map.of("exists", storageService.doesObjectExist(objectKey)),
                         "Request successful!"
                 )
@@ -34,7 +34,7 @@ public class StorageController {
     public ResponseEntity<Response<PresignBatchResponseDto>>
     presignPutUrl(@RequestBody PresignBatchRequestDto presignRequestDto) {
         return ResponseEntity.ok(
-                new Response<>(
+                Response.success(
                         storageService.getPresignPutUrls(presignRequestDto),
                         "Presigned Url created successfully"
                 )

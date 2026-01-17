@@ -25,6 +25,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -42,6 +43,7 @@ public class UserService {
     private final ListingService listingService;
     private final CoreUserService coreUserService;
     private final StorageService storageService;
+    private final PasswordEncoder passwordEncoder;
 
     public CreateUserResponseDto createUser(CreateUserRequestDto userDetails) {
         Optional<User> user = userRepository.findByEmail(userDetails.getEmail());
@@ -60,7 +62,13 @@ public class UserService {
             throw new InternalServerException("Unable to fetch role");
         }
 
-        User newUser = new User(userDetails, role.get());
+        String encodedPassword = passwordEncoder.encode(userDetails.getPassword());
+        User newUser = new User(
+                userDetails.getName(),
+                userDetails.getEmail(),
+                encodedPassword,
+                role.get()
+        );
         userRepository.save(newUser);
         log.info(
                 "User created user=[UUID {}] role={}",

@@ -27,7 +27,7 @@ import java.util.UUID;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(Urls.Admin.ADMIN_BASE)
+@RequestMapping(Urls.Admin.BASE)
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
@@ -51,7 +51,7 @@ public class AdminController {
                 size
         );
         return ResponseEntity.ok(
-                new Response<>(userService.fetchAll(page, size),
+                Response.success(userService.fetchAll(page, size),
                         "Users fetched successfully")
         );
     }
@@ -98,7 +98,7 @@ public class AdminController {
                 updatedUser.getUuid()
         );
         log.info("[ UPDATED DATA ] : {}", updatedUser);
-        return ResponseEntity.ok(new Response<>(userService.updateUser(updatedUser),
+        return ResponseEntity.ok(Response.success(userService.updateUser(updatedUser),
                 "User updated successfully"));
     }
 
@@ -128,7 +128,7 @@ public class AdminController {
         );
 
         return ResponseEntity.ok(
-                new Response<>(listingService.getAllRecords(
+                Response.success(listingService.getAllRecords(
                         new FetchListingsRequestDto(
                                 categoryId, minPrice, maxPrice,
                                 countryId, stateId, cityId,

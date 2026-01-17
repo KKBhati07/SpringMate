@@ -93,7 +93,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         String authToken = jwtTokenProvider.generateToken(session.getSessionId());
         authHelper.injectAuthCookie(response, authToken);
 
-        Response<Map<String, Boolean>> res = new Response<>(Map.of("authenticated", true), "Logged in successfully!");
+        Response<Map<String, Boolean>> res = Response.success(Map.of("authenticated", true), "Logged in successfully!");
         response.getWriter().write(new ObjectMapper().writeValueAsString(res));
     }
 
@@ -104,7 +104,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         response.setContentType("application/json");
         Map<String, Object> resMap = new HashMap<>();
         resMap.put("authenticated", false);
-        Response<Void> res = new Response<>(null, "Invalid credentials. Please try again.");
+        Response<Void> res = Response.error("Invalid credentials. Please try again.");
         response.getWriter().write(new ObjectMapper().writeValueAsString(res));
     }
 }
