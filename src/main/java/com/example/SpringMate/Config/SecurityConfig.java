@@ -8,6 +8,7 @@ import com.example.SpringMate.Auth.Filter.SessionAuthenticationFilter;
 import com.example.SpringMate.Auth.jwt.JwtTokenProvider;
 import com.example.SpringMate.User.Service.UserDetailServiceImpl;
 import com.example.SpringMate.Shared.Urls;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -41,6 +42,7 @@ public class SecurityConfig {
     private final AuthCacheService authCacheService;
     private final AuthHelper authHelper;
     private final AppProperties appProperties;
+    private final ObjectMapper objectMapper;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -49,13 +51,15 @@ public class SecurityConfig {
                         sessionManagementHelper,
                         jwtTokenProvider,
                         authCacheService,
-                        authHelper);
+                        authHelper,
+                        objectMapper);
         authFilter.setFilterProcessesUrl(Urls.Auth.BASE + Urls.Auth.LOGIN_WITH_PASS);
 
         http.cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
+                                .requestMatchers("/actuator/**").hasRole("ADMIN")
                                 .requestMatchers(Urls.Security.PUBLIC_ENDPOINTS).permitAll()
                                 .anyRequest().authenticated()
                 )

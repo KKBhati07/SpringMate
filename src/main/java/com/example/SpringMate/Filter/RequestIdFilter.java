@@ -1,5 +1,6 @@
 package com.example.SpringMate.Filter;
 
+import com.example.SpringMate.Shared.Constants;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,8 +19,7 @@ import java.util.UUID;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class RequestIdFilter extends OncePerRequestFilter {
 
-    public static final String REQUEST_ID_HEADER = "X-Request-Id";
-    public static final String MDC_KEY = "requestId";
+
 
     @Override
     protected void doFilterInternal(
@@ -28,21 +28,21 @@ public class RequestIdFilter extends OncePerRequestFilter {
             @NotNull FilterChain filterChain
     ) throws ServletException, IOException {
 
-        String requestId = request.getHeader(REQUEST_ID_HEADER);
+        String requestId = request.getHeader(Constants.RequestCorrelation.REQUEST_ID_HEADER);
 
         if (requestId == null || requestId.isBlank()) {
             requestId = UUID.randomUUID().toString();
         }
 
         try {
-            MDC.put(MDC_KEY, requestId);
+            MDC.put(Constants.RequestCorrelation.MDC_KEY, requestId);
 
             // Return it back in response header
-            response.setHeader(REQUEST_ID_HEADER, requestId);
+            response.setHeader(Constants.RequestCorrelation.REQUEST_ID_HEADER, requestId);
             filterChain.doFilter(request, response);
         } finally {
             // clean up to avoid memory leaks
-            MDC.remove(MDC_KEY);
+            MDC.remove(Constants.RequestCorrelation.MDC_KEY);
         }
     }
 }

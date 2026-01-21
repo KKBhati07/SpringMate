@@ -47,8 +47,7 @@ SpringMate
 │       └── Application.java
 ├── src/main/resources
 │   ├── application.yml
-│   ├── application-local.yml
-│   └── db/migration        # Flyway migrations (if enabled)
+│   └── application-local.yml
 └── pom.xml
 ```
 

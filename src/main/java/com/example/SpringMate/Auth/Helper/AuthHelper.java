@@ -23,12 +23,13 @@ import java.util.UUID;
 public class AuthHelper {
 
     private final AppProperties appProperties;
+    private final ObjectMapper objectMapper;
 
-    public static String failureResponse(String message, String status) throws JsonProcessingException {
+    public String failureResponse(String message, String status) throws JsonProcessingException {
         Map<String, String> map = new HashMap<>();
         map.put("message", message);
         map.put("status", status);
-        return new ObjectMapper().writeValueAsString(map);
+        return objectMapper.writeValueAsString(map);
     }
 
     public User getUserDetails() {

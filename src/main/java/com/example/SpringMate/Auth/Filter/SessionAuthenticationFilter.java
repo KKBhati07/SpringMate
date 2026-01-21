@@ -50,6 +50,7 @@ public class SessionAuthenticationFilter extends OncePerRequestFilter {
     private final AuthHelper authHelper;
     private final AuthCacheService authCacheService;
     private final SessionManagementHelper sessionManagementHelper;
+    private final ObjectMapper objectMapper;
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     @Override
@@ -198,6 +199,6 @@ public class SessionAuthenticationFilter extends OncePerRequestFilter {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         Response<Void> res = Response.error(message);
         response.setContentType("application/json");
-        response.getWriter().write(new ObjectMapper().writeValueAsString(res));
+        response.getWriter().write(objectMapper.writeValueAsString(res));
     }
 }

@@ -22,7 +22,6 @@ public class Response<T> {
     private boolean success;
     private T data;
     private String message;
-    private String requestId;
     private Instant timestamp;
     @Builder.Default
     private Map<String, Object> metadata = new HashMap<>();
@@ -35,7 +34,6 @@ public class Response<T> {
                 .success(true)
                 .data(data)
                 .message(message)
-                .requestId(getRequestIdFromMDC())
                 .timestamp(Instant.now())
                 .build();
     }
@@ -47,7 +45,6 @@ public class Response<T> {
         return Response.<T>builder()
                 .success(true)
                 .data(data)
-                .requestId(getRequestIdFromMDC())
                 .timestamp(Instant.now())
                 .build();
     }
@@ -59,7 +56,6 @@ public class Response<T> {
         return Response.<T>builder()
                 .success(false)
                 .message(message)
-                .requestId(getRequestIdFromMDC())
                 .timestamp(Instant.now())
                 .build();
     }
@@ -71,7 +67,6 @@ public class Response<T> {
         return Response.<T>builder()
                 .success(false)
                 .message(message)
-                .requestId(getRequestIdFromMDC())
                 .timestamp(Instant.now())
                 .metadata(metadata != null ? metadata : new HashMap<>())
                 .build();
@@ -99,12 +94,5 @@ public class Response<T> {
             this.metadata.putAll(additionalMetadata);
         }
         return this;
-    }
-
-    /**
-     * Gets request ID from MDC context, or returns null if not available.
-     */
-    private static String getRequestIdFromMDC() {
-        return MDC.get(RequestIdFilter.MDC_KEY);
     }
 }

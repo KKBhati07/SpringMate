@@ -15,6 +15,16 @@ public final class Constants {
         private UserRole() {
         }
     }
+    /**
+     * Request correlation keys
+     */
+    public static final class RequestCorrelation {
+        public static final String REQUEST_ID_HEADER = "X-Request-Id";
+        public static final String MDC_KEY = "requestId";
+
+        private RequestCorrelation() {
+        }
+    }
 
     /**
      * Cache namespace constants for Redis caching

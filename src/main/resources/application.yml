@@ -38,8 +38,8 @@ spring:
             enable: true                  # Enables STARTTLS (encryption over port 587)
         debug: true                       # Enables detailed logging of the email sending process
 
-
-  resilience4j.retry:
+resilience4j:
+  retry:
     instances:
       s3Upload:
         max-attempts: 3               # Number of retry attempts (1 initial + 2 retries)
@@ -47,8 +47,7 @@ spring:
       sendEmail:
         max-attempts: 3               # Number of retry attempts (1 initial + 2 retries)
         wait-duration: 1s            # Wait duration between retry attempts
-
-  resilience4j.circuitbreaker:
+  circuitbreaker:
     instances:
       s3Upload:
         register-health-indicator: true     # Exposes circuit breaker metrics to actuator
@@ -62,6 +61,33 @@ spring:
         minimum-number-of-calls: 5          # Minimum number of calls required before calculating failure rate
         failure-rate-threshold: 50          # Percentage of failures to trip the circuit
         wait-duration-in-open-state: 10s    # Time to wait before transitioning from OPEN to HALF_OPEN
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,env,loggers,httptrace
+        exclude: shutdown,heapdump,threaddump
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+      show-components: always
+      probes:
+        enabled: true
+    info:
+      enabled: true
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
 app:
   # AWS S3 Configuration
   aws:
