@@ -3,6 +3,7 @@ package com.example.SpringMate.User.Service;
 import com.example.SpringMate.Listing.Service.ListingService;
 import com.example.SpringMate.Shared.Enum.AwsS3Directory;
 import com.example.SpringMate.Shared.Exception.InternalServerException;
+import com.example.SpringMate.Shared.Roles;
 import com.example.SpringMate.Storage.Service.StorageService;
 import com.example.SpringMate.User.DTO.*;
 import com.example.SpringMate.User.Entity.Role;
@@ -13,7 +14,6 @@ import com.example.SpringMate.User.Exception.UserAlreadyExistsException;
 import com.example.SpringMate.User.Exception.UserNotFoundException;
 import com.example.SpringMate.User.Repository.RoleRepository;
 import com.example.SpringMate.User.Repository.UserRepository;
-import com.example.SpringMate.Shared.Constants;
 import com.example.SpringMate.Util.AuthenticatedUser;
 import com.example.SpringMate.Util.PaginatedResponse;
 import com.example.SpringMate.Util.ResponseMapper;
@@ -53,7 +53,7 @@ public class UserService {
 
         Optional<Role> role = roleRepository.findByName(
                 (userDetails.getRole() == null || userDetails.getRole().isBlank())
-                        ? Constants.UserRole.USER
+                        ? Roles.USER
                         : userDetails.getRole().trim().toUpperCase()
         );
 

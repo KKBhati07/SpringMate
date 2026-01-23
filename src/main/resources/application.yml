@@ -89,6 +89,10 @@ management:
       application: ${spring.application.name}
 
 app:
+  monitoring:
+    prometheus:
+      username: prometheus
+      password: ${PROMETHEUS_PASS:prometheus-pass}
   # AWS S3 Configuration
   aws:
     region: ${AWS_REGION:ap-south-1}

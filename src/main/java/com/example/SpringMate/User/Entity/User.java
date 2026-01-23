@@ -1,7 +1,7 @@
 package com.example.SpringMate.User.Entity;
 
-import com.example.SpringMate.Shared.Constants;
 import com.example.SpringMate.Shared.Helper.CoreHelper;
+import com.example.SpringMate.Shared.Roles;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
@@ -102,6 +102,6 @@ public class User implements UserDetails {
     }
 
     public boolean isAdmin() {
-        return Constants.UserRole.ADMIN.equalsIgnoreCase(this.role.getName());
+        return Roles.ADMIN.equalsIgnoreCase(this.role.getName());
     }
 }

@@ -6,12 +6,16 @@ import com.example.SpringMate.Auth.Helper.SessionManagementHelper;
 import com.example.SpringMate.Auth.Filter.AuthenticationFilter;
 import com.example.SpringMate.Auth.Filter.SessionAuthenticationFilter;
 import com.example.SpringMate.Auth.jwt.JwtTokenProvider;
+import com.example.SpringMate.Shared.Roles;
 import com.example.SpringMate.User.Service.UserDetailServiceImpl;
 import com.example.SpringMate.Shared.Urls;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -45,9 +49,30 @@ public class SecurityConfig {
     private final ObjectMapper objectMapper;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    @Order(1)
+    SecurityFilterChain prometheusChain(HttpSecurity http) throws Exception {
+        http
+                .securityMatcher(Urls.Actuator.PROMETHEUS)
+                .authenticationManager(prometheusAuthManager())
+                .authorizeHttpRequests(auth -> auth
+                        .anyRequest().hasRole(Roles.PROMETHEUS)
+                )
+                .httpBasic(Customizer.withDefaults())
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(sm ->
+                        sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                );
+
+        return http.build();
+    }
+
+
+
+    @Bean
+    @Order(2)
+    public SecurityFilterChain appChain(HttpSecurity http) throws Exception {
         AuthenticationFilter authFilter = new AuthenticationFilter
-                (authenticationManager(http),
+                (appAuthenticationManager(http),
                         sessionManagementHelper,
                         jwtTokenProvider,
                         authCacheService,
@@ -59,7 +84,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers("/actuator/**").hasRole("ADMIN")
+                                .requestMatchers(Urls.Actuator.BASE + "/**").hasRole(Roles.SUPER_ADMIN)
                                 .requestMatchers(Urls.Security.PUBLIC_ENDPOINTS).permitAll()
                                 .anyRequest().authenticated()
                 )
@@ -81,7 +106,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
+    public AuthenticationManager appAuthenticationManager(HttpSecurity http) throws Exception {
         DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
         authenticationProvider.setUserDetailsService(userDetailService);
         authenticationProvider.setPasswordEncoder(passwordEncoder());
@@ -91,6 +116,29 @@ public class SecurityConfig {
         return providerManager;
 
     }
+
+    @Bean
+    public AuthenticationManager prometheusAuthManager() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(userDetailService);
+        provider.setPasswordEncoder(passwordEncoder());
+
+        ProviderManager manager = new ProviderManager(provider);
+        manager.setEraseCredentialsAfterAuthentication(false);
+        return manager;
+    }
+
+
+
+    @Bean
+    public RoleHierarchy roleHierarchy() {
+        return RoleHierarchyImpl.fromHierarchy("""
+                    ROLE_SUPER_ADMIN > ROLE_ADMIN
+                    ROLE_ADMIN > ROLE_USER
+                """);
+
+    }
+
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {

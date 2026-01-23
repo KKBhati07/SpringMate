@@ -6,16 +6,6 @@ public final class Constants {
     }
 
     /**
-     * User roles for authorization
-     */
-    public static final class UserRole {
-        public static final String USER = "USER";
-        public static final String ADMIN = "ADMIN";
-
-        private UserRole() {
-        }
-    }
-    /**
      * Request correlation keys
      */
     public static final class RequestCorrelation {

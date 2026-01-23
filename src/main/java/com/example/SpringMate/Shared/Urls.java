@@ -110,6 +110,22 @@ public final class Urls {
         }
     }
 
+    /** Spring Boot Actuator endpoint paths */
+    public static final class Actuator {
+        public static final String BASE = "/actuator";
+
+        public static final String HEALTH = BASE + "/health";
+        public static final String INFO = BASE + "/info";
+        public static final String METRICS = BASE + "/metrics";
+        public static final String PROMETHEUS = BASE + "/prometheus";
+        public static final String ENV = BASE + "/env";
+        public static final String BEANS = BASE + "/beans";
+        public static final String MAPPINGS = BASE + "/mappings";
+        public static final String LOGGERS = BASE + "/loggers";
+        public static final String THREADDUMP = BASE + "/threaddump";
+        public static final String HEAPDUMP = BASE + "/heapdump";
+    }
+
     /** Security configuration endpoint paths */
     public static final class Security {
 
@@ -134,7 +150,8 @@ public final class Urls {
                 Auth.BASE + Auth.LOGIN_WITH_PASS,
                 Auth.BASE + Auth.REQUEST_LOGIN_OTP,
                 Auth.BASE + Auth.OTP_LOGIN,
-                Location.BASE + "/**"
+                Location.BASE + "/**",
+                Actuator.PROMETHEUS
         };
     }
 }
