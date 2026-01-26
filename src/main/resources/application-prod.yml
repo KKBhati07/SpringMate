@@ -11,6 +11,8 @@ spring:
     properties:
       hibernate:
         format_sql: false   # Do not pretty-print SQL; reduces log size and overhead in production
+        jdbc:
+          batch_size: 20  # Batch size for bulk operations
     hibernate:
       ddl-auto: validate     # NEVER update in prod
 

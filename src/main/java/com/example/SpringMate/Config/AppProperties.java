@@ -153,16 +153,25 @@ public class AppProperties {
         @Data
         public static class Headers {
             private final Hsts hsts = new Hsts();
+            
+            @NotBlank(message = "Frame options must be specified")
             private String frameOptions = "DENY";
+            
             private boolean contentTypeOptions = true;
             private boolean xssProtection = true;
+            
+            @NotBlank(message = "Referrer policy must be specified")
             private String referrerPolicy = "strict-origin-when-cross-origin";
+            
             private String csp = "default-src 'self'; frame-ancestors 'none';";
 
             @Data
             public static class Hsts {
                 private boolean enabled = true;
+                
+                @Min(value = 0, message = "HSTS max age must be non-negative")
                 private long maxAgeSeconds = 3600L;
+                
                 private boolean includeSubdomains = true;
             }
         }

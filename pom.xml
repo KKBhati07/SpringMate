@@ -12,23 +12,33 @@
     <artifactId>SpringMate</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>SpringMate</name>
-    <description>Demo project for Spring Boot</description>
-    <url/>
+    <description>Spring Boot backend service for MarketMate platform - A marketplace for buying and selling used goods</description>
+    <url>https://github.com/KKBhati07/SpringMate</url>
     <licenses>
-        <license/>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/licenses/MIT</url>
+            <distribution>repo</distribution>
+        </license>
     </licenses>
     <developers>
-        <developer/>
+        <developer>
+            <name>Kanishk Bhati</name>
+            <email>kk.bhatii.007@gmail.com</email>
+            <organization> N/A </organization>
+            <organizationUrl> N/A </organizationUrl>
+        </developer>
     </developers>
     <scm>
-        <connection/>
-        <developerConnection/>
-        <tag/>
-        <url/>
+        <connection>scm:git:git://github.com/KKBhati07/SpringMate.git</connection>
+        <developerConnection>scm:git:ssh://github.com/KKBhati07/SpringMate.git</developerConnection>
+        <tag>HEAD</tag>
+        <url>https://github.com/KKBhati07/SpringMate</url>
     </scm>
     <properties>
         <java.version>17</java.version>
         <logback.version>1.5.25</logback.version>
+        <logstash-logback-encoder.version>8.0</logstash-logback-encoder.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -161,6 +171,12 @@
             <artifactId>jjwt-jackson</artifactId>
             <version>0.13.0</version>
             <scope>runtime</scope>
+        </dependency>
+        <!-- JSON Logging -->
+        <dependency>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
+            <version>${logstash-logback-encoder.version}</version>
         </dependency>
     </dependencies>
 

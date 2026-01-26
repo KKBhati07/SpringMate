@@ -23,8 +23,11 @@ spring:
     properties:
       hibernate:
         format_sql: true   # Pretty SQL for easier debugging in local
+        jdbc:
+          batch_size: 20  # Batch size for bulk operations
     hibernate:
       ddl-auto: update
+
 
 server:
   ssl:
