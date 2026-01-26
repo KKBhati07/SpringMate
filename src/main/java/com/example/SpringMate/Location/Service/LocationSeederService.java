@@ -12,12 +12,10 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 
 import java.util.List;
 import java.util.Map;
@@ -27,7 +25,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class LocationSeederService {
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
     private final CountryRepository countryRepository;
     private final StateRepository stateRepository;
     private final CityRepository cityRepository;
@@ -123,18 +121,13 @@ public class LocationSeederService {
 
     }
 
-    private ResponseEntity<List> getApiResponse(String url) {
+    private ResponseEntity<List<Map<String, Object>>> getApiResponse(String url) {
         try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("X-CSCAPI-KEY", locationApiKey);
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-
-            return restTemplate.exchange(
-                    url,
-                    HttpMethod.GET,
-                    entity,
-                    List.class
-            );
+            return restClient.get()
+                    .uri(url)
+                    .header("X-CSCAPI-KEY", locationApiKey)
+                    .retrieve()
+                    .toEntity(new ParameterizedTypeReference<List<Map<String, Object>>>() {});
         } catch (Exception ex) {
             log.error("External API call failed url={}", url, ex);
             throw ex;
