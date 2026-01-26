@@ -11,6 +11,7 @@ import com.example.SpringMate.Location.Service.LocationService;
 import com.example.SpringMate.Shared.Constants;
 import com.example.SpringMate.Shared.Enum.AwsS3Directory;
 import com.example.SpringMate.Shared.Exception.*;
+import com.example.SpringMate.Shared.Helper.InputSanitizer;
 import com.example.SpringMate.Storage.Service.StorageService;
 import com.example.SpringMate.User.Entity.User;
 import com.example.SpringMate.User.Service.CoreUserService;
@@ -127,8 +128,10 @@ public class ListingService {
 
         Listing item = Listing.builder()
                 .price(requestDto.getPrice())
-                .title(requestDto.getTitle())
-                .description(requestDto.getDescription())
+                // No HTML allowed in titles
+                .title(InputSanitizer.sanitizePlainText(requestDto.getTitle()))
+                // Allow safe HTML (links, bold, lists)
+                .description(InputSanitizer.sanitizeHtml(requestDto.getDescription()))
                 .seller(user)
                 .location(locationService.getOrCreateOne(
                         requestDto.getCityId(),

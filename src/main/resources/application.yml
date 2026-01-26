@@ -11,6 +11,14 @@ spring:
   mvc:
     throw-exception-if-no-handler-found: true   # Throw NoHandlerFoundException for unknown routes
 
+  # Request size limits
+  servlet:
+    multipart:
+      max-file-size: 10MB        # Maximum file size for uploads
+      max-request-size: 50MB    # Maximum request size (including all files)
+  codec:
+    max-in-memory-size: 2MB     # Maximum in-memory buffer size for request body
+
   datasource:
     url: ${DB_URL} # JDBC URL to connect to the PostgreSQL database
     username: ${DB_USERNAME}  # Database username
@@ -61,6 +69,23 @@ resilience4j:
         minimum-number-of-calls: 5          # Minimum number of calls required before calculating failure rate
         failure-rate-threshold: 50          # Percentage of failures to trip the circuit
         wait-duration-in-open-state: 10s    # Time to wait before transitioning from OPEN to HALF_OPEN
+  ratelimiter:
+    instances:
+      api:
+        limit-for-period: 100              # Number of requests allowed per period
+        limit-refresh-period: 60s          # Time window for rate limit (60 seconds)
+        timeout-duration: 0s                # Wait time for permit (0 = fail immediately)
+        register-health-indicator: true     # Exposes rate limiter metrics to actuator
+      auth:
+        limit-for-period: 10               # Stricter limit for authentication endpoints
+        limit-refresh-period: 60s
+        timeout-duration: 0s
+        register-health-indicator: true
+      public:
+        limit-for-period: 200               # More lenient for public read endpoints
+        limit-refresh-period: 60s
+        timeout-duration: 0s
+        register-health-indicator: true
 
 management:
   endpoints:
@@ -131,3 +156,15 @@ app:
       validity-days: ${SESSION_VALIDITY_DAYS:7}        # Session validity in days
     otp:
       expiration-minutes: ${OTP_EXPIRATION_MINUTES:10} # OTP expiration in minutes
+
+  # Security Headers Configuration
+  security:
+    headers:
+      hsts:
+        enabled: ${SECURITY_HSTS_ENABLED:true}         # Enable HTTP Strict Transport Security
+        max-age-seconds: ${SECURITY_HSTS_MAX_AGE:3600}
+        include-subdomains: ${SECURITY_HSTS_INCLUDE_SUBDOMAINS:true}
+      frame-options: ${SECURITY_FRAME_OPTIONS:DENY}   # X-Frame-Options: DENY, SAMEORIGIN, or ALLOW-FROM
+      content-type-options: ${SECURITY_CONTENT_TYPE_OPTIONS:true}  # X-Content-Type-Options: nosniff
+      referrer-policy: ${SECURITY_REFERRER_POLICY:strict-origin-when-cross-origin}
+      csp: "default-src 'self'; frame-ancestors 'none';"

@@ -24,6 +24,7 @@ public class AppProperties {
     private final Cors cors = new Cors();
     private final Cookie cookie = new Cookie();
     private final Auth auth = new Auth();
+    private final Security security = new Security();
 
     @Data
     public static class Aws {
@@ -142,6 +143,28 @@ public class AppProperties {
              */
             @Min(value = 1, message = "OTP expiration must be at least 1 minute")
             private int expirationMinutes = 10;
+        }
+    }
+
+    @Data
+    public static class Security {
+        private final Headers headers = new Headers();
+
+        @Data
+        public static class Headers {
+            private final Hsts hsts = new Hsts();
+            private String frameOptions = "DENY";
+            private boolean contentTypeOptions = true;
+            private boolean xssProtection = true;
+            private String referrerPolicy = "strict-origin-when-cross-origin";
+            private String csp = "default-src 'self'; frame-ancestors 'none';";
+
+            @Data
+            public static class Hsts {
+                private boolean enabled = true;
+                private long maxAgeSeconds = 3600L;
+                private boolean includeSubdomains = true;
+            }
         }
     }
 }

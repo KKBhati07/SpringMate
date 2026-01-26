@@ -3,6 +3,7 @@ package com.example.SpringMate.User.Service;
 import com.example.SpringMate.Listing.Service.ListingService;
 import com.example.SpringMate.Shared.Enum.AwsS3Directory;
 import com.example.SpringMate.Shared.Exception.InternalServerException;
+import com.example.SpringMate.Shared.Helper.InputSanitizer;
 import com.example.SpringMate.Shared.Roles;
 import com.example.SpringMate.Storage.Service.StorageService;
 import com.example.SpringMate.User.DTO.*;
@@ -62,13 +63,12 @@ public class UserService {
             throw new InternalServerException("Unable to fetch role");
         }
 
-        String encodedPassword = passwordEncoder.encode(userDetails.getPassword());
-        User newUser = new User(
-                userDetails.getName(),
-                userDetails.getEmail(),
-                encodedPassword,
-                role.get()
-        );
+        User newUser = User.builder()
+                .name(InputSanitizer.sanitizePlainText(userDetails.getName()))
+                .email(userDetails.getEmail())
+                .password(passwordEncoder.encode(userDetails.getPassword()))
+                .role(role.get())
+                .build();
         userRepository.save(newUser);
         log.info(
                 "User created user=[UUID {}] role={}",
