@@ -26,12 +26,6 @@ spring:
     hibernate:
       ddl-auto: update
 
-  devtools:
-    restart:
-      enabled: false # Enables automatic restart with Spring DevTools
-      poll-interval: 10000
-      quiet-period: 4000
-
 server:
   ssl:
     enabled: true
