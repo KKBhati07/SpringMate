@@ -18,6 +18,10 @@ spring:
       max-request-size: 50MB    # Maximum request size (including all files)
   codec:
     max-in-memory-size: 2MB     # Maximum in-memory buffer size for request body
+  compression:
+    enabled: true                # Enable HTTP response compression
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain,application/javascript,text/css
+    min-response-size: 1024      # Minimum response size to compress (1KB)
 
   datasource:
     url: ${DB_URL} # JDBC URL to connect to the PostgreSQL database
