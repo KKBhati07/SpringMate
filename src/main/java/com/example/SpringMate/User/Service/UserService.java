@@ -105,6 +105,9 @@ public class UserService {
 
     }
 
+    /**
+     * Cascades soft deletion to user's listings to maintain data consistency.
+     */
     @Transactional
     public void
     deleteUser(UUID uuid, AuthenticatedUser authenticatedUser) {

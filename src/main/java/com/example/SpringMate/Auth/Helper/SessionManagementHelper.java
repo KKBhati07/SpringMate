@@ -16,6 +16,10 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Manages user sessions and security audit logging.
+ * Tracks IP addresses and user agents for security monitoring.
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -90,6 +94,10 @@ public class SessionManagementHelper {
         }
     }
 
+    /**
+     * Extracts client IP considering proxy headers for accurate security logging.
+     * Uses first X-Forwarded-For value when present to handle load balancers.
+     */
     private String getClientIp(HttpServletRequest request) {
         String header = request.getHeader("X-Forwarded-For");
         if (header != null && !header.isEmpty() && !"unknown".equalsIgnoreCase(header)) {

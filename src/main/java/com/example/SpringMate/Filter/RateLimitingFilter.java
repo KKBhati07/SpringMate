@@ -18,9 +18,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-/**
- * Filter to apply rate limiting to API endpoints using Resilience4j RateLimiter.
- */
 @Slf4j
 @Component
 @Order(org.springframework.core.Ordered.HIGHEST_PRECEDENCE + 2)
@@ -75,10 +72,6 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         return "api";
     }
 
-    /**
-     * Gets a client identifier for logging purposes.
-     * Uses IP address or user identifier if available.
-     */
     private String getClientIdentifier(HttpServletRequest request) {
         String forwardedFor = request.getHeader("X-Forwarded-For");
         if (forwardedFor != null && !forwardedFor.isEmpty()) {

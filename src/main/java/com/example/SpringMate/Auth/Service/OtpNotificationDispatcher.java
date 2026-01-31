@@ -9,6 +9,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+/**
+ * Dispatches OTP emails with resilience patterns.
+ * Uses async execution, retry, and circuit breaker to handle email service failures gracefully.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor

@@ -33,12 +33,15 @@ public class LocationSeederService {
     String locationApiKey;
     String[] countriesIso = {"IN"};
 
+    /**
+     * Evicts location caches to ensure fresh data after seeding from external API.
+     */
     @Transactional
     @CacheEvict(value = {
             Constants.CacheNamespace.COUNTRY,
             Constants.CacheNamespace.STATE,
             Constants.CacheNamespace.CITY},
-            allEntries = true) //beforeInvocation = true; to evict before method invocation (default is after invocation)
+            allEntries = true)
     public String seedLocations(String locationApiKey) {
         log.info("Location seeding started");
 

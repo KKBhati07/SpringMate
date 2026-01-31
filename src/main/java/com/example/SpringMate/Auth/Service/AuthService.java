@@ -77,6 +77,10 @@ public class AuthService {
 
     }
 
+    /**
+     * Returns silently on non-existent users to prevent email enumeration attacks.
+     * Rate limited to 60 seconds to prevent abuse.
+     */
     @Transactional
     public void generateAndSendOTP(OtpRequestDto loginDTO) throws MessagingException {
         Map<String, Object> responseMap = new HashMap<>();
@@ -120,6 +124,9 @@ public class AuthService {
 
     }
 
+    /**
+     * Caches authenticated user session to avoid database lookups on each request.
+     */
     @Transactional
     public OtpLoginResponseDto
     verifyOtp(OtpLoginRequestDto loginDTO, HttpServletRequest request, HttpServletResponse response) {

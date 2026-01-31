@@ -22,6 +22,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+/**
+ * REST controller for authentication and authorization operations.
+ * Handles login, logout, OTP flows, and retrieval of authentication details.
+ */
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -32,6 +36,10 @@ public class AuthController {
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthHelper authHelper;
 
+    /**
+     * Logs out the current user by invalidating their session and clearing auth cookies.
+     * Accepts authentication token from either cookie or Authorization header.
+     */
     @PostMapping(Urls.Auth.LOGOUT)
     public ResponseEntity<Response<Map<String, Boolean>>>
     logout(

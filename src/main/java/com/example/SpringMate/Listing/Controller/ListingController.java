@@ -18,6 +18,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+/**
+ * REST controller for managing product listings.
+ * Handles creation, retrieval, update, deletion, and image uploads.
+ */
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -106,7 +110,11 @@ public class ListingController {
                         "Listing created successfully"));
     }
 
-
+    /**
+     * Uploads listing images using a multipart fallback flow.
+     * This endpoint exists to support image upload if primary
+     * image upload mechanism fails.
+     */
     @PatchMapping(
             value = Urls.Listing.IMAGE_UPLOAD_FALLBACK,
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE

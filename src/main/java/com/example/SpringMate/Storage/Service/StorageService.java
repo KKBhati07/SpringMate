@@ -111,23 +111,14 @@ public class StorageService {
                 .build();
     }
 
-    /**
-     * Delete an image from S3 bucket.
-     */
     public void deleteImage(String objectKey) {
         awsS3Service.deleteImage(getBucketName(), objectKey);
     }
 
-    /**
-     * Upload an image to the S3 bucket.
-     */
     public String uploadImage(AwsS3Directory directoryName, MultipartFile imageFile) {
         return awsS3Service.uploadImage(getBucketName(), directoryName, imageFile);
     }
 
-    /**
-     * Get a presigned GET URL for an object using bucket and expiry.
-     */
     public String getPreSignedUrl(String objectKey) {
         return awsS3Service.getPreSignedUrl(
                 getBucketName(),
@@ -136,9 +127,6 @@ public class StorageService {
         );
     }
 
-    /**
-     * Check if an object exists in S3 bucket.
-     */
     public boolean doesObjectExist(String objectKey) {
         return awsS3Service.doesObjectExist(getBucketName(), objectKey);
     }
@@ -163,16 +151,10 @@ public class StorageService {
         return awsS3Service.doesObjectExist(bucketName, objectKey);
     }
 
-    /**
-     * Get the S3 bucket name.
-     */
     public String getBucketName() {
         return appProperties.getAws().getBucketName();
     }
 
-    /**
-     * Get the presigned URL expiry for GET requests.
-     */
     public int getGetExpiryMinutes() {
         return appProperties.getAws().getPresign().getGetExpiryMinutes();
     }

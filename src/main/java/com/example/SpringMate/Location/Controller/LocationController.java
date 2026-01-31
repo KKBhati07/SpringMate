@@ -18,6 +18,10 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
+/**
+ * REST controller for managing location data (countries, states, cities).
+ * Handles retrieval of location hierarchies and secure seeding of location data.
+ */
 @Slf4j
 @RestController()
 @RequestMapping(Urls.Location.BASE)
@@ -33,7 +37,11 @@ public class LocationController {
     @Value("${spring.application.location-api-key}")
     private String locationApikey;
 
-
+    /**
+     * Seeds location data (countries, states, cities) into the database.
+     * This endpoint is protected by a secret header and should never
+     * be exposed publicly.
+     */
     @PostMapping(Urls.Location.SEED)
     public String seedLocations(@RequestHeader("x-seed-key") String key) {
         if (key == null || key.isEmpty() || !seedSecret.equals(key)) {

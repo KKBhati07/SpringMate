@@ -13,6 +13,10 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 
+/**
+ * JWT token generation and validation.
+ * Uses sessionId as subject to enable session invalidation without token rotation.
+ */
 @Component
 @RequiredArgsConstructor
 public class JwtTokenProvider {

@@ -45,6 +45,10 @@ public class AuthHelper {
                 && authenticatedUser.getUuid().equals(user.getUuid());
     }
 
+    /**
+     * Generates 6-digit OTP for authentication.
+     * Range 100000-999999 to ensure consistent length and prevent leading zeros.
+     */
     public String generateOTP() {
         Random random = new Random();
         int otp = 100000 + random.nextInt(900000);
@@ -73,6 +77,10 @@ public class AuthHelper {
                 cookieConfig.isSecure());
     }
 
+    /**
+     * Sets authentication cookie with security attributes.
+     * httpOnly disabled to allow client-side access for SPA authentication flow.
+     */
     private void injectCookie(HttpServletResponse response,
                               String name,
                               String value,

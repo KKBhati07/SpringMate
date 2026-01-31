@@ -17,6 +17,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+/**
+ * REST controller for managing user-related operations.
+ * Handles profile management and user self-service actions.
+ */
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -53,6 +57,10 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Updates user profile information.
+     * Only allows users to update their own profile.
+     */
     @PutMapping(value = Urls.User.UPDATE_USER)
     public ResponseEntity<Response<UpdateUserResponseDto>> updateUserProfile(
             @Valid @RequestBody UpdateUserRequestDto updatedUserDetails,
@@ -70,6 +78,10 @@ public class UserController {
                 "User updated successfully"));
     }
 
+    /**
+     * Uploads profile image using multipart fallback flow.
+     * Users are only allowed to upload their own profile image.
+     */
     @PatchMapping(value = Urls.User.UPLOAD_IMAGE_FALLBACK, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> uploadProfileImageFallback(
             @Valid @ModelAttribute FallbackUploadRequestDto dto,

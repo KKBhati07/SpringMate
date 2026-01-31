@@ -109,6 +109,9 @@ public class ListingService {
                 pagedRecords.getTotalPages());
     }
 
+    /**
+     * Rolls back uploaded S3 images on failure to prevent orphaned storage objects.
+     */
     @Transactional
     public CreateListingResponseDto createRecord(
             CreateListingRequestDto requestDto,
@@ -219,6 +222,9 @@ public class ListingService {
         return objectKey;
     }
 
+    /**
+     * Cleans up uploaded S3 images on failure to prevent orphaned storage objects.
+     */
     @Transactional
     public void uploadListingImages(FallbackImageUploadDto dto, AuthenticatedUser authenticatedUser) {
         if (dto.getImages() == null || dto.getImages().isEmpty()) {

@@ -26,8 +26,7 @@ public class AppConfigHolder {
     }
 
     /**
-     * Get OTP expiration time in minutes.
-     * Used by VerificationCode entity for setting expiration timestamp.
+     * Provides static access for JPA entity callbacks where DI is unavailable.
      */
     public static int getOtpExpirationMinutes() {
         if (staticAppProperties == null) {
@@ -36,9 +35,6 @@ public class AppConfigHolder {
         return staticAppProperties.getAuth().getOtp().getExpirationMinutes();
     }
 
-    /**
-     * Get AWS bucket name.
-     */
     public static String getAwsBucketName() {
         if (staticAppProperties == null) {
             throw new IllegalStateException("AppConfigHolder not initialized");
@@ -46,9 +42,6 @@ public class AppConfigHolder {
         return staticAppProperties.getAws().getBucketName();
     }
 
-    /**
-     * Get presigned URL expiration for GET requests (in minutes).
-     */
     public static int getPresignGetExpiryMinutes() {
         if (staticAppProperties == null) {
             return 10;
@@ -56,9 +49,6 @@ public class AppConfigHolder {
         return staticAppProperties.getAws().getPresign().getGetExpiryMinutes();
     }
 
-    /**
-     * Get presigned URL expiration for PUT requests (in minutes).
-     */
     public static int getPresignPutExpiryMinutes() {
         if (staticAppProperties == null) {
             return 15;

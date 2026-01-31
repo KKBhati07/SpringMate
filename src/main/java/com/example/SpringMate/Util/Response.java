@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Standardized API response wrapper for consistent response structure across all endpoints.
+ * Standardized response wrapper to ensure consistent API structure across all endpoints.
  */
 @Data
 @Builder
@@ -26,9 +26,6 @@ public class Response<T> {
     @Builder.Default
     private Map<String, Object> metadata = new HashMap<>();
 
-    /**
-     * Creates a successful response with data and message.
-     */
     public static <T> Response<T> success(T data, String message) {
         return Response.<T>builder()
                 .success(true)
@@ -38,9 +35,6 @@ public class Response<T> {
                 .build();
     }
 
-    /**
-     * Creates a successful response with only data (message will be null).
-     */
     public static <T> Response<T> success(T data) {
         return Response.<T>builder()
                 .success(true)
@@ -49,9 +43,6 @@ public class Response<T> {
                 .build();
     }
 
-    /**
-     * Creates an error response with message.
-     */
     public static <T> Response<T> error(String message) {
         return Response.<T>builder()
                 .success(false)
@@ -60,9 +51,6 @@ public class Response<T> {
                 .build();
     }
 
-    /**
-     * Creates an error response with message and metadata.
-     */
     public static <T> Response<T> error(String message, Map<String, Object> metadata) {
         return Response.<T>builder()
                 .success(false)
@@ -72,9 +60,6 @@ public class Response<T> {
                 .build();
     }
 
-    /**
-     * Adds metadata to the response.
-     */
     public Response<T> withMetadata(String key, Object value) {
         if (this.metadata == null) {
             this.metadata = new HashMap<>();
@@ -83,9 +68,6 @@ public class Response<T> {
         return this;
     }
 
-    /**
-     * Adds multiple metadata entries to the response.
-     */
     public Response<T> withMetadata(Map<String, Object> additionalMetadata) {
         if (this.metadata == null) {
             this.metadata = new HashMap<>();

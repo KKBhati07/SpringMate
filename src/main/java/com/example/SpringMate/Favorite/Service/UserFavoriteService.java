@@ -23,6 +23,9 @@ public class UserFavoriteService {
     private final UserFavoriteRepository userFavoriteRepository;
 
 
+    /**
+     * Prevents users from favoriting their own listings to maintain data integrity.
+     */
     public Map<String, Boolean> setUnsetFavorite(Long userId, Long listingId) {
         User user = coreUserService.getUserOrThrowById(userId);
         Listing listing = listingService.getByIdOrThrow(listingId);

@@ -24,6 +24,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+/**
+ * REST controller for administrative operations.
+ * Handles user management, listing moderation, and other admin-only actions.
+ * All endpoints require ADMIN role authorization.
+ */
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -103,6 +108,12 @@ public class AdminController {
     }
 
     //    ------- LISTING ROUTES
+
+    /**
+     * Retrieves all listings with advanced filtering options.
+     * Supports category, price range, location, free-text search,
+     * and optionally includes soft-deleted listings for moderation.
+     */
     @GetMapping(value = Urls.Admin.Listing.GET_ALL)
     public ResponseEntity<Response<PaginatedResponse<FetchListingItemsResponseDto>>>
     getAllListings(
