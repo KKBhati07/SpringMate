@@ -23,6 +23,7 @@ public class ResponseMapper {
                 .uuid(user.getUuid())
                 .isAdmin(user.isAdmin())
                 .contactNo(user.getContactNo())
+                .deleted(user.isDeleted())
                 .profileUrl(storageService.getPreSignedUrl(user.getProfileUrl()))
                 .build();
     }
