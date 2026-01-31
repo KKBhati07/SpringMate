@@ -1,3 +1,18 @@
+# Configuration Overview
+
+This document describes the operational configuration of SpringMate.
+It is intended for engineers running or deploying the system.
+
+High-level configuration areas:
+- PostgreSQL for persistence
+- Redis for caching and sessions
+- JWT + session-based authentication
+- AWS S3 for file storage
+- Resilience4j for rate limiting and fault tolerance
+
+For architectural rationale, see ARCHITECTURE.md.
+
+
 # Configuration Documentation
 
 This document describes all configuration properties available in SpringMate, their purposes, default values, and environment-specific settings.

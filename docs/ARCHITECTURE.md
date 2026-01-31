@@ -1,26 +1,12 @@
-# SpringMate Backend Architecture Documentation (C4 Model)
-
-This document provides detailed architecture diagrams for the SpringMate backend application using the C4 model (Component and Code levels).
+# SpringMate Backend Architecture
 
 > **Note**: For system-level architecture (System Context and Container diagrams), see `mm-infra/docs/ARCHITECTURE.md`.
 
 ---
 
-## Table of Contents
+## High-Level Architecture
 
-1. [Component Diagram (Level 3)](#component-diagram-level-3)
-2. [Code Diagram (Level 4)](#code-diagram-level-4)
-3. [Technology Stack](#technology-stack)
-4. [Data Flow Examples](#data-flow-examples)
-5. [Security Architecture](#security-architecture)
-6. [Performance Optimizations](#performance-optimizations)
-
----
-
-## Component Diagram (Level 3)
-
-### Overview
-The Component diagram shows the major components within the Spring Boot application.
+The SpringMate backend follows a layered architecture pattern with clear separation of concerns:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -28,312 +14,173 @@ The Component diagram shows the major components within the Spring Boot applicat
 │                                                                 │
 │  ┌──────────────────────────────────────────────────────────┐   │
 │  │                    Controllers Layer                     │   │
-│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │   │
-│  │  │   Auth       │  │   Listing     │  │   User       │   │   │
-│  │  │ Controller  │  │  Controller  │  │  Controller  │     │   │
-│  │  └──────────────┘  └──────────────┘  └──────────────┘    │   │
-│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │   │
-│  │  │   Admin      │  │   Location   │  │   Category   │    │   │
-│  │  │  Controller  │  │  Controller  │  │  Controller  │    │   │
-│  │  └──────────────┘  └──────────────┘  └──────────────┘    │   │
-│  │  ┌──────────────┐  ┌──────────────┐                      │   │
-│  │  │   Favorite   │  │   Storage    │                      │   │
-│  │  │  Controller  │  │  Controller  │                      │   │
-│  │  └──────────────┘  └──────────────┘                      │   │
+│  │  (REST endpoints, request validation, response mapping)  │   │
 │  └──────────────────────────────────────────────────────────┘   │
 │                              │                                  │
 │  ┌──────────────────────────────────────────────────────────┐   │
 │  │                    Services Layer                        │   │
-│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │   │
-│  │  │   Auth       │  │   Listing     │  │   User       │   │   │
-│  │  │   Service    │  │   Service     │  │   Service    │   │   │
-│  │  └──────────────┘  └──────────────┘  └──────────────┘    │   │
-│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │   │
-│  │  │   Location   │  │   Category   │  │   Storage    │    │   │
-│  │  │   Service    │  │   Service    │  │   Service    │    │   │
-│  │  └──────────────┘  └──────────────┘  └──────────────┘    │   │
-│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │   │
-│  │  │   Favorite   │  │   Email      │  │   AwsS3      │    │   │
-│  │  │   Service    │  │   Service    │  │   Service    │    │   │
-│  │  └──────────────┘  └──────────────┘  └──────────────┘    │   │
+│  │  (Business logic, orchestration, transaction management) │   │
 │  └──────────────────────────────────────────────────────────┘   │
 │                              │                                  │
 │  ┌──────────────────────────────────────────────────────────┐   │
 │  │                    Repository Layer                      │   │
-│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │   │
-│  │  │   User       │  │   Listing     │  │   Category   │   │   │
-│  │  │  Repository  │  │  Repository  │  │  Repository  │    │   │
-│  │  └──────────────┘  └──────────────┘  └──────────────┘    │   │
-│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │   │
-│  │  │   Location   │  │   Session    │  │   Favorite   │    │   │
-│  │  │  Repository  │  │  Repository  │  │  Repository  │    │   │
-│  │  └──────────────┘  └──────────────┘  └──────────────┘    │   │
-│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │   │
-│  │  │   Listing    │  │   Verification│ │   Role       │    │   │
-│  │  │   Image      │  │   Code        │  │  Repository  │   │   │
-│  │  │  Repository  │  │  Repository  │  │              │    │   │
-│  │  └──────────────┘  └──────────────┘  └──────────────┘    │   │
+│  │  (Data access, JPA repositories, custom queries)         │   │
 │  └──────────────────────────────────────────────────────────┘   │
 │                              │                                  │
 │  ┌──────────────────────────────────────────────────────────┐   │
 │  │                    Infrastructure Layer                  │   │
-│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │   │
-│  │  │   Security   │  │   Redis      │  │   Cache      │    │   │
-│  │  │   Config     │  │   Config     │  │   Config     │    │   │
-│  │  └──────────────┘  └──────────────┘  └──────────────┘    │   │
-│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │   │
-│  │  │   AWS        │  │   JPA        │  │   Async      │    │   │
-│  │  │   Config     │  │   Config     │  │   Config     │    │   │
-│  │  └──────────────┘  └──────────────┘  └──────────────┘    │   │
-│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │   │
-│  │  │   Filter     │  │   Exception  │  │   Thread     │    │   │
-│  │  │   Chain      │  │   Handler     │  │   Pool       │   │   │
-│  │  └──────────────┘  └──────────────┘  └──────────────┘    │   │
+│  │  (Security, caching, external services, filters)         │   │
 │  └──────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────┘
+        │                    │                    │
+        ▼                    ▼                    ▼
+┌──────────────┐    ┌──────────────┐    ┌──────────────┐
+│  PostgreSQL  │    │    Redis      │    │    AWS S3     │
+│  (Primary DB)│    │  (Cache/Session)│  │  (File Storage)│
+└──────────────┘    └──────────────┘    └──────────────┘
 ```
 
-### Key Components
+### Key Architectural Decisions
 
-#### Controllers
-- **AuthController**: Handles authentication (login, OTP, session management)
-- **ListingController**: Manages listing CRUD operations with pagination
-- **UserController**: Handles user profile operations
-- **AdminController**: Admin-specific operations (user/listings management)
-- **LocationController**: Location data endpoints (countries, states, cities)
-- **CategoryController**: Category listing endpoints
-- **UserFavoriteController**: Manages user favorite listings (toggle favorites)
-- **StorageController**: Handles S3 presigned URLs and object existence checks
-
-#### Services
-- **AuthService**: Authentication and session management logic
-- **ListingService**: Listing business logic, filtering, pagination
-- **UserService**: User management and profile operations
-- **CoreUserService**: Core user operations (get, validate)
-- **LocationService**: Location data retrieval and caching
-- **LocationSeederService**: Seeds location data (countries, states, cities)
-- **CategoryService**: Category operations with caching
-- **StorageService**: AWS S3 file operations (presigned URLs, upload, delete)
-- **AwsS3Service**: Low-level AWS S3 client operations
-- **UserFavoriteService**: Favorite listings management
-- **EmailService**: Email sending (OTP, notifications)
-- **EmailTemplateService**: Email template management
-- **AuthCacheService**: Authentication cache operations (Redis)
-- **UserDetailServiceImpl**: Spring Security UserDetailsService implementation
-
-#### Repositories
-- **UserRepository**: User data access
-- **RoleRepository**: User role data access
-- **ListingRepository**: Listing data access with complex queries
-- **ListingImageRepository**: Listing image data access
-- **CategoryRepository**: Category data access
-- **LocationRepository**: Location data access (base)
-- **CountryRepository**: Country data access
-- **StateRepository**: State data access
-- **CityRepository**: City data access
-- **SessionRepository**: Session data access
-- **SessionLogRepository**: Session log data access
-- **UserFavoriteRepository**: User favorites data access
-- **VerificationCodeRepository**: OTP verification code data access
-
-#### Infrastructure
-- **SecurityConfig**: Spring Security configuration (includes CORS)
-- **RedisConfig**: Redis connection configuration
-- **RedisCacheManagerConfig**: Redis cache manager configuration
-- **CacheConfig**: Spring Cache abstraction configuration
-- **AwsConfig**: AWS S3 client configuration
-- **JpaConfig**: JPA/Hibernate configuration
-- **AsyncConfig**: Async processing configuration
-- **ThreadPoolConfig**: Thread pool configuration
-- **AppProperties**: Application properties binding
-- **AuditorAwareImpl**: JPA auditing (created/updated by)
-- **Filter Chain**: 
-  - **RateLimitingFilter**: Rate limiting using Resilience4j
-  - **SecurityHeadersFilter**: Security headers (HSTS, XSS, etc.)
-  - **RequestIdFilter**: Request ID tracking for logging
-  - **RequestLoggingFilter**: Request/response logging
-  - **SessionAuthenticationFilter**: Session-based authentication
-  - **AuthenticationFilter**: JWT-based authentication
-- **GlobalExceptionHandler**: Global exception handling
-
----
-
-## Code Diagram (Level 4)
-
-### Overview
-The Code diagram shows the detailed structure of a key component (Listing Service) as an example.
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                      ListingService Component                   │
-│                                                                 │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │                    Public Methods                        │   │
-│  │  ┌────────────────────────────────────────────────────┐  │   │
-│  │  │ getAllRecords()                                    │  │   │
-│  │  │ - Filters listings                                 │  │   │
-│  │  │ - Pagination support                               │  │   │
-│  │  │ - Returns PaginatedResponse                        │  │   │
-│  │  └────────────────────────────────────────────────────┘  │   │
-│  │  ┌────────────────────────────────────────────────────┐  │   │
-│  │  │ getRecordsByUser()                                 │  │   │
-│  │  │ - User's listings                                  │  │   │
-│  │  │ - Favorites support                                │  │   │
-│  │  └────────────────────────────────────────────────────┘  │   │
-│  │  ┌────────────────────────────────────────────────────┐  │   │
-│  │  │ getOne()                                           │  │   │
-│  │  │ - Single listing with relations                    │  │   │
-│  │  │ - Uses EntityGraph for N+1 prevention              │  │   │
-│  │  └────────────────────────────────────────────────────┘  │   │
-│  │  ┌────────────────────────────────────────────────────┐  │   │
-│  │  │ createRecord()                                     │  │   │
-│  │  │ - Creates listing                                  │  │   │
-│  │  │ - Uploads images to S3                            │   │   │
-│  │  └────────────────────────────────────────────────────┘  │   │
-│  └──────────────────────────────────────────────────────────┘   │
-│                              │                                  │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │                    Dependencies                          │   │
-│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │   │
-│  │  │  Listing     │  │  Listing     │  │   Storage    │    │   │
-│  │  │  Repository  │  │  Image      │  │   Service     │    │   │
-│  │  │              │  │  Repository  │  │              │    │   │
-│  │  └──────────────┘  └──────────────┘  └──────────────┘    │   │
-│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │   │
-│  │  │   Category   │  │   CoreUser    │  │   Location   │   │   │
-│  │  │  Repository  │  │   Service    │  │   Service    │    │   │
-│  │  └──────────────┘  └──────────────┘  └──────────────┘    │   │
-│  │  ┌──────────────┐                                        │   │
-│  │  │   Response   │                                        │   │
-│  │  │   Mapper      │                                       │   │
-│  │  └──────────────┘                                        │   │
-│  └──────────────────────────────────────────────────────────┘   │
-│                              │                                  │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │                    Private Helpers                       │   │
-│  │  ┌────────────────────────────────────────────────────┐  │   │
-│  │  │ injectPreSignedUrl()                               │  │   │
-│  │  │ - Adds S3 presigned URLs to images                 │  │   │
-│  │  └────────────────────────────────────────────────────┘  │   │
-│  └──────────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────┘
-```
+- **Layered Architecture**: Clear separation between controllers, services, and repositories enables testability and maintainability
+- **Dual Authentication**: JWT tokens in httpOnly cookies + Redis-backed sessions for stateless scalability
+- **Redis Dual Purpose**: Used for both caching (categories, locations) and session storage to reduce database load
+- **Presigned URLs**: S3 presigned URLs generated server-side for secure, direct client uploads
+- **Filter Chain**: Request-level concerns (rate limiting, security headers, authentication) handled via filter chain before controller layer
 
 ---
 
 ## Technology Stack
 
-### Backend
-- **Framework**: Spring Boot 3.x
-- **Language**: Java 17+
-- **Security**: Spring Security (JWT + Session-based)
-- **Persistence**: Spring Data JPA (Hibernate)
-- **Database**: PostgreSQL 15
-- **Caching**: Redis (Spring Cache abstraction)
-- **Build**: Maven
-- **Serialization**: Jackson (SNAKE_CASE)
+### Core Framework
+- **Spring Boot 3.x** with Java 17+
+- **Spring Security**: JWT + Session-based authentication
+- **Spring Data JPA**: Hibernate with PostgreSQL 15
+- **Spring Cache**: Redis abstraction layer
 
 ### External Services
-- **Storage**: AWS S3
-- **Email**: SMTP (Gmail)
-- **Location API**: External REST API
+- **AWS S3**: File storage with presigned URL pattern
+- **Redis**: Caching and session storage
+- **PostgreSQL**: Primary relational database
+- **SMTP**: Email service for OTP and notifications
 
 ### Infrastructure
-- **Containerization**: Docker / Docker Compose
-- **Monitoring**: Prometheus + Grafana
-- **Logging**: Logback (JSON in prod, console in dev)
+- **Docker**: Containerization for development and deployment
+- **Prometheus + Grafana**: Metrics and monitoring
+- **Resilience4j**: Circuit breakers and retries for external calls
+- **Logback**: Structured logging (JSON in production)
 
 ---
 
-## Data Flow Examples
+## Key Data Flows
 
-### 1. User Authentication Flow
-```
-User → AuthController → AuthService → UserRepository → PostgreSQL
-                                    ↓
-                              SessionRepository → PostgreSQL
-                                    ↓
-                              Redis (Session Cache)
-```
+### Authentication Flow
 
-### 2. Listing Creation Flow
 ```
-User → ListingController → ListingService → ListingRepository → PostgreSQL
-                                    ↓
-                              StorageService → AWS S3
-                                    ↓
-                              LocationService → LocationRepository → PostgreSQL
+Client → AuthController → AuthService
+                              ↓
+                    UserRepository → PostgreSQL (validate user)
+                              ↓
+                    SessionRepository → PostgreSQL (create session)
+                              ↓
+                    Redis (cache session for fast lookup)
+                              ↓
+                    JWT in httpOnly cookie → Client
 ```
 
-### 3. Listing Retrieval Flow (with Caching)
+**Design Decision**: Sessions stored in both PostgreSQL (persistence) and Redis (performance). Redis provides fast session validation while PostgreSQL ensures durability.
+
+### Listing Creation Flow
+
 ```
-User → ListingController → ListingService → ListingRepository → PostgreSQL
-                                    ↓
-                              Redis Cache (if cached)
-                                    ↓
-                              StorageService → AWS S3 (presigned URLs)
+Client → ListingController → ListingService
+                              ↓
+                    ListingRepository → PostgreSQL (save metadata)
+                              ↓
+                    StorageService → AWS S3 (generate presigned URLs)
+                              ↓
+                    Client uploads directly to S3
+                              ↓
+                    StorageService → S3 (verify upload, update listing)
 ```
+
+**Design Decision**: Presigned URLs allow direct client-to-S3 uploads, reducing server bandwidth and improving upload performance. Server maintains control through URL expiration and validation.
+
+### Listing Retrieval Flow (with Caching)
+
+```
+Client → ListingController → ListingService
+                              ↓
+                    Redis Cache (check for cached result)
+                              ↓ (cache miss)
+                    ListingRepository → PostgreSQL (query with filters)
+                              ↓
+                    Redis Cache (store result)
+                              ↓
+                    StorageService → S3 (generate presigned URLs for images)
+                              ↓
+                    Response → Client
+```
+
+**Design Decision**: Multi-level caching strategy - Redis for frequently accessed data (categories, locations), database queries cached for expensive operations. Presigned URLs generated on-demand to ensure security.
 
 ---
 
 ## Security Architecture
 
 ### Authentication
-- **JWT Tokens**: Stored in httpOnly cookies
-- **Session Management**: Redis-backed sessions
-- **OTP Verification**: Email-based OTP for login
+
+- **JWT in httpOnly Cookies**: Tokens stored in httpOnly cookies prevent XSS attacks. Frontend JavaScript cannot access tokens.
+- **Redis Session Cache**: Session validation happens in Redis for performance, with PostgreSQL as source of truth.
+- **OTP Verification**: Email-based OTP for login adds an additional security layer.
+
+**Security Decision**: Dual storage (PostgreSQL + Redis) balances security (durable session records) with performance (fast validation).
 
 ### Authorization
-- **Role-Based Access Control (RBAC)**: ADMIN, USER roles
-- **Method-Level Security**: `@PreAuthorize` annotations
-- **Resource-Level Security**: User can only modify own resources
+
+- **Role-Based Access Control (RBAC)**: ADMIN and USER roles with method-level security (`@PreAuthorize`)
+- **Resource-Level Security**: Users can only modify their own resources (enforced in service layer)
+- **Filter Chain Security**: Rate limiting, security headers, and authentication checks at filter level before reaching controllers
 
 ### Security Headers
+
+Filter chain automatically adds security headers to all responses:
 - HSTS (HTTP Strict Transport Security)
-- X-Frame-Options
-- X-Content-Type-Options
+- X-Frame-Options, X-Content-Type-Options
 - X-XSS-Protection
 - Content-Security-Policy
 - Referrer-Policy
 
 ---
 
-## Performance Optimizations
+## Performance & Scalability
 
 ### Caching Strategy
-- **Categories**: Cached in Redis (rarely changes)
-- **Locations**: Cached by country/state (frequently accessed)
-- **Query Results**: Cached for expensive queries
+
+- **Categories**: Cached in Redis (rarely changes, high read frequency)
+- **Locations**: Cached by country/state (frequently accessed, hierarchical data)
+- **Query Results**: Expensive queries cached with TTL based on data volatility
+
+**Decision**: Spring Cache abstraction allows switching cache providers without code changes. Redis chosen for distributed caching support (horizontal scaling).
 
 ### Database Optimization
-- **Indexes**: Strategic indexes on frequently queried columns (see `DATABASE_INDEXES.md`)
-- **EntityGraph**: Prevents N+1 query problems
-- **Batch Operations**: JDBC batch size configured (20)
-- **Projection Queries**: Used for listing lists to avoid loading full entities
 
-### Pagination
-- **Offset-based**: For most endpoints
-- **Cursor-based**: Recommended for large datasets (see `PERFORMANCE_IMPROVEMENTS.md`)
+- **Strategic Indexes**: Indexes on frequently queried columns (user UUID, listing status, location IDs)
+- **EntityGraph**: Prevents N+1 query problems by eager loading relationships
+- **Projection Queries**: DTO projections for listing lists to avoid loading full entities
+- **Batch Operations**: JDBC batch size configured (20) for bulk inserts
 
-### Response Compression
-- **GZIP compression**: Enabled for JSON, XML, HTML responses
-- **Minimum size**: 1KB threshold
+### Scalability Considerations
+
+- **Stateless Design**: JWT + Redis sessions enable horizontal scaling (no sticky sessions required)
+- **Connection Pooling**: HikariCP connection pool configured for optimal database connection management
+- **Async Processing**: Email sending and non-critical operations handled asynchronously
+- **Response Compression**: GZIP compression reduces bandwidth by 60-80% for JSON responses
 
 ---
 
 ## Related Documentation
 
-- **Configuration**: See `docs/CONFIGURATION.md` for all configuration properties
-- **Database Indexes**: See `docs/DATABASE_INDEXES.md` for index documentation
-- **System Architecture**: See `mm-infra/docs/ARCHITECTURE.md` for system-level diagrams
-
----
-
-## Notes
-
-- This architecture supports horizontal scaling
-- Redis is used for both caching and session storage
-- Database connections are pooled (HikariCP)
-- All external service calls are wrapped with Resilience4j (circuit breakers, retries)
-- Rate limiting is applied at the filter level
-- Response compression reduces bandwidth usage by 60-80%
+- **System Architecture**: `mm-infra/docs/ARCHITECTURE.md` (system-level diagrams)
+- **Configuration**: `docs/CONFIGURATION.md` (configuration properties)
+- **Database Indexes**: `docs/DATABASE_INDEXES.md` (index documentation)
