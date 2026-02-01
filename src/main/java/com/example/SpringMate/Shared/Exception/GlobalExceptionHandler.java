@@ -7,9 +7,11 @@ import com.example.SpringMate.User.Exception.UserAlreadyExistsException;
 import com.example.SpringMate.Util.Response;
 import com.example.SpringMate.User.Exception.UserNotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -18,6 +20,7 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Slf4j
 @RestControllerAdvice
@@ -53,6 +56,24 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(Response.error("Do not have access to the resource"));
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<?> handleMethodNotSupported(
+            HttpRequestMethodNotSupportedException ex) {
+
+        log.warn("METHOD_NOT_ALLOWED");
+
+        return ResponseEntity
+                .status(HttpStatus.METHOD_NOT_ALLOWED)
+                .body(Response.error("Method Not Allowed", Map.of(
+                        "message", ex.getMessage(),
+                        "allowedMethods",
+                        Objects.requireNonNull(ex.getSupportedHttpMethods())
+                                .stream()
+                                .map(HttpMethod::name)
+                                .toList()
+                )));
     }
 
 

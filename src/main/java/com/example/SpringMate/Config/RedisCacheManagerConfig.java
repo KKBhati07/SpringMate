@@ -1,12 +1,13 @@
 package com.example.SpringMate.Config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
@@ -17,8 +18,11 @@ public class RedisCacheManagerConfig {
 
     @Bean
     public CacheManager cacheManager(
-            RedisConnectionFactory connectionFactory
+            RedisConnectionFactory connectionFactory,
+            ObjectMapper objectMapper
     ) {
+        Jackson2JsonRedisSerializer<Object> serializer =
+                new Jackson2JsonRedisSerializer<>(objectMapper, Object.class);
 
         RedisCacheConfiguration defaultConfig =
                 RedisCacheConfiguration.defaultCacheConfig()
@@ -28,7 +32,7 @@ public class RedisCacheManagerConfig {
                         )
                         .serializeValuesWith(
                                 RedisSerializationContext.SerializationPair
-                                        .fromSerializer(new GenericJackson2JsonRedisSerializer())
+                                        .fromSerializer(serializer)
                         )
                         .entryTtl(Duration.ofMinutes(30));
 

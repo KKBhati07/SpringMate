@@ -6,6 +6,6 @@ import lombok.Data;
 @Data
 public class FavoriteRequestDto {
 
-    @JsonProperty("listing_id")
-    private Long listingId;
+    @JsonProperty("is_favorite")
+    private boolean isFavorite;
 }

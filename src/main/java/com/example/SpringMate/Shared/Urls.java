@@ -85,7 +85,7 @@ public final class Urls {
 
     public static final class UserFavorites {
         public static final String BASE = Api.ROOT + "/favorite";
-        public static final String SET_UNSET = "/set_unset";
+        public static final String SET = "/{listing_id}";
     }
 
     public static final class ExternalApi {
