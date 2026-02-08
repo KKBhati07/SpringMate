@@ -11,6 +11,7 @@ public interface FetchListingItemsProjection {
     Boolean getDeleted();
     LocalDateTime getPostedAt();
     CategoryProjection getCategory();
+    ConditionProjection getCondition();
     String getCoverImageUrl();
     Boolean getIsFavorite();
 
@@ -20,6 +21,14 @@ public interface FetchListingItemsProjection {
     interface CategoryProjection {
         Long getId();
         String getName();
+    }
+
+    interface ConditionProjection {
+        Long getId();
+        String getCode();
+        String getLabel();
+        String getDescription();
+        Integer getSortOrder();
     }
 
     interface LocationProjection {

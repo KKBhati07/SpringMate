@@ -2,9 +2,11 @@ package com.example.SpringMate.Listing.Service;
 
 import com.example.SpringMate.Listing.DTO.*;
 import com.example.SpringMate.Listing.Entity.Category;
+import com.example.SpringMate.Listing.Entity.Condition;
 import com.example.SpringMate.Listing.Entity.Listing;
 import com.example.SpringMate.Listing.Entity.ListingImage;
 import com.example.SpringMate.Listing.Repository.CategoryRepository;
+import com.example.SpringMate.Listing.Repository.ConditionRepository;
 import com.example.SpringMate.Listing.Repository.ListingImageRepository;
 import com.example.SpringMate.Listing.Repository.ListingRepository;
 import com.example.SpringMate.Location.Service.LocationService;
@@ -22,6 +24,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -39,6 +42,7 @@ public class ListingService {
     private final ListingRepository listingRepository;
     private final ListingImageRepository listingImageRepository;
     private final CategoryRepository categoryRepository;
+    private final ConditionRepository conditionRepository;
     private final LocationService locationService;
     private final CoreUserService coreUserService;
     private final StorageService storageService;
@@ -127,6 +131,9 @@ public class ListingService {
                 : categoryRepository.findByName(Constants.DEFAULT_CATEGORY)
                 .orElseThrow(() -> new InternalServerException("Default category not found"));
 
+        Condition condition = conditionRepository.findById(requestDto.getConditionId())
+                .orElseThrow(() -> new BadRequestException("Please select a valid condition"));
+
         User user = coreUserService.getUserOrThrowByUUID(authenticatedUser.uuid());
 
         Listing item = Listing.builder()
@@ -142,6 +149,7 @@ public class ListingService {
                         requestDto.getCountryId()
                 ))
                 .category(category)
+                .condition(condition)
                 .build();
 
         Listing savedItem = listingRepository.save(item);
@@ -395,6 +403,18 @@ public class ListingService {
                     .build();
         }
 
+        ConditionDto conditionDTO = null;
+        if (record.getCondition() != null) {
+            var cond = record.getCondition();
+            conditionDTO = ConditionDto.builder()
+                    .id(cond.getId())
+                    .code(cond.getCode())
+                    .label(cond.getLabel())
+                    .description(cond.getDescription())
+                    .sortOrder(cond.getSortOrder())
+                    .build();
+        }
+
         return FetchListingItemsResponseDto.builder()
                 .id(record.getId())
                 .title(record.getTitle())
@@ -407,10 +427,18 @@ public class ListingService {
                         .id(record.getCategory().getId())
                         .name(record.getCategory().getName())
                         .build())
+                .condition(conditionDTO)
                 .coverImageUrl(storageService.getPreSignedUrl(record.getCoverImageUrl()))
                 .isFavorite(record.getIsFavorite())
                 .location(locationDTO)
                 .build();
+    }
+
+    @Cacheable(value = Constants.CacheNamespace.CONDITION, key = "'active'")
+    public FetchConditionsResponseDto getAllConditions() {
+        return new FetchConditionsResponseDto(
+                conditionRepository.findByActiveTrueOrderBySortOrderAsc()
+        );
     }
 
 }

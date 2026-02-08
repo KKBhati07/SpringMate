@@ -55,6 +55,14 @@ public class ResponseMapper {
                     .build());
         }
 
+        dto.setCondition(ConditionDto.builder()
+                .id(listing.getCondition().getId())
+                .code(listing.getCondition().getCode())
+                .label(listing.getCondition().getLabel())
+                .description(listing.getCondition().getDescription())
+                .sortOrder(listing.getCondition().getSortOrder())
+                .build());
+
         if (listing.getLocation() != null) {
             dto.setLocation(LocationDto.builder()
                     .state(LocationDto.StateDto.builder()

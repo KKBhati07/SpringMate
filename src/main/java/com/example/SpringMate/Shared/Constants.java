@@ -21,6 +21,7 @@ public final class Constants {
      */
     public static final class CacheNamespace {
         public static final String CATEGORY = "categories";
+        public static final String CONDITION = "conditions";
         public static final String COUNTRY = "countries";
         public static final String STATE = "states";
         public static final String CITY = "cities";

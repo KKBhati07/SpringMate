@@ -46,14 +46,14 @@ public class ListingController {
     ) {
         return ResponseEntity.ok(
                 Response.success(listingService.getAllRecords(
-                        new FetchListingsRequestDto(
-                                categoryId, minPrice, maxPrice,
-                                countryId, stateId, cityId,
-                                searchString,
-                                page, size),
-                        authenticatedUser,
-                        false
-                ),
+                                new FetchListingsRequestDto(
+                                        categoryId, minPrice, maxPrice,
+                                        countryId, stateId, cityId,
+                                        searchString,
+                                        page, size),
+                                authenticatedUser,
+                                false
+                        ),
                         "Listings fetched successfully"));
     }
 
@@ -66,11 +66,11 @@ public class ListingController {
     ) {
         return ResponseEntity.ok(
                 Response.success(listingService.getRecordsByUser(
-                        uuid,
-                        page,
-                        size,
-                        false
-                ),
+                                uuid,
+                                page,
+                                size,
+                                false
+                        ),
                         "Listings fetched successfully"));
     }
 
@@ -86,11 +86,11 @@ public class ListingController {
         }
         return ResponseEntity.ok(
                 Response.success(listingService.getRecordsByUser(
-                        uuid,
-                        page,
-                        size,
-                        true
-                ),
+                                uuid,
+                                page,
+                                size,
+                                true
+                        ),
                         "Listings fetched successfully"));
     }
 
@@ -156,5 +156,12 @@ public class ListingController {
         return ResponseEntity.ok(Response.success(
                 listingService.getOne(id),
                 "Item fetched successfully"));
+    }
+
+    @GetMapping(Urls.Listing.GET_CONDITIONS)
+    public ResponseEntity<Response<FetchConditionsResponseDto>> getConditions() {
+        return ResponseEntity.ok(
+                Response.success(listingService.getAllConditions(),
+                        "Conditions fetched successfully"));
     }
 }

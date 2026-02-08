@@ -17,7 +17,7 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
 
     Optional<Listing> findByIdAndDeletedFalse(Long id);
 
-    @EntityGraph(attributePaths = {"category", "seller", "listingImages", "location"})
+    @EntityGraph(attributePaths = {"category", "seller", "listingImages", "location", "condition"})
     Optional<Listing> findWithRelationsByIdAndDeletedFalse(Long id);
 
     List<Listing> findByDeletedFalse();
@@ -51,7 +51,7 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
                     l.postedAt AS postedAt,
                     COALESCE(l.deleted, false) AS deleted,
                     c AS category,
-            
+                    cond AS condition,
                     (
                         SELECT li.url 
                         FROM ListingImage li 
@@ -66,6 +66,7 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
                     END AS isFavorite
                 FROM Listing l
                 LEFT JOIN l.category c
+                LEFT JOIN l.condition cond
                 LEFT JOIN l.location loc
                 LEFT JOIN loc.city city
                 LEFT JOIN loc.state state
@@ -109,6 +110,7 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
                     l.price AS price,
                     l.postedAt AS postedAt,
                     c AS category,
+                    cond AS condition,
                     (
                         SELECT li.url 
                         FROM ListingImage li 
@@ -120,6 +122,7 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
                     false AS isFavorite
                 FROM Listing l
                 LEFT JOIN l.category c
+                LEFT JOIN l.condition cond
                 LEFT JOIN l.location loc
                 LEFT JOIN loc.city city
                 LEFT JOIN loc.state state
@@ -140,6 +143,7 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
                     l.price AS price,
                     l.postedAt AS postedAt,
                     c AS category,
+                    cond AS condition,
                     (
                         SELECT li.url 
                         FROM ListingImage li 
@@ -153,6 +157,7 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
                 LEFT JOIN UserFavorite uf 
                     ON uf.listing = l AND uf.user.id = :userId
                 LEFT JOIN l.category c
+                LEFT JOIN l.condition cond
                 LEFT JOIN l.location loc
                 LEFT JOIN loc.city city
                 LEFT JOIN loc.state state

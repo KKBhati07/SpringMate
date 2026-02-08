@@ -55,11 +55,12 @@ public final class Urls {
         public static final String GET_ALL = "/get_all";
         public static final String GET_BY_USER = "/get_by_user";
         public static final String GET_FAVORITES = "/get_favorites";
+        public static final String GET_CONDITIONS = "/get_conditions";
         public static final String CREATE = "/create";
         public static final String UPDATE = "/update";
         public static final String DELETE = "/delete";
         public static final String IMAGE_UPLOAD_FALLBACK = "/image_upload_fallback";
-        public static final String GET_DETAILS = "/{uuid}/get_details";
+        public static final String GET_DETAILS = "/{id}/get_details";
     }
 
     public static final class Category {
