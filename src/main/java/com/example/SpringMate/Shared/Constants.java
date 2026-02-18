@@ -42,6 +42,7 @@ public final class Constants {
      */
     public static final class EmailHeaders {
         public static final String LOGIN = "OTP Verification";
+        public static final String CONTACT_SELLER = "New message on MarketMate";
 
         private EmailHeaders() {
         }

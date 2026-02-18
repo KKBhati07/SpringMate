@@ -35,6 +35,7 @@ public class User implements UserDetails {
     @Column(unique = true, nullable = false)
     private UUID uuid;
 
+    @Column(nullable = false, length = 100)
     private String name;
 
     @JsonIgnore

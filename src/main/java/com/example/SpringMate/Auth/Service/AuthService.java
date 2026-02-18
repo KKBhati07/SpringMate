@@ -6,6 +6,8 @@ import com.example.SpringMate.Auth.DTO.AuthDetailsResponseDto;
 import com.example.SpringMate.Auth.DTO.OtpLoginResponseDto;
 import com.example.SpringMate.Auth.DTO.OtpRequestDto;
 import com.example.SpringMate.Auth.DTO.OtpLoginRequestDto;
+import com.example.SpringMate.Auth.DTO.SessionResolveRequestDto;
+import com.example.SpringMate.Auth.DTO.SessionResolveResponseDto;
 import com.example.SpringMate.Auth.Entity.Session;
 import com.example.SpringMate.Auth.Exception.TooManyRequestsException;
 import com.example.SpringMate.Auth.jwt.JwtTokenProvider;
@@ -164,5 +166,36 @@ public class AuthService {
         }
         log.warn("action=OTP_VERIFY reason=INVALID_TYPE");
         throw new BadRequestException("Ambiguous request type");
+    }
+
+    /**
+     * Resolves a session by sessionId and returns the associated user UUID.
+     * Used by external services (e.g., chat service) to validate sessions.
+     */
+    public SessionResolveResponseDto resolveSession(SessionResolveRequestDto requestDto) {
+        log.info("action=RESOLVE_SESSION sessionId={}", requestDto.getSessionId());
+
+        if (requestDto.getSessionId() == null || requestDto.getSessionId().isBlank()) {
+            log.warn("action=RESOLVE_SESSION reason=INVALID_SESSION_ID");
+            throw new BadRequestException("Session ID is required");
+        }
+
+        Optional<Session> sessionOpt = sessionRepository.findBySessionId(requestDto.getSessionId());
+        if (sessionOpt.isEmpty()) {
+            log.warn("action=RESOLVE_SESSION reason=SESSION_NOT_FOUND");
+            throw new UnauthorizedException("Invalid session");
+        }
+
+        Session session = sessionOpt.get();
+        if (session.getExpiresAt().isBefore(LocalDateTime.now())) {
+            log.warn("action=RESOLVE_SESSION reason=SESSION_EXPIRED");
+            throw new UnauthorizedException("Session expired");
+        }
+
+        UUID userUuid = session.getUser().getUuid();
+        log.info("action=RESOLVE_SESSION result=SUCCESS userUuid={}", userUuid);
+        return SessionResolveResponseDto.builder()
+                .userUuid(userUuid)
+                .build();
     }
 }

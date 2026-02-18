@@ -14,13 +14,19 @@ public class EmailService {
     private final JavaMailSender javaMailSender;
     private final EmailTemplateService emailTemplateService;
 
-    public void sendEmail(String to, String subject, String otp) throws MessagingException {
+    public void sendOtpEmail(String to, String subject, String otp) throws MessagingException {
+        String htmlContent = emailTemplateService.generateOTPEmail(Constants.EmailHeaders.LOGIN, otp);
+        sendEmail(to, subject, htmlContent);
+    }
 
+    /**
+     * Sends an HTML email with pre-rendered content.
+     */
+    public void sendEmail(String to, String subject, String htmlContent) throws MessagingException {
         MimeMessage message = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
         helper.setTo(to);
-        String htmlContent = emailTemplateService.generateOTPEmail(Constants.EmailHeaders.LOGIN,otp);
         helper.setSubject(subject);
         helper.setText(htmlContent, true);
 

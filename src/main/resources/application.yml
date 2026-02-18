@@ -118,6 +118,9 @@ management:
       application: ${spring.application.name}
 
 app:
+  internal:
+    service:
+      key: ${SERVICE_KEY:6911aa62-3705-42ef-8484-db35b62cf9ba}
   monitoring:
     prometheus:
       username: prometheus

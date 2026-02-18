@@ -24,7 +24,7 @@ public class OtpNotificationDispatcher {
     @CircuitBreaker(name = "sendEmail", fallbackMethod = "handleEmailFailure")
     public void dispatchEmail(String to, String subject, String otp) throws MessagingException {
         log.info("OTP email dispatch attempt subject={}", subject);
-        emailService.sendEmail(to, subject, otp);
+        emailService.sendOtpEmail(to, subject, otp);
         log.info("OTP email dispatched successfully subject={}", subject);
     }
 

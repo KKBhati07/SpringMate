@@ -4,6 +4,8 @@ import com.example.SpringMate.Auth.DTO.AuthDetailsResponseDto;
 import com.example.SpringMate.Auth.DTO.OtpLoginResponseDto;
 import com.example.SpringMate.Auth.DTO.OtpRequestDto;
 import com.example.SpringMate.Auth.DTO.OtpLoginRequestDto;
+import com.example.SpringMate.Auth.DTO.SessionResolveRequestDto;
+import com.example.SpringMate.Auth.DTO.SessionResolveResponseDto;
 import com.example.SpringMate.Auth.Helper.AuthHelper;
 import com.example.SpringMate.Auth.jwt.JwtTokenProvider;
 import com.example.SpringMate.Util.AuthenticatedUser;
@@ -119,6 +121,28 @@ public class AuthController {
 
         return ResponseEntity.ok(
                 Response.success(res, "Logged in successfully!")
+        );
+    }
+
+    /**
+     * Resolves a session by sessionId and returns the associated user UUID.
+     * Used by external services (e.g., chat service) to validate sessions.
+     */
+    @PostMapping(Urls.Auth.RESOLVE_SESSION)
+    public ResponseEntity<Response<SessionResolveResponseDto>> resolveSession(
+            @Valid @RequestBody SessionResolveRequestDto requestDto
+    ) {
+        log.info("action=RESOLVE_SESSION_REQUEST sessionId={}", requestDto.getSessionId());
+
+        SessionResolveResponseDto res = authService.resolveSession(requestDto);
+
+        log.info(
+                "action=RESOLVE_SESSION_SUCCESS userUuid={}",
+                res.getUserUuid()
+        );
+
+        return ResponseEntity.ok(
+                Response.success(res, "Session resolved successfully")
         );
     }
 

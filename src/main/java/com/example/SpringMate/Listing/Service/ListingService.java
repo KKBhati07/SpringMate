@@ -1,11 +1,14 @@
 package com.example.SpringMate.Listing.Service;
 
 import com.example.SpringMate.Listing.DTO.*;
+import com.example.SpringMate.Listing.Entity.ContactMessage;
+import com.example.SpringMate.Listing.Entity.ContactMessageStatus;
 import com.example.SpringMate.Listing.Entity.Category;
 import com.example.SpringMate.Listing.Entity.Condition;
 import com.example.SpringMate.Listing.Entity.Listing;
 import com.example.SpringMate.Listing.Entity.ListingImage;
 import com.example.SpringMate.Listing.Repository.CategoryRepository;
+import com.example.SpringMate.Listing.Repository.ContactMessageRepository;
 import com.example.SpringMate.Listing.Repository.ConditionRepository;
 import com.example.SpringMate.Listing.Repository.ListingImageRepository;
 import com.example.SpringMate.Listing.Repository.ListingRepository;
@@ -14,6 +17,8 @@ import com.example.SpringMate.Shared.Constants;
 import com.example.SpringMate.Shared.Enum.AwsS3Directory;
 import com.example.SpringMate.Shared.Exception.*;
 import com.example.SpringMate.Shared.Helper.InputSanitizer;
+import com.example.SpringMate.Shared.Service.EmailService;
+import com.example.SpringMate.Shared.Service.EmailTemplateService;
 import com.example.SpringMate.Storage.Service.StorageService;
 import com.example.SpringMate.User.Entity.User;
 import com.example.SpringMate.User.Service.CoreUserService;
@@ -32,6 +37,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Slf4j
@@ -47,6 +53,9 @@ public class ListingService {
     private final CoreUserService coreUserService;
     private final StorageService storageService;
     private final ResponseMapper responseMapper;
+    private final EmailService emailService;
+    private final ContactMessageRepository contactMessageRepository;
+    private final EmailTemplateService emailTemplateService;
 
     public PaginatedResponse<FetchListingItemsResponseDto> getAllRecords(
             FetchListingsRequestDto queryParams,
@@ -368,6 +377,84 @@ public class ListingService {
                 .findWithRelationsByIdAndDeletedFalse(itemId);
         return listingOptional.map(responseMapper::mapListing)
                 .orElseThrow(() -> new NotFoundException("Listing not found"));
+    }
+
+    /**
+     * Sends an email to the listing seller on behalf of an authenticated user.
+     */
+    public void contactSellerByEmail(
+            Long listingId,
+            ContactSellerEmailRequestDto dto,
+            AuthenticatedUser authenticatedUser
+    ) {
+        if (authenticatedUser == null) {
+            throw new UnauthorizedException();
+        }
+
+        var sellerContact = listingRepository.findSellerContactByListingId(listingId)
+                .orElseThrow(() -> new NotFoundException("Listing not found"));
+
+        if (sellerContact.getSellerEmail() == null || sellerContact.getSellerEmail().isBlank()) {
+            throw new InternalServerException("Seller email not available");
+        }
+
+        // Prevent emailing yourself via this flow
+        if (sellerContact.getSellerUuid() != null && sellerContact.getSellerUuid().equals(authenticatedUser.uuid())) {
+            throw new BadRequestException("You cannot contact your own listing");
+        }
+
+        String subject = InputSanitizer.stripTagsPlainText(dto.getSubject());
+        String body = InputSanitizer.stripTagsPlainText(dto.getBody());
+
+        ContactMessage audit = ContactMessage.builder()
+                .listingId(sellerContact.getListingId())
+                .sellerId(sellerContact.getSellerId())
+                .buyerId(authenticatedUser.id())
+                .status(ContactMessageStatus.QUEUED)
+                .createdAt(LocalDateTime.now())
+                .subjectLength(subject.length())
+                .bodyLength(body.length())
+                .build();
+
+        audit = contactMessageRepository.save(audit);
+
+        String htmlContent = emailTemplateService.generateContactSellerEmail(
+                Constants.EmailHeaders.CONTACT_SELLER,
+                sellerContact.getListingTitle() == null ? ("Listing #" + sellerContact.getListingId()) : sellerContact.getListingTitle(),
+                authenticatedUser.name(),
+                authenticatedUser.email(),
+                normalizeListingUrl(dto.getListingUrl()),
+                body
+        );
+
+        try {
+            emailService.sendEmail(sellerContact.getSellerEmail(), subject, htmlContent);
+            audit.setStatus(ContactMessageStatus.SENT);
+            audit.setSentAt(LocalDateTime.now());
+            contactMessageRepository.save(audit);
+        } catch (Exception ex) {
+            log.error("Failed to send contact email listing=[ID {}] to={}", listingId, sellerContact.getSellerEmail(), ex);
+            audit.setStatus(ContactMessageStatus.FAILED);
+            audit.setFailureReason(truncateFailureReason(ex.getMessage()));
+            contactMessageRepository.save(audit);
+            throw new InternalServerException("Failed to send email");
+        }
+    }
+
+    private String truncateFailureReason(String msg) {
+        if (msg == null) return null;
+        String trimmed = msg.trim();
+        if (trimmed.length() <= 500) return trimmed;
+        return trimmed.substring(0, 500);
+    }
+
+    private String normalizeListingUrl(String url) {
+        if (url == null) return null;
+        String trimmed = url.trim();
+        if (trimmed.isBlank()) return null;
+        // Basic safety: allow only http(s)
+        if (!(trimmed.startsWith("http://") || trimmed.startsWith("https://"))) return null;
+        return trimmed.length() > 500 ? trimmed.substring(0, 500) : trimmed;
     }
 
     public void softDeleteByUserId(Long userId) {

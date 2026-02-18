@@ -48,6 +48,18 @@ public final class InputSanitizer {
     }
 
     /**
+     * Removes all HTML tags but does NOT HTML-escape characters.
+     * Use this when the output will later be rendered safely by a templating engine
+     * (e.g., Thymeleaf th:text) to avoid double-encoding like &amp;#39;.
+     */
+    public static String stripTagsPlainText(String input) {
+        if (!StringUtils.hasText(input)) {
+            return input;
+        }
+        return PLAIN_TEXT_POLICY.sanitize(input).trim();
+    }
+
+    /**
      * For rich content fields (e.g., blog posts, descriptions).
      * Allows safe HTML tags and attributes while stripping dangerous ones.
      */

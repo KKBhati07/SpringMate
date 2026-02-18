@@ -1,6 +1,7 @@
 package com.example.SpringMate.Listing.Repository;
 
 import com.example.SpringMate.Listing.DTO.FetchListingItemsProjection;
+import com.example.SpringMate.Listing.DTO.ListingSellerContactProjection;
 import com.example.SpringMate.Listing.Entity.Listing;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,6 +20,19 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
 
     @EntityGraph(attributePaths = {"category", "seller", "listingImages", "location", "condition"})
     Optional<Listing> findWithRelationsByIdAndDeletedFalse(Long id);
+
+    @Query("""
+            SELECT
+                l.id AS listingId,
+                l.title AS listingTitle,
+                s.id AS sellerId,
+                s.uuid AS sellerUuid,
+                s.email AS sellerEmail
+            FROM Listing l
+            JOIN l.seller s
+            WHERE l.id = :listingId AND l.deleted = false
+            """)
+    Optional<ListingSellerContactProjection> findSellerContactByListingId(@Param("listingId") Long listingId);
 
     List<Listing> findByDeletedFalse();
 

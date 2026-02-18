@@ -5,7 +5,8 @@ package com.example.SpringMate.Shared;
  */
 public final class Urls {
 
-    private Urls() {}
+    private Urls() {
+    }
 
     public static final class Api {
         public static final String BASE_PATH = "/api";
@@ -21,6 +22,7 @@ public final class Urls {
         public static final String AUTH_DETAILS = "/auth_details";
         public static final String REQUEST_LOGIN_OTP = "/request_login_otp";
         public static final String OTP_LOGIN = "/login_with_otp";
+        public static final String RESOLVE_SESSION = "/resolve_session";
     }
 
     public static final class Admin {
@@ -61,6 +63,7 @@ public final class Urls {
         public static final String DELETE = "/delete";
         public static final String IMAGE_UPLOAD_FALLBACK = "/image_upload_fallback";
         public static final String GET_DETAILS = "/{id}/get_details";
+        public static final String CONTACT_SELLER_EMAIL = "/{id}/contact_seller_email";
     }
 
     public static final class Category {
@@ -122,7 +125,9 @@ public final class Urls {
                 Auth.BASE + Auth.OTP_LOGIN,
                 Listing.BASE + Listing.GET_ALL,
                 Listing.BASE + Listing.GET_BY_USER,
-                Location.BASE + "/**"
+                Listing.BASE + Listing.GET_DETAILS,
+                Location.BASE + "/**",
+                Internal.Auth.BASE + "/**"
         };
 
         public static final String[] FILTER_EXCLUDED_ENDPOINTS = {
@@ -131,7 +136,18 @@ public final class Urls {
                 Auth.BASE + Auth.REQUEST_LOGIN_OTP,
                 Auth.BASE + Auth.OTP_LOGIN,
                 Location.BASE + "/**",
-                Actuator.PROMETHEUS
+                Actuator.PROMETHEUS,
+                Internal.Auth.BASE + "/**"
         };
     }
+
+    public static class Internal {
+        public static final String INTERNAL_ROOT = "/internal/v1";
+
+        public static class Auth {
+            public static final String BASE = INTERNAL_ROOT + "/auth";
+            public static final String RESOLVE_SESSION = "/resolve_session";
+        }
+    }
+
 }

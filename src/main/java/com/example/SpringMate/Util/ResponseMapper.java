@@ -88,7 +88,7 @@ public class ResponseMapper {
                     listing.getListingImages().stream()
                             .map(img -> ListingImageDto.builder()
                                     .id(img.getId())
-                                    .url(img.getUrl())
+                                    .url(storageService.getPreSignedUrl(img.getUrl()))
                                     .isCover(img.isCover())
                                     .build()
                             ).toList()

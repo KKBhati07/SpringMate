@@ -158,6 +158,16 @@ public class ListingController {
                 "Item fetched successfully"));
     }
 
+    @PostMapping(Urls.Listing.CONTACT_SELLER_EMAIL)
+    public ResponseEntity<Response<Object>> contactSellerByEmail(
+            @PathVariable Long id,
+            @Valid @RequestBody ContactSellerEmailRequestDto requestDto,
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser
+    ) {
+        listingService.contactSellerByEmail(id, requestDto, authenticatedUser);
+        return ResponseEntity.ok(Response.success(null, "Email sent successfully"));
+    }
+
     @GetMapping(Urls.Listing.GET_CONDITIONS)
     public ResponseEntity<Response<FetchConditionsResponseDto>> getConditions() {
         return ResponseEntity.ok(
