@@ -55,6 +55,7 @@ public final class Urls {
         public static final String BASE = Api.ROOT + "/listing";
 
         public static final String GET_ALL = "/get_all";
+        public static final String SUGGEST = "/suggest";
         public static final String GET_BY_USER = "/get_by_user";
         public static final String GET_FAVORITES = "/get_favorites";
         public static final String GET_CONDITIONS = "/get_conditions";
@@ -124,6 +125,7 @@ public final class Urls {
                 Auth.BASE + Auth.REQUEST_LOGIN_OTP,
                 Auth.BASE + Auth.OTP_LOGIN,
                 Listing.BASE + Listing.GET_ALL,
+                Listing.BASE + Listing.SUGGEST,
                 Listing.BASE + Listing.GET_BY_USER,
                 Listing.BASE + Listing.GET_DETAILS,
                 Location.BASE + "/**",

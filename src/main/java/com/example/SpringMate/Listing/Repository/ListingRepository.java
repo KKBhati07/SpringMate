@@ -185,5 +185,21 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
             Pageable pageable
     );
 
+    @Query("""
+            SELECT l.title
+            FROM Listing l
+            WHERE l.deleted = false
+              AND (
+                :query IS NULL
+                OR LOWER(l.title) LIKE LOWER(CONCAT('%', :query, '%'))
+                OR LOWER(COALESCE(l.description, '')) LIKE LOWER(CONCAT('%', :query, '%'))
+              )
+            ORDER BY l.postedAt DESC
+            """)
+    List<String> suggestTitles(
+            @Param("query") String query,
+            Pageable pageable
+    );
+
 
 }

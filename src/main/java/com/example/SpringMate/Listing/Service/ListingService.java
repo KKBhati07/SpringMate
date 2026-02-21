@@ -69,6 +69,12 @@ public class ListingService {
         );
 
         String searchString = queryParams.getSearchString();
+        if (searchString != null) {
+            searchString = searchString.trim();
+            if (searchString.isBlank()) {
+                searchString = null;
+            }
+        }
         Page<FetchListingItemsProjection> pagedRecords = listingRepository
                 .findAllByFilters(
                         authenticatedUser == null ? null : authenticatedUser.id(),
@@ -78,9 +84,7 @@ public class ListingService {
                         queryParams.getCountryId(),
                         queryParams.getStateId(),
                         queryParams.getCityId(),
-                        (searchString == null
-                                || searchString.isEmpty()) ?
-                                "" : searchString,
+                        searchString,
                         deleted,
                         pageable);
         return new PaginatedResponse<>(pagedRecords.getContent()
@@ -91,6 +95,26 @@ public class ListingService {
                 pagedRecords.getNumber(),
                 pagedRecords.getTotalElements(),
                 pagedRecords.getTotalPages());
+    }
+
+    public List<String> suggestListingTitles(String query, int limit) {
+        if (limit <= 0) return List.of();
+        int capped = Math.min(limit, 20);
+
+        String q = query == null ? null : query.trim();
+        if (q == null || q.isBlank()) return List.of();
+
+        Pageable pageable = PageRequest.of(0, capped);
+        List<String> raw = listingRepository.suggestTitles(q, pageable);
+
+        LinkedHashSet<String> unique = new LinkedHashSet<>();
+        for (String s : raw) {
+            if (s == null) continue;
+            String trimmed = s.trim();
+            if (!trimmed.isEmpty()) unique.add(trimmed);
+            if (unique.size() >= capped) break;
+        }
+        return new ArrayList<>(unique);
     }
 
     public PaginatedResponse<FetchListingItemsResponseDto> getRecordsByUser(

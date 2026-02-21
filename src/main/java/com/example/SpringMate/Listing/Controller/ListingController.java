@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -55,6 +56,22 @@ public class ListingController {
                                 false
                         ),
                         "Listings fetched successfully"));
+    }
+
+    @GetMapping(Urls.Listing.SUGGEST)
+    public ResponseEntity<Response<List<String>>> suggest(
+            @RequestParam(value = "query") String query,
+            @RequestParam(value = "limit", defaultValue = "8") int limit
+    ) {
+        if (limit < 1) {
+            throw new BadRequestException("Invalid limit");
+        }
+        return ResponseEntity.ok(
+                Response.success(
+                        listingService.suggestListingTitles(query, limit),
+                        "Suggestions fetched successfully"
+                )
+        );
     }
 
     @GetMapping(Urls.Listing.GET_BY_USER)
