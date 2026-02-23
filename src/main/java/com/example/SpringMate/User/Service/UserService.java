@@ -3,6 +3,8 @@ package com.example.SpringMate.User.Service;
 import com.example.SpringMate.Listing.Service.ListingService;
 import com.example.SpringMate.Shared.Enum.AwsS3Directory;
 import com.example.SpringMate.Shared.Exception.InternalServerException;
+import com.example.SpringMate.Shared.Helper.InputSanitizer;
+import com.example.SpringMate.Shared.Roles;
 import com.example.SpringMate.Storage.Service.StorageService;
 import com.example.SpringMate.User.DTO.*;
 import com.example.SpringMate.User.Entity.Role;
@@ -13,7 +15,6 @@ import com.example.SpringMate.User.Exception.UserAlreadyExistsException;
 import com.example.SpringMate.User.Exception.UserNotFoundException;
 import com.example.SpringMate.User.Repository.RoleRepository;
 import com.example.SpringMate.User.Repository.UserRepository;
-import com.example.SpringMate.Shared.Constants;
 import com.example.SpringMate.Util.AuthenticatedUser;
 import com.example.SpringMate.Util.PaginatedResponse;
 import com.example.SpringMate.Util.ResponseMapper;
@@ -25,6 +26,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -42,6 +44,7 @@ public class UserService {
     private final ListingService listingService;
     private final CoreUserService coreUserService;
     private final StorageService storageService;
+    private final PasswordEncoder passwordEncoder;
 
     public CreateUserResponseDto createUser(CreateUserRequestDto userDetails) {
         Optional<User> user = userRepository.findByEmail(userDetails.getEmail());
@@ -51,7 +54,7 @@ public class UserService {
 
         Optional<Role> role = roleRepository.findByName(
                 (userDetails.getRole() == null || userDetails.getRole().isBlank())
-                        ? Constants.UserRole.USER
+                        ? Roles.USER
                         : userDetails.getRole().trim().toUpperCase()
         );
 
@@ -60,7 +63,12 @@ public class UserService {
             throw new InternalServerException("Unable to fetch role");
         }
 
-        User newUser = new User(userDetails, role.get());
+        User newUser = User.builder()
+                .name(InputSanitizer.sanitizePlainText(userDetails.getName()))
+                .email(userDetails.getEmail())
+                .password(passwordEncoder.encode(userDetails.getPassword()))
+                .role(role.get())
+                .build();
         userRepository.save(newUser);
         log.info(
                 "User created user=[UUID {}] role={}",
@@ -97,6 +105,9 @@ public class UserService {
 
     }
 
+    /**
+     * Cascades soft deletion to user's listings to maintain data consistency.
+     */
     @Transactional
     public void
     deleteUser(UUID uuid, AuthenticatedUser authenticatedUser) {
@@ -146,7 +157,7 @@ public class UserService {
         if (userDetails.getProfileUrl() != null) {
             String oldProfilePicUrl = user.getProfileUrl();
             if (oldProfilePicUrl != null) {
-                storageService.deleteImage(Constants.AWS.BUCKET_NAME, oldProfilePicUrl);
+                storageService.deleteImage(oldProfilePicUrl);
             }
             user.setProfileUrl(userDetails.getProfileUrl());
         }
@@ -179,11 +190,7 @@ public class UserService {
 
             String oldProfilePicUrl = user.getProfileUrl();
 
-            String imageKey = storageService.uploadImage(
-                    Constants.AWS.BUCKET_NAME,
-                    AwsS3Directory.PROFILE,
-                    file
-            );
+            String imageKey = storageService.uploadImage(AwsS3Directory.PROFILE, file);
 
             if (imageKey == null) {
                 throw new InternalServerException("Upload image failed");
@@ -192,7 +199,7 @@ public class UserService {
             user.setProfileUrl(imageKey);
 
             if (oldProfilePicUrl != null) {
-                storageService.deleteImage(Constants.AWS.BUCKET_NAME, oldProfilePicUrl);
+                storageService.deleteImage(oldProfilePicUrl);
             }
             log.info(
                     "Profile image updated for user=[UUID {}]",

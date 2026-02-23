@@ -30,7 +30,9 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 
-// Migrated to SDK v2
+/**
+ * // Migrated to SDK v2
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -152,6 +154,9 @@ class AwsS3Service {
     }
 
 
+    /**
+     * Deletes S3 objects asynchronously to avoid blocking request threads.
+     */
     @Async("appDefault")
     public void deleteImage(String bucketName, String objectKey) {
         try {

@@ -1,8 +1,7 @@
 package com.example.SpringMate.User.Entity;
 
-import com.example.SpringMate.Shared.Constants;
-import com.example.SpringMate.User.DTO.CreateUserRequestDto;
 import com.example.SpringMate.Shared.Helper.CoreHelper;
+import com.example.SpringMate.Shared.Roles;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
@@ -13,8 +12,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -38,6 +35,7 @@ public class User implements UserDetails {
     @Column(unique = true, nullable = false)
     private UUID uuid;
 
+    @Column(nullable = false, length = 100)
     private String name;
 
     @JsonIgnore
@@ -87,16 +85,11 @@ public class User implements UserDetails {
         this.uuid = CoreHelper.generateUUID();
     }
 
-    public User(CreateUserRequestDto userDetails, Role role) {
-        this.name = userDetails.getName();
-        this.email = userDetails.getEmail();
-        this.password = encodePassword(userDetails.getPassword());
+    public User(String name, String email, String encodedPassword, Role role) {
+        this.name = name;
+        this.email = email;
+        this.password = encodedPassword;
         this.role = role;
-    }
-
-    private String encodePassword(String password) {
-        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-        return passwordEncoder.encode(password);
     }
 
     @Override
@@ -110,6 +103,6 @@ public class User implements UserDetails {
     }
 
     public boolean isAdmin() {
-        return Constants.UserRole.ADMIN.equalsIgnoreCase(this.role.getName());
+        return Roles.ADMIN.equalsIgnoreCase(this.role.getName());
     }
 }

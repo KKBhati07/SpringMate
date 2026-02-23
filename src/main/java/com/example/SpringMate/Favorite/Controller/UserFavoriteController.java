@@ -16,30 +16,30 @@ import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping(Urls.UserFavorites.FAVORITE_BASE)
+@RequestMapping(Urls.UserFavorites.BASE)
 @RequiredArgsConstructor
 public class UserFavoriteController {
 
     private final UserFavoriteService userFavoriteService;
 
-    @PostMapping(Urls.UserFavorites.SET_UNSET)
+    @PutMapping(Urls.UserFavorites.SET)
     public ResponseEntity<Response<Map<String, Boolean>>> setUnsetFavorite(
+            @PathVariable(value = "listing_id") Long listingId,
             @RequestBody FavoriteRequestDto dto,
             @AuthenticationPrincipal AuthenticatedUser authenticatedUser
     ) {
         log.info(
-                "User toggling favorite user=[UUID {}] listing=[ID {}]",
+                "User updating favorite user=[UUID {}] listing=[ID {}] favorite =[{}]",
                 authenticatedUser.uuid(),
-                dto.getListingId()
+                listingId,
+                dto.isFavorite()
         );
 
-        return ResponseEntity.status(
-                        HttpStatus.CREATED)
-                .body(new Response<>
-                        (userFavoriteService.setUnsetFavorite(
-                                authenticatedUser.id(),
-                                dto.getListingId()),
-                                "Request successful")
-                );
+        return ResponseEntity.ok(Response.success(
+                userFavoriteService.setFavorite(
+                        authenticatedUser.id(),
+                        listingId, dto.isFavorite()),
+                "Request successful")
+        );
     }
 }

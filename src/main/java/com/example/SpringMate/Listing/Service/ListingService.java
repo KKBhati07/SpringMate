@@ -1,16 +1,24 @@
 package com.example.SpringMate.Listing.Service;
 
 import com.example.SpringMate.Listing.DTO.*;
+import com.example.SpringMate.Listing.Entity.ContactMessage;
+import com.example.SpringMate.Listing.Entity.ContactMessageStatus;
 import com.example.SpringMate.Listing.Entity.Category;
+import com.example.SpringMate.Listing.Entity.Condition;
 import com.example.SpringMate.Listing.Entity.Listing;
 import com.example.SpringMate.Listing.Entity.ListingImage;
 import com.example.SpringMate.Listing.Repository.CategoryRepository;
+import com.example.SpringMate.Listing.Repository.ContactMessageRepository;
+import com.example.SpringMate.Listing.Repository.ConditionRepository;
 import com.example.SpringMate.Listing.Repository.ListingImageRepository;
 import com.example.SpringMate.Listing.Repository.ListingRepository;
 import com.example.SpringMate.Location.Service.LocationService;
 import com.example.SpringMate.Shared.Constants;
 import com.example.SpringMate.Shared.Enum.AwsS3Directory;
 import com.example.SpringMate.Shared.Exception.*;
+import com.example.SpringMate.Shared.Helper.InputSanitizer;
+import com.example.SpringMate.Shared.Service.EmailService;
+import com.example.SpringMate.Shared.Service.EmailTemplateService;
 import com.example.SpringMate.Storage.Service.StorageService;
 import com.example.SpringMate.User.Entity.User;
 import com.example.SpringMate.User.Service.CoreUserService;
@@ -21,6 +29,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -28,6 +37,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Slf4j
@@ -38,10 +48,14 @@ public class ListingService {
     private final ListingRepository listingRepository;
     private final ListingImageRepository listingImageRepository;
     private final CategoryRepository categoryRepository;
+    private final ConditionRepository conditionRepository;
     private final LocationService locationService;
     private final CoreUserService coreUserService;
     private final StorageService storageService;
     private final ResponseMapper responseMapper;
+    private final EmailService emailService;
+    private final ContactMessageRepository contactMessageRepository;
+    private final EmailTemplateService emailTemplateService;
 
     public PaginatedResponse<FetchListingItemsResponseDto> getAllRecords(
             FetchListingsRequestDto queryParams,
@@ -55,6 +69,12 @@ public class ListingService {
         );
 
         String searchString = queryParams.getSearchString();
+        if (searchString != null) {
+            searchString = searchString.trim();
+            if (searchString.isBlank()) {
+                searchString = null;
+            }
+        }
         Page<FetchListingItemsProjection> pagedRecords = listingRepository
                 .findAllByFilters(
                         authenticatedUser == null ? null : authenticatedUser.id(),
@@ -64,9 +84,7 @@ public class ListingService {
                         queryParams.getCountryId(),
                         queryParams.getStateId(),
                         queryParams.getCityId(),
-                        (searchString == null
-                                || searchString.isEmpty()) ?
-                                "" : searchString,
+                        searchString,
                         deleted,
                         pageable);
         return new PaginatedResponse<>(pagedRecords.getContent()
@@ -77,6 +95,26 @@ public class ListingService {
                 pagedRecords.getNumber(),
                 pagedRecords.getTotalElements(),
                 pagedRecords.getTotalPages());
+    }
+
+    public List<String> suggestListingTitles(String query, int limit) {
+        if (limit <= 0) return List.of();
+        int capped = Math.min(limit, 20);
+
+        String q = query == null ? null : query.trim();
+        if (q == null || q.isBlank()) return List.of();
+
+        Pageable pageable = PageRequest.of(0, capped);
+        List<String> raw = listingRepository.suggestTitles(q, pageable);
+
+        LinkedHashSet<String> unique = new LinkedHashSet<>();
+        for (String s : raw) {
+            if (s == null) continue;
+            String trimmed = s.trim();
+            if (!trimmed.isEmpty()) unique.add(trimmed);
+            if (unique.size() >= capped) break;
+        }
+        return new ArrayList<>(unique);
     }
 
     public PaginatedResponse<FetchListingItemsResponseDto> getRecordsByUser(
@@ -108,6 +146,9 @@ public class ListingService {
                 pagedRecords.getTotalPages());
     }
 
+    /**
+     * Rolls back uploaded S3 images on failure to prevent orphaned storage objects.
+     */
     @Transactional
     public CreateListingResponseDto createRecord(
             CreateListingRequestDto requestDto,
@@ -123,12 +164,17 @@ public class ListingService {
                 : categoryRepository.findByName(Constants.DEFAULT_CATEGORY)
                 .orElseThrow(() -> new InternalServerException("Default category not found"));
 
+        Condition condition = conditionRepository.findById(requestDto.getConditionId())
+                .orElseThrow(() -> new BadRequestException("Please select a valid condition"));
+
         User user = coreUserService.getUserOrThrowByUUID(authenticatedUser.uuid());
 
         Listing item = Listing.builder()
                 .price(requestDto.getPrice())
-                .title(requestDto.getTitle())
-                .description(requestDto.getDescription())
+                // No HTML allowed in titles
+                .title(InputSanitizer.sanitizePlainText(requestDto.getTitle()))
+                // Allow safe HTML (links, bold, lists)
+                .description(InputSanitizer.sanitizeHtml(requestDto.getDescription()))
                 .seller(user)
                 .location(locationService.getOrCreateOne(
                         requestDto.getCityId(),
@@ -136,6 +182,7 @@ public class ListingService {
                         requestDto.getCountryId()
                 ))
                 .category(category)
+                .condition(condition)
                 .build();
 
         Listing savedItem = listingRepository.save(item);
@@ -180,7 +227,7 @@ public class ListingService {
                 );
                 for (String key : keysToCleanup) {
                     try {
-                        storageService.deleteImage(Constants.AWS.BUCKET_NAME, key);
+                        storageService.deleteImage(key);
                     } catch (Exception cleanupEx) {
                         log.error(
                                 "Upload rollback failed listing=[ ID {}]",
@@ -216,6 +263,9 @@ public class ListingService {
         return objectKey;
     }
 
+    /**
+     * Cleans up uploaded S3 images on failure to prevent orphaned storage objects.
+     */
     @Transactional
     public void uploadListingImages(FallbackImageUploadDto dto, AuthenticatedUser authenticatedUser) {
         if (dto.getImages() == null || dto.getImages().isEmpty()) {
@@ -244,8 +294,7 @@ public class ListingService {
                     throw new BadRequestException("Empty image provided");
                 }
 
-                String imgKey = storageService.uploadImage(Constants.AWS.BUCKET_NAME,
-                        AwsS3Directory.LISTINGS, file);
+                String imgKey = storageService.uploadImage(AwsS3Directory.LISTINGS, file);
                 if (imgKey == null) {
                     throw new InternalServerException("Upload failed for file: " + file.getOriginalFilename());
                 }
@@ -287,7 +336,7 @@ public class ListingService {
             );
             for (String key : uploadedKeys) {
                 try {
-                    storageService.deleteImage(Constants.AWS.BUCKET_NAME, key);
+                    storageService.deleteImage(key);
                 } catch (Exception deleteEx) {
                     log.error(
                             "Upload rollback failed listing=[ ID {}]",
@@ -354,6 +403,84 @@ public class ListingService {
                 .orElseThrow(() -> new NotFoundException("Listing not found"));
     }
 
+    /**
+     * Sends an email to the listing seller on behalf of an authenticated user.
+     */
+    public void contactSellerByEmail(
+            Long listingId,
+            ContactSellerEmailRequestDto dto,
+            AuthenticatedUser authenticatedUser
+    ) {
+        if (authenticatedUser == null) {
+            throw new UnauthorizedException();
+        }
+
+        var sellerContact = listingRepository.findSellerContactByListingId(listingId)
+                .orElseThrow(() -> new NotFoundException("Listing not found"));
+
+        if (sellerContact.getSellerEmail() == null || sellerContact.getSellerEmail().isBlank()) {
+            throw new InternalServerException("Seller email not available");
+        }
+
+        // Prevent emailing yourself via this flow
+        if (sellerContact.getSellerUuid() != null && sellerContact.getSellerUuid().equals(authenticatedUser.uuid())) {
+            throw new BadRequestException("You cannot contact your own listing");
+        }
+
+        String subject = InputSanitizer.stripTagsPlainText(dto.getSubject());
+        String body = InputSanitizer.stripTagsPlainText(dto.getBody());
+
+        ContactMessage audit = ContactMessage.builder()
+                .listingId(sellerContact.getListingId())
+                .sellerId(sellerContact.getSellerId())
+                .buyerId(authenticatedUser.id())
+                .status(ContactMessageStatus.QUEUED)
+                .createdAt(LocalDateTime.now())
+                .subjectLength(subject.length())
+                .bodyLength(body.length())
+                .build();
+
+        audit = contactMessageRepository.save(audit);
+
+        String htmlContent = emailTemplateService.generateContactSellerEmail(
+                Constants.EmailHeaders.CONTACT_SELLER,
+                sellerContact.getListingTitle() == null ? ("Listing #" + sellerContact.getListingId()) : sellerContact.getListingTitle(),
+                authenticatedUser.name(),
+                authenticatedUser.email(),
+                normalizeListingUrl(dto.getListingUrl()),
+                body
+        );
+
+        try {
+            emailService.sendEmail(sellerContact.getSellerEmail(), subject, htmlContent);
+            audit.setStatus(ContactMessageStatus.SENT);
+            audit.setSentAt(LocalDateTime.now());
+            contactMessageRepository.save(audit);
+        } catch (Exception ex) {
+            log.error("Failed to send contact email listing=[ID {}] to={}", listingId, sellerContact.getSellerEmail(), ex);
+            audit.setStatus(ContactMessageStatus.FAILED);
+            audit.setFailureReason(truncateFailureReason(ex.getMessage()));
+            contactMessageRepository.save(audit);
+            throw new InternalServerException("Failed to send email");
+        }
+    }
+
+    private String truncateFailureReason(String msg) {
+        if (msg == null) return null;
+        String trimmed = msg.trim();
+        if (trimmed.length() <= 500) return trimmed;
+        return trimmed.substring(0, 500);
+    }
+
+    private String normalizeListingUrl(String url) {
+        if (url == null) return null;
+        String trimmed = url.trim();
+        if (trimmed.isBlank()) return null;
+        // Basic safety: allow only http(s)
+        if (!(trimmed.startsWith("http://") || trimmed.startsWith("https://"))) return null;
+        return trimmed.length() > 500 ? trimmed.substring(0, 500) : trimmed;
+    }
+
     public void softDeleteByUserId(Long userId) {
         this.listingRepository.softDeleteByUserId(userId);
     }
@@ -387,6 +514,18 @@ public class ListingService {
                     .build();
         }
 
+        ConditionDto conditionDTO = null;
+        if (record.getCondition() != null) {
+            var cond = record.getCondition();
+            conditionDTO = ConditionDto.builder()
+                    .id(cond.getId())
+                    .code(cond.getCode())
+                    .label(cond.getLabel())
+                    .description(cond.getDescription())
+                    .sortOrder(cond.getSortOrder())
+                    .build();
+        }
+
         return FetchListingItemsResponseDto.builder()
                 .id(record.getId())
                 .title(record.getTitle())
@@ -399,13 +538,18 @@ public class ListingService {
                         .id(record.getCategory().getId())
                         .name(record.getCategory().getName())
                         .build())
-                .coverImageUrl(storageService.getPreSignedUrl(
-                        Constants.AWS.BUCKET_NAME,
-                        record.getCoverImageUrl(),
-                        Constants.AWS.GET_SIGNED_URI_EXPIRATION))
+                .condition(conditionDTO)
+                .coverImageUrl(storageService.getPreSignedUrl(record.getCoverImageUrl()))
                 .isFavorite(record.getIsFavorite())
                 .location(locationDTO)
                 .build();
+    }
+
+    @Cacheable(value = Constants.CacheNamespace.CONDITION, key = "'active'")
+    public FetchConditionsResponseDto getAllConditions() {
+        return new FetchConditionsResponseDto(
+                conditionRepository.findByActiveTrueOrderBySortOrderAsc()
+        );
     }
 
 }

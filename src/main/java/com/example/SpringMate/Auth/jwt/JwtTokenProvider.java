@@ -1,9 +1,9 @@
 package com.example.SpringMate.Auth.jwt;
 
-import com.example.SpringMate.Shared.Constants;
+import com.example.SpringMate.Config.AppProperties;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
@@ -13,21 +13,27 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 
+/**
+ * JWT token generation and validation.
+ * Uses sessionId as subject to enable session invalidation without token rotation.
+ */
 @Component
+@RequiredArgsConstructor
 public class JwtTokenProvider {
 
-    @Value("${jwt.secret}")
-    private String jwtSecret;
+    private final AppProperties appProperties;
 
     private SecretKey key;
 
     @PostConstruct
     public void init() {
+        String jwtSecret = appProperties.getAuth().getJwt().getSecret();
         key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
     }
 
     public String generateToken(String sessionId) {
-        LocalDateTime expiryDateTime = LocalDateTime.now().plusDays(Constants.JWT_VALIDITY);
+        int validityDays = appProperties.getAuth().getJwt().getValidityDays();
+        LocalDateTime expiryDateTime = LocalDateTime.now().plusDays(validityDays);
         Date expiryDate = Date.from(expiryDateTime.atZone(ZoneId.systemDefault()).toInstant());
 
         return Jwts.builder()

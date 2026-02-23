@@ -34,12 +34,13 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthCacheService authCacheService;
     private final AuthHelper authHelper;
+    private final ObjectMapper objectMapper;
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest req, HttpServletResponse res) throws AuthenticationException {
         log.info("AUTH_LOGIN_ATTEMPT path={}", req.getPathInfo());
         try {
-            Map<String, String> requestBody = new ObjectMapper().readValue(req.getInputStream(), Map.class);
+            Map<String, String> requestBody = objectMapper.readValue(req.getInputStream(), Map.class);
             String email = requestBody.get("email");
             String password = requestBody.get("password");
 
@@ -55,7 +56,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
             try {
                 res.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 res.setContentType("application/json");
-                res.getWriter().write(new ObjectMapper().writeValueAsString(
+                res.getWriter().write(objectMapper.writeValueAsString(
                         Map.of("message", "Something went wrong while processing the request.")
                 ));
             } catch (IOException ioException) {
@@ -78,7 +79,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json");
                 response.getWriter().write(
-                        new ObjectMapper().writeValueAsString(
+                        objectMapper.writeValueAsString(
                                 Map.of("message", "Admin access only!")
                         )
                 );
@@ -93,8 +94,8 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         String authToken = jwtTokenProvider.generateToken(session.getSessionId());
         authHelper.injectAuthCookie(response, authToken);
 
-        Response<Map<String, Boolean>> res = new Response<>(Map.of("authenticated", true), "Logged in successfully!");
-        response.getWriter().write(new ObjectMapper().writeValueAsString(res));
+        Response<Map<String, Boolean>> res = Response.success(Map.of("authenticated", true), "Logged in successfully!");
+        response.getWriter().write(objectMapper.writeValueAsString(res));
     }
 
     @Override
@@ -104,7 +105,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         response.setContentType("application/json");
         Map<String, Object> resMap = new HashMap<>();
         resMap.put("authenticated", false);
-        Response<Void> res = new Response<>(null, "Invalid credentials. Please try again.");
-        response.getWriter().write(new ObjectMapper().writeValueAsString(res));
+        Response<Void> res = Response.error("Invalid credentials. Please try again.");
+        response.getWriter().write(objectMapper.writeValueAsString(res));
     }
 }

@@ -1,18 +1,20 @@
 package com.example.SpringMate.Seeder;
 
+import com.example.SpringMate.Shared.Roles;
 import com.example.SpringMate.User.Entity.Role;
 import com.example.SpringMate.User.Repository.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Arrays;
 
 @Slf4j
 @RequiredArgsConstructor
 @Component
+@Order(1)
 public class RoleSeeder implements CommandLineRunner {
     private final RoleRepository roleRepository;
 
@@ -21,7 +23,12 @@ public class RoleSeeder implements CommandLineRunner {
 
         log.info("Role seeding started");
 
-        List<String> roles = Arrays.asList("USER", "ADMIN");
+        List<String> roles = List.of(
+                Roles.USER,
+                Roles.ADMIN,
+                Roles.SUPER_ADMIN,
+                Roles.PROMETHEUS
+        );
 
         List<String> existingRoles = roleRepository
                 .findByNameIn(roles).stream()

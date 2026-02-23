@@ -5,36 +5,47 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.3.4</version>
+        <version>3.5.9</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.example</groupId>
     <artifactId>SpringMate</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>SpringMate</name>
-    <description>Demo project for Spring Boot</description>
-    <url/>
+    <description>Spring Boot backend service for MarketMate platform - A marketplace for buying and selling used goods</description>
+    <url>https://github.com/KKBhati07/SpringMate</url>
     <licenses>
-        <license/>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/licenses/MIT</url>
+            <distribution>repo</distribution>
+        </license>
     </licenses>
     <developers>
-        <developer/>
+        <developer>
+            <name>Kanishk Bhati</name>
+            <email>kk.bhatii.007@gmail.com</email>
+            <organization> N/A </organization>
+            <organizationUrl> N/A </organizationUrl>
+        </developer>
     </developers>
     <scm>
-        <connection/>
-        <developerConnection/>
-        <tag/>
-        <url/>
+        <connection>scm:git:git://github.com/KKBhati07/SpringMate.git</connection>
+        <developerConnection>scm:git:ssh://github.com/KKBhati07/SpringMate.git</developerConnection>
+        <tag>HEAD</tag>
+        <url>https://github.com/KKBhati07/SpringMate</url>
     </scm>
     <properties>
         <java.version>17</java.version>
+        <logback.version>1.5.25</logback.version>
+        <logstash-logback-encoder.version>8.0</logstash-logback-encoder.version>
     </properties>
     <dependencyManagement>
         <dependencies>
             <dependency>
                 <groupId>software.amazon.awssdk</groupId>
                 <artifactId>bom</artifactId>
-                <version>2.25.70</version>
+                <version>2.30.0</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -45,13 +56,6 @@
         <!-- Local -->
         <profile>
             <id>local</id>
-            <dependencies>
-                <dependency>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-devtools</artifactId>
-                    <scope>runtime</scope>
-                </dependency>
-            </dependencies>
         </profile>
         <!-- Production-->
         <profile>
@@ -79,6 +83,20 @@
             <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
 
+<!--        HTML Sanitizer-->
+        <dependency>
+            <groupId>com.googlecode.owasp-java-html-sanitizer</groupId>
+            <artifactId>owasp-java-html-sanitizer</artifactId>
+            <version>20260102.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>33.4.0-jre</version>
+        </dependency>
+
+
         <!-- Spring Cache abstraction -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -88,7 +106,7 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.7.2</version>
+            <!--            <version>42.7.2</version>-->
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -98,7 +116,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.32</version>
+            <!--            <version>1.18.32</version>-->
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -112,6 +130,14 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -146,13 +172,43 @@
             <version>0.13.0</version>
             <scope>runtime</scope>
         </dependency>
+        <!-- JSON Logging -->
+        <dependency>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
+            <version>${logstash-logback-encoder.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
         <plugins>
+
+            <!-- Spring Boot plugin + build metadata -->
+            <!--Generates META-INF/build-info.properties -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>build-info</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Git commit metadata -->
+            <plugin>
+                <groupId>io.github.git-commit-id</groupId>
+                <artifactId>git-commit-id-maven-plugin</artifactId>
+                <version>7.0.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>revision</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

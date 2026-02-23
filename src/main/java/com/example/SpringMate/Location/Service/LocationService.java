@@ -30,6 +30,9 @@ public class LocationService {
     private final CountryRepository countryRepository;
     private final LocationRepository locationRepository;
 
+    /**
+     * Creates location entry if missing to ensure referential integrity for listings.
+     */
     public Location getOrCreateOne(Long cityId, Long stateId, Long countryId) {
         Country country = countryRepository.findById(countryId)
                 .orElseThrow(() -> new NotFoundException("Country not found"));

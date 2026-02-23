@@ -1,12 +1,15 @@
 package com.example.SpringMate.Auth.Entity;
 
-import com.example.SpringMate.Shared.Constants;
+import com.example.SpringMate.Config.AppConfigHolder;
 import com.example.SpringMate.User.Entity.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 
@@ -14,12 +17,17 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Data
+@Getter
+@Setter
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(onlyExplicitlyIncluded = true)
 @Table(name = "verification_codes")
 public class VerificationCode {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
+    @ToString.Include
     private Long id;
 
     @Column(nullable = false)
@@ -42,6 +50,6 @@ public class VerificationCode {
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
-        this.expiresAt = this.createdAt.plusMinutes(Constants.OTP_EXPIRATION_MINUTES);
+        this.expiresAt = this.createdAt.plusMinutes(AppConfigHolder.getOtpExpirationMinutes());
     }
 }

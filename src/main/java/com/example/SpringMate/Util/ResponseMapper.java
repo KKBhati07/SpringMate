@@ -2,7 +2,6 @@ package com.example.SpringMate.Util;
 
 import com.example.SpringMate.Listing.DTO.*;
 import com.example.SpringMate.Listing.Entity.Listing;
-import com.example.SpringMate.Shared.Constants;
 import com.example.SpringMate.Storage.Service.StorageService;
 import com.example.SpringMate.User.Entity.User;
 import lombok.RequiredArgsConstructor;
@@ -24,10 +23,8 @@ public class ResponseMapper {
                 .uuid(user.getUuid())
                 .isAdmin(user.isAdmin())
                 .contactNo(user.getContactNo())
-                .profileUrl(storageService.getPreSignedUrl(
-                        Constants.AWS.BUCKET_NAME,
-                        user.getProfileUrl(),
-                        Constants.AWS.GET_SIGNED_URI_EXPIRATION))
+                .deleted(user.isDeleted())
+                .profileUrl(storageService.getPreSignedUrl(user.getProfileUrl()))
                 .build();
     }
 
@@ -58,6 +55,14 @@ public class ResponseMapper {
                     .build());
         }
 
+        dto.setCondition(ConditionDto.builder()
+                .id(listing.getCondition().getId())
+                .code(listing.getCondition().getCode())
+                .label(listing.getCondition().getLabel())
+                .description(listing.getCondition().getDescription())
+                .sortOrder(listing.getCondition().getSortOrder())
+                .build());
+
         if (listing.getLocation() != null) {
             dto.setLocation(LocationDto.builder()
                     .state(LocationDto.StateDto.builder()
@@ -83,7 +88,7 @@ public class ResponseMapper {
                     listing.getListingImages().stream()
                             .map(img -> ListingImageDto.builder()
                                     .id(img.getId())
-                                    .url(img.getUrl())
+                                    .url(storageService.getPreSignedUrl(img.getUrl()))
                                     .isCover(img.isCover())
                                     .build()
                             ).toList()

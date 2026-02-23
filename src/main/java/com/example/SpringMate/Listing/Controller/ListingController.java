@@ -16,12 +16,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
+/**
+ * REST controller for managing product listings.
+ * Handles creation, retrieval, update, deletion, and image uploads.
+ */
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(Urls.Listing.LISTING_BASE)
+@RequestMapping(Urls.Listing.BASE)
 public class ListingController {
 
     private final ListingService listingService;
@@ -41,16 +46,32 @@ public class ListingController {
             @AuthenticationPrincipal AuthenticatedUser authenticatedUser
     ) {
         return ResponseEntity.ok(
-                new Response<>(listingService.getAllRecords(
-                        new FetchListingsRequestDto(
-                                categoryId, minPrice, maxPrice,
-                                countryId, stateId, cityId,
-                                searchString,
-                                page, size),
-                        authenticatedUser,
-                        false
-                ),
+                Response.success(listingService.getAllRecords(
+                                new FetchListingsRequestDto(
+                                        categoryId, minPrice, maxPrice,
+                                        countryId, stateId, cityId,
+                                        searchString,
+                                        page, size),
+                                authenticatedUser,
+                                false
+                        ),
                         "Listings fetched successfully"));
+    }
+
+    @GetMapping(Urls.Listing.SUGGEST)
+    public ResponseEntity<Response<List<String>>> suggest(
+            @RequestParam(value = "query") String query,
+            @RequestParam(value = "limit", defaultValue = "8") int limit
+    ) {
+        if (limit < 1) {
+            throw new BadRequestException("Invalid limit");
+        }
+        return ResponseEntity.ok(
+                Response.success(
+                        listingService.suggestListingTitles(query, limit),
+                        "Suggestions fetched successfully"
+                )
+        );
     }
 
     @GetMapping(Urls.Listing.GET_BY_USER)
@@ -61,12 +82,12 @@ public class ListingController {
             @RequestParam(defaultValue = "10") int size
     ) {
         return ResponseEntity.ok(
-                new Response<>(listingService.getRecordsByUser(
-                        uuid,
-                        page,
-                        size,
-                        false
-                ),
+                Response.success(listingService.getRecordsByUser(
+                                uuid,
+                                page,
+                                size,
+                                false
+                        ),
                         "Listings fetched successfully"));
     }
 
@@ -81,16 +102,16 @@ public class ListingController {
             throw new BadRequestException("Invalid params!");
         }
         return ResponseEntity.ok(
-                new Response<>(listingService.getRecordsByUser(
-                        uuid,
-                        page,
-                        size,
-                        true
-                ),
+                Response.success(listingService.getRecordsByUser(
+                                uuid,
+                                page,
+                                size,
+                                true
+                        ),
                         "Listings fetched successfully"));
     }
 
-    @PostMapping(value = Urls.Listing.CREATE_LISTING)
+    @PostMapping(value = Urls.Listing.CREATE)
     public ResponseEntity<Response<CreateListingResponseDto>>
     createListing(@Valid
                   @RequestBody CreateListingRequestDto requestDto,
@@ -102,11 +123,15 @@ public class ListingController {
         );
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new Response<>(listingService.createRecord(requestDto, authenticatedUser),
+                .body(Response.success(listingService.createRecord(requestDto, authenticatedUser),
                         "Listing created successfully"));
     }
 
-
+    /**
+     * Uploads listing images using a multipart fallback flow.
+     * This endpoint exists to support image upload if primary
+     * image upload mechanism fails.
+     */
     @PatchMapping(
             value = Urls.Listing.IMAGE_UPLOAD_FALLBACK,
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
@@ -126,7 +151,7 @@ public class ListingController {
     }
 
 
-    @DeleteMapping(Urls.Listing.DELETE_LISTING)
+    @DeleteMapping(Urls.Listing.DELETE)
     public ResponseEntity<Void>
     deleteListing(@PathVariable Long id,
                   @AuthenticationPrincipal AuthenticatedUser authenticatedUser
@@ -145,8 +170,25 @@ public class ListingController {
     // due to back ref Listing -> Images -> Listing
     public ResponseEntity<Response<ListingResponseDto>>
     fetchOne(@PathVariable Long id) {
-        return ResponseEntity.ok(new Response<>(
+        return ResponseEntity.ok(Response.success(
                 listingService.getOne(id),
                 "Item fetched successfully"));
+    }
+
+    @PostMapping(Urls.Listing.CONTACT_SELLER_EMAIL)
+    public ResponseEntity<Response<Object>> contactSellerByEmail(
+            @PathVariable Long id,
+            @Valid @RequestBody ContactSellerEmailRequestDto requestDto,
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser
+    ) {
+        listingService.contactSellerByEmail(id, requestDto, authenticatedUser);
+        return ResponseEntity.ok(Response.success(null, "Email sent successfully"));
+    }
+
+    @GetMapping(Urls.Listing.GET_CONDITIONS)
+    public ResponseEntity<Response<FetchConditionsResponseDto>> getConditions() {
+        return ResponseEntity.ok(
+                Response.success(listingService.getAllConditions(),
+                        "Conditions fetched successfully"));
     }
 }

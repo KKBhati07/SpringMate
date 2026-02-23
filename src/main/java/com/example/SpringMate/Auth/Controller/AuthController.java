@@ -4,6 +4,8 @@ import com.example.SpringMate.Auth.DTO.AuthDetailsResponseDto;
 import com.example.SpringMate.Auth.DTO.OtpLoginResponseDto;
 import com.example.SpringMate.Auth.DTO.OtpRequestDto;
 import com.example.SpringMate.Auth.DTO.OtpLoginRequestDto;
+import com.example.SpringMate.Auth.DTO.SessionResolveRequestDto;
+import com.example.SpringMate.Auth.DTO.SessionResolveResponseDto;
 import com.example.SpringMate.Auth.Helper.AuthHelper;
 import com.example.SpringMate.Auth.jwt.JwtTokenProvider;
 import com.example.SpringMate.Util.AuthenticatedUser;
@@ -22,16 +24,24 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+/**
+ * REST controller for authentication and authorization operations.
+ * Handles login, logout, OTP flows, and retrieval of authentication details.
+ */
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(Urls.Auth.AUTH_BASE)
+@RequestMapping(Urls.Auth.BASE)
 public class AuthController {
 
     private final AuthService authService;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthHelper authHelper;
 
+    /**
+     * Logs out the current user by invalidating their session and clearing auth cookies.
+     * Accepts authentication token from either cookie or Authorization header.
+     */
     @PostMapping(Urls.Auth.LOGOUT)
     public ResponseEntity<Response<Map<String, Boolean>>>
     logout(
@@ -59,7 +69,7 @@ public class AuthController {
         authHelper.clearAuthCookie(response);
         log.info("action=LOGOUT_SUCCESS sessionInvalidated");
         return ResponseEntity.ok(
-                new Response<>(Map.of("logged_out", true),
+                Response.success(Map.of("logged_out", true),
                         "Logged out successfully"));
     }
 
@@ -71,8 +81,8 @@ public class AuthController {
                 authenticatedUser.uuid()
         );
         return ResponseEntity.ok(
-                new Response<>(authService.authDetails(authenticatedUser.uuid())
-                        , "Data fetched successfully"));
+                Response.success(authService.authDetails(authenticatedUser.uuid()),
+                        "Data fetched successfully"));
     }
 
     @PostMapping(Urls.Auth.REQUEST_LOGIN_OTP)
@@ -88,7 +98,7 @@ public class AuthController {
 
         // Always return a generic message (for security)
         return ResponseEntity.ok(
-                new Response<>(null,
+                Response.success(null,
                         "If your account exists, an OTP has been sent"));
 
     }
@@ -110,7 +120,29 @@ public class AuthController {
         );
 
         return ResponseEntity.ok(
-                new Response<>(res, "Logged in successfully!")
+                Response.success(res, "Logged in successfully!")
+        );
+    }
+
+    /**
+     * Resolves a session by sessionId and returns the associated user UUID.
+     * Used by external services (e.g., chat service) to validate sessions.
+     */
+    @PostMapping(Urls.Auth.RESOLVE_SESSION)
+    public ResponseEntity<Response<SessionResolveResponseDto>> resolveSession(
+            @Valid @RequestBody SessionResolveRequestDto requestDto
+    ) {
+        log.info("action=RESOLVE_SESSION_REQUEST sessionId={}", requestDto.getSessionId());
+
+        SessionResolveResponseDto res = authService.resolveSession(requestDto);
+
+        log.info(
+                "action=RESOLVE_SESSION_SUCCESS userUuid={}",
+                res.getUserUuid()
+        );
+
+        return ResponseEntity.ok(
+                Response.success(res, "Session resolved successfully")
         );
     }
 

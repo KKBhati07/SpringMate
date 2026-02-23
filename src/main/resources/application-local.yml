@@ -23,14 +23,11 @@ spring:
     properties:
       hibernate:
         format_sql: true   # Pretty SQL for easier debugging in local
+        jdbc:
+          batch_size: 20  # Batch size for bulk operations
     hibernate:
       ddl-auto: update
 
-  devtools:
-    restart:
-      enabled: false # Enables automatic restart with Spring DevTools
-      poll-interval: 10000
-      quiet-period: 4000
 
 server:
   ssl:
@@ -52,9 +49,20 @@ logging:
   level:
     org.springframework.boot.devtools: DEBUG
     org.springframework.data.redis: DEBUG
+    org.springframework.security: DEBUG
     org:
       hibernate:
         SQL: DEBUG          # Logs generated SQL statements without excessive verbosity
         orm:
           jdbc:
             bind: TRACE     # Disables logging of query parameter values to avoid sensitive data leaks
+app:
+  cors:
+    # Local development origins
+    allowed-origins:
+      - https://marketmate.local:4200
+      - https://admin.marketmate.local:4300
+
+  cookie:
+    domain: .marketmate.local
+    secure: true  # Using HTTPS locally with self-signed cert

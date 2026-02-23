@@ -9,6 +9,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+/**
+ * Dispatches OTP emails with resilience patterns.
+ * Uses async execution, retry, and circuit breaker to handle email service failures gracefully.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -20,7 +24,7 @@ public class OtpNotificationDispatcher {
     @CircuitBreaker(name = "sendEmail", fallbackMethod = "handleEmailFailure")
     public void dispatchEmail(String to, String subject, String otp) throws MessagingException {
         log.info("OTP email dispatch attempt subject={}", subject);
-        emailService.sendEmail(to, subject, otp);
+        emailService.sendOtpEmail(to, subject, otp);
         log.info("OTP email dispatched successfully subject={}", subject);
     }
 

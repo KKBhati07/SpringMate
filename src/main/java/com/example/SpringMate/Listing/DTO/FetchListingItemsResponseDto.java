@@ -20,6 +20,7 @@ public class FetchListingItemsResponseDto {
     private Boolean isDeleted;
     private LocalDateTime postedAt;
     private CategoryDto category;
+    private ConditionDto condition;
     private String coverImageUrl;
     private Boolean isFavorite;
     private LocationDto location;

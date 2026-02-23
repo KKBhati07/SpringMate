@@ -2,11 +2,11 @@ package com.example.SpringMate.Auth.Helper;
 
 import com.example.SpringMate.Auth.Entity.Session;
 import com.example.SpringMate.Auth.Entity.SessionLog;
+import com.example.SpringMate.Config.AppProperties;
 import com.example.SpringMate.Shared.Helper.CoreHelper;
 import com.example.SpringMate.User.Entity.User;
 import com.example.SpringMate.Auth.Repository.SessionLogRepository;
 import com.example.SpringMate.Auth.Repository.SessionRepository;
-import com.example.SpringMate.Shared.Constants;
 import com.example.SpringMate.User.Service.CoreUserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +16,10 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Manages user sessions and security audit logging.
+ * Tracks IP addresses and user agents for security monitoring.
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -24,6 +28,7 @@ public class SessionManagementHelper {
     private final CoreUserService coreUserService;
     private final SessionRepository sessionRepository;
     private final SessionLogRepository sessionLogRepository;
+    private final AppProperties appProperties;
 
     public Session checkIfSessionExists(String email) {
         User user = coreUserService.getUserByEmail(email);
@@ -38,12 +43,14 @@ public class SessionManagementHelper {
 
     public Session createSession(User user, HttpServletRequest request) {
         String sessionId = CoreHelper.generateUUID().toString().toUpperCase();
+        int sessionValidityDays = appProperties.getAuth().getSession().getValidityDays();
+
         Session session = Session.builder()
                 .sessionId(sessionId)
                 .user(user)
                 .createdAt(LocalDateTime.now())
                 .lastAccessedAt(LocalDateTime.now())
-                .expiresAt(LocalDateTime.now().plusDays(Constants.SESSION_VALIDITY))
+                .expiresAt(LocalDateTime.now().plusDays(sessionValidityDays))
                 .build();
         Session createdSession = sessionRepository.save(session);
         createSessionLog(createdSession.getCreatedAt(), user, sessionId, request);
@@ -87,6 +94,10 @@ public class SessionManagementHelper {
         }
     }
 
+    /**
+     * Extracts client IP considering proxy headers for accurate security logging.
+     * Uses first X-Forwarded-For value when present to handle load balancers.
+     */
     private String getClientIp(HttpServletRequest request) {
         String header = request.getHeader("X-Forwarded-For");
         if (header != null && !header.isEmpty() && !"unknown".equalsIgnoreCase(header)) {

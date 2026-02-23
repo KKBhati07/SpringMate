@@ -12,6 +12,8 @@ import java.time.LocalDateTime;
 @Setter
 @AllArgsConstructor
 @Builder
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(onlyExplicitlyIncluded = true)
 @Table(
         name = "sessions",
         indexes = {
@@ -26,9 +28,11 @@ public class Session {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
+    @ToString.Include
     private Long id;
 
-    @Column(name = "session_id",nullable = false)
+    @Column(name = "session_id", nullable = false)
     private String sessionId;
 
     @JoinColumn(name = "user_id", nullable = false)

@@ -17,10 +17,14 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+/**
+ * REST controller for managing user-related operations.
+ * Handles profile management and user self-service actions.
+ */
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(Urls.User.USER_BASE)
+@RequestMapping(Urls.User.BASE)
 public class UserController {
 
     private final UserService userService;
@@ -28,7 +32,7 @@ public class UserController {
 
     @PostMapping(value = Urls.User.CREATE_USER, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Response<CreateUserResponseDto>> createUser(@Valid @RequestBody CreateUserRequestDto userDetails) {
-        return ResponseEntity.ok(new Response<>(userService.createUser(userDetails), "User created successfully"));
+        return ResponseEntity.ok(Response.success(userService.createUser(userDetails), "User created successfully"));
     }
 
 
@@ -36,7 +40,7 @@ public class UserController {
     public ResponseEntity<Response<UserDetailsResponseDto>>
     getUserDetails(@PathVariable UUID uuid,
                    @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
-        return ResponseEntity.ok(new Response<>(userService
+        return ResponseEntity.ok(Response.success(userService
                 .getUserDetails(uuid, authenticatedUser),
                 "User details fetched successfully"));
     }
@@ -53,6 +57,10 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Updates user profile information.
+     * Only allows users to update their own profile.
+     */
     @PutMapping(value = Urls.User.UPDATE_USER)
     public ResponseEntity<Response<UpdateUserResponseDto>> updateUserProfile(
             @Valid @RequestBody UpdateUserRequestDto updatedUserDetails,
@@ -66,10 +74,14 @@ public class UserController {
             throw new UnauthorizedUserUpdateException();
         }
 
-        return ResponseEntity.ok(new Response<>(userService.updateUser(updatedUserDetails),
+        return ResponseEntity.ok(Response.success(userService.updateUser(updatedUserDetails),
                 "User updated successfully"));
     }
 
+    /**
+     * Uploads profile image using multipart fallback flow.
+     * Users are only allowed to upload their own profile image.
+     */
     @PatchMapping(value = Urls.User.UPLOAD_IMAGE_FALLBACK, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> uploadProfileImageFallback(
             @Valid @ModelAttribute FallbackUploadRequestDto dto,

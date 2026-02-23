@@ -13,6 +13,7 @@ public class ListingResponseDto {
     private boolean isSold;
     private LocalDateTime postedAt;
     private CategoryDto category;
+    private ConditionDto condition;
     private UserDto seller;
     private LocationDto location;
     private List<ListingImageDto> images;

@@ -47,8 +47,7 @@ SpringMate
 │       └── Application.java
 ├── src/main/resources
 │   ├── application.yml
-│   ├── application-local.yml
-│   └── db/migration        # Flyway migrations (if enabled)
+│   └── application-local.yml
 └── pom.xml
 ```
 
@@ -218,6 +217,93 @@ Key integration features:
 ✔ DTO-based API contracts
 ✔ Dockerized deployment
 ✔ Environment-based configuration
+✔ Rate limiting  
+✔ Security headers  
+✔ Input sanitization  
+✔ Request size limits
+
+---
+
+## 🔒 Security Features
+
+SpringMate implements multiple layers of security to protect APIs, users, and infrastructure.
+
+---
+
+### CSRF Protection
+
+SpringMate disables Spring Security’s default CSRF protection because the application:
+
+- Is **stateless**
+- Does **not use server-side HTTP sessions**
+- Uses **token-based authentication**
+- Restricts cross-origin access via **CORS**
+- Uses **SameSite** and **Secure** cookies for tokens
+
+#### Why CSRF is disabled
+
+Spring Security’s CSRF protection is designed for **stateful, session-based** applications that rely on cookies for authentication.
+
+In SpringMate:
+
+- The server does **not store authentication state**
+- Requests are validated using tokens
+- Cross-origin requests are restricted
+- Cookies cannot be sent cross-site by default
+
+This makes traditional CSRF tokens unnecessary.
+
+---
+
+### Rate Limiting
+
+Rate limiting is implemented using **Resilience4j RateLimiter**:
+
+| Endpoint Type       | Limit                     |
+|---------------------|---------------------------|
+| Authentication APIs | 10 requests / 60 seconds  |
+| Public read APIs    | 200 requests / 60 seconds |
+| General APIs        | 100 requests / 60 seconds |
+---
+
+### Security Headers
+
+All responses include browser security headers:
+
+- **Strict-Transport-Security (HSTS)** — Forces HTTPS
+- **X-Frame-Options** — Prevents clickjacking
+- **X-Content-Type-Options** — Prevents MIME sniffing
+- **X-XSS-Protection** — Legacy browser XSS filter
+- **Referrer-Policy** — Controls referrer leakage
+- **Content-Security-Policy (CSP)** — Primary XSS protection
+---
+
+### Input Sanitization
+
+User-provided HTML is sanitized using the **OWASP Java HTML Sanitizer (CVE-patched)**:
+
+- Removes scripts and dangerous tags
+- Blocks event handlers and unsafe protocols
+- Preserves safe formatting
+- Prevents XSS without regex-based filtering
+
+Plain text is safely escaped on output.
+---
+
+### Request Size Limits
+
+Configured to prevent resource exhaustion:
+
+| Limit            | Value |
+|------------------|-------|
+| Max file size    | 10MB  |
+| Max request size | 50MB  |
+| In-memory buffer | 2MB   |
+
+Configured under:
+
+- `spring.servlet.multipart`
+- `spring.codec`
 
 ---
 
@@ -228,3 +314,7 @@ Key integration features:
 * Prefer constructor injection
 * Avoid field injection
 * Version APIs explicitly
+* Sanitize all user input before processing
+* Use parameterized queries for database operations (never concatenate SQL)
+* Keep rate limits appropriate for your use case
+* Regularly rotate JWT secrets and Prometheus credentials

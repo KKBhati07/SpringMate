@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Seller</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        a { color: inherit; }
+        .email-container {
+            max-width: 600px;
+            margin: 30px auto;
+            background-color: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+            border: 1px solid #e0e0e0;
+        }
+        .email-header {
+            background-color: #004f3c;
+            color: #ffffff;
+            text-align: center;
+            padding: 20px;
+        }
+        .email-header h2 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .email-body {
+            padding: 26px 20px;
+            color: #333333;
+        }
+        .badge {
+            display: inline-block;
+            background-color: #eef7f4;
+            border: 1px solid rgba(0, 79, 60, 0.25);
+            color: #004f3c;
+            border-radius: 999px;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .card {
+            background-color: #ffffff;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            padding: 14px;
+            margin-top: 14px;
+        }
+        .label {
+            color: #666;
+            font-size: 12px;
+            margin: 0 0 4px 0;
+        }
+        .value {
+            color: #111;
+            font-size: 14px;
+            margin: 0;
+            font-weight: 600;
+        }
+        .message {
+            background-color: #f9fbfc;
+            border: 1px solid #eef3f6;
+            border-radius: 10px;
+            padding: 14px;
+            margin-top: 10px;
+            color: #222;
+            line-height: 1.5;
+            font-size: 14px;
+            white-space: pre-wrap;
+            font-family: inherit;
+        }
+        .cta-wrap {
+            margin-top: 14px;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #004f3c;
+            color: #ffffff !important;
+            text-decoration: none;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 13px;
+            letter-spacing: 0.2px;
+        }
+        .btn-sub {
+            margin-top: 10px;
+            word-break: break-word;
+        }
+        .footer {
+            font-size: 12px;
+            text-align: center;
+            color: #888;
+            padding: 12px;
+            border-top: 1px solid #eee;
+        }
+        .muted {
+            color: #666;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+<div class="email-container">
+    <div class="email-header">
+        <h2 th:text="${heading}">New message on MarketMate</h2>
+    </div>
+
+    <div class="email-body">
+        <span class="badge">Marketplace message</span>
+
+        <div class="card">
+            <p class="label">Listing</p>
+            <p class="value" th:text="${listingTitle}">Listing title</p>
+            <div class="cta-wrap" th:if="${listingUrl != null and !#strings.isEmpty(listingUrl)}">
+                <a class="btn" th:href="${listingUrl}" target="_blank" rel="noopener noreferrer">View listing</a>
+                <p class="muted btn-sub">If the button doesn’t work, open: <span th:text="${listingUrl}">https://example.com</span></p>
+            </div>
+        </div>
+
+        <div class="card">
+            <p class="label">From</p>
+            <p class="value">
+                <span th:text="${fromName}">Buyer Name</span>
+                &lt;<span th:text="${fromEmail}">buyer@email.com</span>&gt;
+            </p>
+
+            <p class="label" style="margin-top:12px;">Message</p>
+            <div class="message" th:text="${messageBody}">Message body…</div>
+        </div>
+
+        <p class="muted" style="margin-top:14px;">
+            You received this message because you listed an item on MarketMate.
+            If this looks suspicious, please ignore it.
+        </p>
+
+        <p style="margin-top:18px;">Regards,<br><strong>Team MarketMate</strong></p>
+    </div>
+
+    <div class="footer">
+        &copy; 2026 MarketMate. All rights reserved.
+    </div>
+</div>
+</body>
+</html>
+

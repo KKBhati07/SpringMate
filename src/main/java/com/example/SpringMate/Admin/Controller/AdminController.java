@@ -24,10 +24,15 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+/**
+ * REST controller for administrative operations.
+ * Handles user management, listing moderation, and other admin-only actions.
+ * All endpoints require ADMIN role authorization.
+ */
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(Urls.Admin.ADMIN_BASE)
+@RequestMapping(Urls.Admin.BASE)
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
@@ -51,7 +56,7 @@ public class AdminController {
                 size
         );
         return ResponseEntity.ok(
-                new Response<>(userService.fetchAll(page, size),
+                Response.success(userService.fetchAll(page, size),
                         "Users fetched successfully")
         );
     }
@@ -98,11 +103,17 @@ public class AdminController {
                 updatedUser.getUuid()
         );
         log.info("[ UPDATED DATA ] : {}", updatedUser);
-        return ResponseEntity.ok(new Response<>(userService.updateUser(updatedUser),
+        return ResponseEntity.ok(Response.success(userService.updateUser(updatedUser),
                 "User updated successfully"));
     }
 
     //    ------- LISTING ROUTES
+
+    /**
+     * Retrieves all listings with advanced filtering options.
+     * Supports category, price range, location, free-text search,
+     * and optionally includes soft-deleted listings for moderation.
+     */
     @GetMapping(value = Urls.Admin.Listing.GET_ALL)
     public ResponseEntity<Response<PaginatedResponse<FetchListingItemsResponseDto>>>
     getAllListings(
@@ -128,7 +139,7 @@ public class AdminController {
         );
 
         return ResponseEntity.ok(
-                new Response<>(listingService.getAllRecords(
+                Response.success(listingService.getAllRecords(
                         new FetchListingsRequestDto(
                                 categoryId, minPrice, maxPrice,
                                 countryId, stateId, cityId,

@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController()
 @RequiredArgsConstructor
-@RequestMapping(Urls.Category.CATEGORY_BASE)
+@RequestMapping(Urls.Category.BASE)
 public class CategoryController {
 
     private final CategoryService categoryService;
@@ -20,7 +20,7 @@ public class CategoryController {
     @GetMapping(Urls.Category.GET_ALL)
     public ResponseEntity<Response<FetchCategoriesResponseDto>> getCategories() {
         return ResponseEntity.ok(
-                new Response<>(categoryService.getAllCategory(),
+                Response.success(categoryService.getAllCategory(),
                         "Categories fetched successfully"));
     }
 }

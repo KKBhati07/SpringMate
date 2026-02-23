@@ -1,13 +1,8 @@
 spring:
   application:
     seed-secret: ${SEED_SECRET}
-    location-api-key: "api-key"
+    location-api-key: ${LOCATION_API_KEY:api-key}
     name: springmate  # Sets the name of the Spring Boot application. Useful for identification in logs and admin tools.
-
-    jwt:
-      secret: ${JWT_SECRET} # JWT secret
-
-
 
   web:
     resources:
@@ -15,6 +10,18 @@ spring:
 
   mvc:
     throw-exception-if-no-handler-found: true   # Throw NoHandlerFoundException for unknown routes
+
+  # Request size limits
+  servlet:
+    multipart:
+      max-file-size: 10MB        # Maximum file size for uploads
+      max-request-size: 50MB    # Maximum request size (including all files)
+  codec:
+    max-in-memory-size: 2MB     # Maximum in-memory buffer size for request body
+  compression:
+    enabled: true                # Enable HTTP response compression
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain,application/javascript,text/css
+    min-response-size: 1024      # Minimum response size to compress (1KB)
 
   datasource:
     url: ${DB_URL} # JDBC URL to connect to the PostgreSQL database
@@ -43,8 +50,8 @@ spring:
             enable: true                  # Enables STARTTLS (encryption over port 587)
         debug: true                       # Enables detailed logging of the email sending process
 
-
-  resilience4j.retry:
+resilience4j:
+  retry:
     instances:
       s3Upload:
         max-attempts: 3               # Number of retry attempts (1 initial + 2 retries)
@@ -52,8 +59,7 @@ spring:
       sendEmail:
         max-attempts: 3               # Number of retry attempts (1 initial + 2 retries)
         wait-duration: 1s            # Wait duration between retry attempts
-
-  resilience4j.circuitbreaker:
+  circuitbreaker:
     instances:
       s3Upload:
         register-health-indicator: true     # Exposes circuit breaker metrics to actuator
@@ -67,3 +73,105 @@ spring:
         minimum-number-of-calls: 5          # Minimum number of calls required before calculating failure rate
         failure-rate-threshold: 50          # Percentage of failures to trip the circuit
         wait-duration-in-open-state: 10s    # Time to wait before transitioning from OPEN to HALF_OPEN
+  ratelimiter:
+    instances:
+      api:
+        limit-for-period: 100              # Number of requests allowed per period
+        limit-refresh-period: 60s          # Time window for rate limit (60 seconds)
+        timeout-duration: 0s                # Wait time for permit (0 = fail immediately)
+        register-health-indicator: true     # Exposes rate limiter metrics to actuator
+      auth:
+        limit-for-period: 10               # Stricter limit for authentication endpoints
+        limit-refresh-period: 60s
+        timeout-duration: 0s
+        register-health-indicator: true
+      public:
+        limit-for-period: 200               # More lenient for public read endpoints
+        limit-refresh-period: 60s
+        timeout-duration: 0s
+        register-health-indicator: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,env,loggers,httptrace
+        exclude: shutdown,heapdump,threaddump
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+      show-components: always
+      probes:
+        enabled: true
+    info:
+      enabled: true
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+app:
+  internal:
+    service:
+      key: ${SERVICE_KEY:6911aa62-3705-42ef-8484-db35b62cf9ba}
+  monitoring:
+    prometheus:
+      username: prometheus
+      password: ${PROMETHEUS_PASS:prometheus-pass}
+  # AWS S3 Configuration
+  aws:
+    region: ${AWS_REGION:ap-south-1}
+    bucket-name: ${AWS_BUCKET_NAME:marketmatestore}
+    presign:
+      get-expiry-minutes: ${AWS_GET_URL_EXPIRY:10}     # Expiration for GET presigned URLs (minutes)
+      put-expiry-minutes: ${AWS_PUT_URL_EXPIRY:15}     # Expiration for PUT presigned URLs (minutes)
+
+  # CORS Configuration (profile-specific values in application-{profile}.yml)
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
+    allowed-methods:
+      - GET
+      - POST
+      - PUT
+      - PATCH
+      - DELETE
+      - OPTIONS
+    allowed-headers:
+      - "*"
+    allow-credentials: true
+    max-age-seconds: 3600
+
+  # Cookie Configuration
+  cookie:
+    domain: ${COOKIE_DOMAIN:.localhost}
+    secure: ${COOKIE_SECURE:true}
+    path: /
+
+  # Authentication Configuration
+  auth:
+    jwt:
+      secret: ${JWT_SECRET}                            # JWT signing secret (required)
+      validity-days: ${JWT_VALIDITY_DAYS:7}            # JWT token validity in days
+    session:
+      validity-days: ${SESSION_VALIDITY_DAYS:7}        # Session validity in days
+    otp:
+      expiration-minutes: ${OTP_EXPIRATION_MINUTES:10} # OTP expiration in minutes
+
+  # Security Headers Configuration
+  security:
+    headers:
+      hsts:
+        enabled: ${SECURITY_HSTS_ENABLED:true}         # Enable HTTP Strict Transport Security
+        max-age-seconds: ${SECURITY_HSTS_MAX_AGE:3600}
+        include-subdomains: ${SECURITY_HSTS_INCLUDE_SUBDOMAINS:true}
+      frame-options: ${SECURITY_FRAME_OPTIONS:DENY}   # X-Frame-Options: DENY, SAMEORIGIN, or ALLOW-FROM
+      content-type-options: ${SECURITY_CONTENT_TYPE_OPTIONS:true}  # X-Content-Type-Options: nosniff
+      referrer-policy: ${SECURITY_REFERRER_POLICY:strict-origin-when-cross-origin}
+      csp: "default-src 'self'; frame-ancestors 'none';"

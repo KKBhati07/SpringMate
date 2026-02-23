@@ -8,17 +8,19 @@ import java.util.List;
 @Data
 public class CreateListingRequestDto {
 
-    @NotNull
+    @NotNull(message = "Title cannot be empty")
     private String title;
     private String description;
-    @NotNull
+    @NotNull(message = "Price cannot be empty")
     private Double price;
     private Long categoryId;
-    @NotNull
+    @NotNull(message = "Must select a condition")
+    private Long conditionId;
+    @NotNull(message = "City cannot be empty")
     private Long cityId;
-    @NotNull
+    @NotNull(message = "State cannot be empty")
     private Long stateId;
-    @NotNull
+    @NotNull(message = "Country cannot be empty")
     private Long countryId;
     private List<ImageDto> images;
 

@@ -7,9 +7,11 @@ import com.example.SpringMate.User.Exception.UserAlreadyExistsException;
 import com.example.SpringMate.Util.Response;
 import com.example.SpringMate.User.Exception.UserNotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -18,6 +20,7 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Slf4j
 @RestControllerAdvice
@@ -34,7 +37,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(new Response<>(Map.of("message", "Validation failed", "errors", errors), "Error"));
+                .body(Response.error("Validation failed", Map.of("errors", errors)));
 
     }
 
@@ -42,7 +45,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Response<?>> handleNoHandler(NoHandlerFoundException ex) {
         log.info("NO_HANDLER");
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(new Response<>(null, "Do not have access to the resource"));
+                .body(Response.error("Do not have access to the resource"));
     }
 
     @ExceptionHandler(AuthorizationDeniedException.class)
@@ -52,7 +55,25 @@ public class GlobalExceptionHandler {
         log.warn("ACCESS_DENIED");
 
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(new Response<>(null, "Do not have access to the resource"));
+                .body(Response.error("Do not have access to the resource"));
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<?> handleMethodNotSupported(
+            HttpRequestMethodNotSupportedException ex) {
+
+        log.warn("METHOD_NOT_ALLOWED");
+
+        return ResponseEntity
+                .status(HttpStatus.METHOD_NOT_ALLOWED)
+                .body(Response.error("Method Not Allowed", Map.of(
+                        "message", ex.getMessage(),
+                        "allowedMethods",
+                        Objects.requireNonNull(ex.getSupportedHttpMethods())
+                                .stream()
+                                .map(HttpMethod::name)
+                                .toList()
+                )));
     }
 
 
@@ -63,7 +84,7 @@ public class GlobalExceptionHandler {
         log.info("USER_NOT_FOUND message={}", ex.getMessage());
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new Response<>(null, ex.getMessage()));
+                .body(Response.error(ex.getMessage()));
     }
 
     @ExceptionHandler(UserAlreadyExistsException.class)
@@ -73,7 +94,7 @@ public class GlobalExceptionHandler {
         log.warn("USER_ALREADY_EXISTS message={}", ex.getMessage());
 
         return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(new Response<>(null, ex.getMessage()));
+                .body(Response.error(ex.getMessage()));
     }
 
     @ExceptionHandler(UnauthorizedUserUpdateException.class)
@@ -83,7 +104,7 @@ public class GlobalExceptionHandler {
         log.warn("UNAUTHORIZED_USER_UPDATE");
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new Response<>(null, ex.getMessage()));
+                .body(Response.error(ex.getMessage()));
     }
 
     @ExceptionHandler(TooManyRequestsException.class)
@@ -93,7 +114,7 @@ public class GlobalExceptionHandler {
         log.warn("RATE_LIMIT_EXCEEDED message={}", ex.getMessage());
 
         return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
-                .body(new Response<>(null, ex.getMessage()));
+                .body(Response.error(ex.getMessage()));
     }
 
     @ExceptionHandler(NotFoundException.class)
@@ -103,7 +124,7 @@ public class GlobalExceptionHandler {
         log.info("RESOURCE_NOT_FOUND message={}", ex.getMessage());
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new Response<>(null, ex.getMessage()));
+                .body(Response.error(ex.getMessage()));
     }
 
     @ExceptionHandler(BadRequestException.class)
@@ -113,7 +134,7 @@ public class GlobalExceptionHandler {
         log.warn("BAD_REQUEST message={}", ex.getMessage());
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new Response<>(null, ex.getMessage()));
+                .body(Response.error(ex.getMessage()));
     }
 
     @ExceptionHandler(UnauthorizedException.class)
@@ -123,7 +144,7 @@ public class GlobalExceptionHandler {
         log.warn("UNAUTHORIZED");
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new Response<>(null, ex.getMessage()));
+                .body(Response.error(ex.getMessage()));
     }
 
 
@@ -138,7 +159,7 @@ public class GlobalExceptionHandler {
         log.error("UNHANDLED_EXCEPTION", ex);
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new Response<>(null, Constants.Messages.Error.SOMETHING_WENT_WRONG));
+                .body(Response.error(Constants.Messages.Error.SOMETHING_WENT_WRONG));
     }
 
     @ExceptionHandler(InternalServerException.class)
@@ -148,7 +169,7 @@ public class GlobalExceptionHandler {
         log.error("INTERNAL_SERVER_ERROR ", ex);
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new Response<>(null, ex.getMessage()));
+                .body(Response.error(ex.getMessage()));
     }
 
     @ExceptionHandler(MissingRequestHeaderException.class)
@@ -158,7 +179,7 @@ public class GlobalExceptionHandler {
         log.warn("MISSING_HEADER header={}", ex.getHeaderName());
 
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(new Response<>(null, "Missing required header: " + ex.getHeaderName()));
+                .body(Response.error("Missing required header: " + ex.getHeaderName()));
     }
 
 }
