@@ -55,7 +55,7 @@ logging:
         SQL: DEBUG          # Logs generated SQL statements without excessive verbosity
         orm:
           jdbc:
-            bind: TRACE     # Disables logging of query parameter values to avoid sensitive data leaks
+            bind: DEBUG     # Disables logging of query parameter values to avoid sensitive data leaks
 app:
   cors:
     # Local development origins
