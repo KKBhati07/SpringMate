@@ -34,28 +34,30 @@ The SpringMate backend follows a layered architecture pattern with clear separat
 └─────────────────────────────────────────────────────────────────┘
         │                    │                    │
         ▼                    ▼                    ▼
-┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│  PostgreSQL  │    │    Redis      │    │    AWS S3     │
-│  (Primary DB)│    │  (Cache/Session)│  │  (File Storage)│
-└──────────────┘    └──────────────┘    └──────────────┘
+┌──────────────┐    ┌─────────────────┐    ┌──────────────┐
+│  PostgreSQL  │    │    Redis        │    │    AWS S3    │
+│  (Primary DB)│    │ (Cache + Auth   │    │(File Storage)│
+│              │    │  session cache) │    │              │
+└──────────────┘    └─────────────────┘    └──────────────┘
 ```
 
 ### Key Architectural Decisions
 
 - **Layered Architecture**: Clear separation between controllers, services, and repositories enables testability and maintainability
-- **Dual Authentication**: JWT tokens in httpOnly cookies + Redis-backed sessions for stateless scalability
-- **Redis Dual Purpose**: Used for both caching (categories, locations) and session storage to reduce database load
+- **JWT + Server-Side Session**: A signed JWT carries the `sessionId` (JWT subject). Sessions are persisted in PostgreSQL and validated via a Redis auth cache for fast lookups.
+- **Redis Dual Purpose**: Used for Spring Cache and for auth/session validation caching.
 - **Presigned URLs**: S3 presigned URLs generated server-side for secure, direct client uploads
-- **Filter Chain**: Request-level concerns (rate limiting, security headers, authentication) handled via filter chain before controller layer
+- **Filter Chain**: Request-level concerns (request-id correlation, security headers, rate limiting, authentication) handled via servlet filters before controller layer
+- **Consistent API URLs**: Endpoints are centrally defined in `com.example.SpringMate.Shared.Urls`
 
 ---
 
 ## Technology Stack
 
 ### Core Framework
-- **Spring Boot 3.x** with Java 17+
-- **Spring Security**: JWT + Session-based authentication
-- **Spring Data JPA**: Hibernate with PostgreSQL 15
+- **Spring Boot**: 3.5.x with Java 21
+- **Spring Security**: Stateless filter chain + method-level security 
+- **Spring Data JPA**: Hibernate with PostgreSQL
 - **Spring Cache**: Redis abstraction layer
 
 ### External Services
@@ -66,7 +68,7 @@ The SpringMate backend follows a layered architecture pattern with clear separat
 
 ### Infrastructure
 - **Docker**: Containerization for development and deployment
-- **Prometheus + Grafana**: Metrics and monitoring
+- **Actuator + Prometheus**: Metrics endpoint (`/actuator/prometheus`) via Micrometer registry
 - **Resilience4j**: Circuit breakers and retries for external calls
 - **Logback**: Structured logging (JSON in production)
 
@@ -77,52 +79,53 @@ The SpringMate backend follows a layered architecture pattern with clear separat
 ### Authentication Flow
 
 ```
-Client → AuthController → AuthService
+Client → AuthenticationFilter (/api/v1/auth/login_with_password)
+          OR AuthController (/api/v1/auth/login_with_otp)
                               ↓
-                    UserRepository → PostgreSQL (validate user)
+                      SessionManagementHelper (create session)
                               ↓
-                    SessionRepository → PostgreSQL (create session)
+               SessionRepository → PostgreSQL (persist session)
                               ↓
-                    Redis (cache session for fast lookup)
+        AuthCacheService → Redis (auth:session:<sessionId> with TTL)
                               ↓
-                    JWT in httpOnly cookie → Client
+        JwtTokenProvider (JWT subject=sessionId)
+                              ↓
+        AuthHelper injects `auth_token` cookie → Client
 ```
 
-**Design Decision**: Sessions stored in both PostgreSQL (persistence) and Redis (performance). Redis provides fast session validation while PostgreSQL ensures durability.
+**Runtime validation**: `SessionAuthenticationFilter` accepts either `Authorization: Bearer <token>` or the `auth_token` cookie, validates JWT signature/expiry, then validates session via `SessionValidationService` (Redis cache → PostgreSQL fallback).
 
 ### Listing Creation Flow
 
 ```
-Client → ListingController → ListingService
+Client → StorageController (/api/v1/storage/presign_url)
                               ↓
-                    ListingRepository → PostgreSQL (save metadata)
+                    StorageService → S3Presigner (PUT presign)
                               ↓
-                    StorageService → AWS S3 (generate presigned URLs)
+                    Client uploads directly to S3 (PUT)
                               ↓
-                    Client uploads directly to S3
+Client → ListingController (/api/v1/listing/create) → ListingService
                               ↓
-                    StorageService → S3 (verify upload, update listing)
+                 ListingRepository → PostgreSQL (save listing + image object keys)
+                              ↓
+                 (on failure) StorageService.deleteImage() (cleanup)
 ```
 
-**Design Decision**: Presigned URLs allow direct client-to-S3 uploads, reducing server bandwidth and improving upload performance. Server maintains control through URL expiration and validation.
+**Fallback path**: The API also supports a multipart image upload fallback (`/api/v1/listing/image_upload_fallback`) which uploads via backend using `AwsS3Service.uploadImage(...)` with retry + circuit breaker.
 
-### Listing Retrieval Flow (with Caching)
+### Listing Retrieval Flow
 
 ```
 Client → ListingController → ListingService
                               ↓
-                    Redis Cache (check for cached result)
-                              ↓ (cache miss)
-                    ListingRepository → PostgreSQL (query with filters)
+    ListingRepository → PostgreSQL (projection query with filters)
                               ↓
-                    Redis Cache (store result)
-                              ↓
-                    StorageService → S3 (generate presigned URLs for images)
+    StorageService → S3Presigner (generate presigned GET URL for cover image)
                               ↓
                     Response → Client
 ```
 
-**Design Decision**: Multi-level caching strategy - Redis for frequently accessed data (categories, locations), database queries cached for expensive operations. Presigned URLs generated on-demand to ensure security.
+**Caching note**: Redis caching is used for relatively static reference data (categories/locations/conditions) and for auth/session validation caching. Listing browse queries are executed via projection queries and are not cached at the service layer in this repo.
 
 ---
 
@@ -130,17 +133,20 @@ Client → ListingController → ListingService
 
 ### Authentication
 
-- **JWT in httpOnly Cookies**: Tokens stored in httpOnly cookies prevent XSS attacks. Frontend JavaScript cannot access tokens.
-- **Redis Session Cache**: Session validation happens in Redis for performance, with PostgreSQL as source of truth.
+- **JWT transport**: Token is accepted from either the `auth_token` cookie or the `Authorization` header.
+- **JWT contents**: JWT subject is the `sessionId`, enabling server-side session invalidation without token rotation.
+- **Session persistence + cache**: Session records are stored in PostgreSQL; Redis caches `CachedAuthentication` for fast validation.
 - **OTP Verification**: Email-based OTP for login adds an additional security layer.
 
-**Security Decision**: Dual storage (PostgreSQL + Redis) balances security (durable session records) with performance (fast validation).
+**Session validation**: `SessionValidationService` checks Redis first, then falls back to PostgreSQL and caches the result with TTL until `expiresAt`.
 
 ### Authorization
 
-- **Role-Based Access Control (RBAC)**: ADMIN and USER roles with method-level security (`@PreAuthorize`)
+- **Role-Based Access Control (RBAC)**: Roles include `USER`, `ADMIN`, `SUPER_ADMIN`, and a dedicated `PROMETHEUS` role for metrics.
+- **Method-level security**: Admin endpoints are protected via `@PreAuthorize("hasRole('ADMIN')")`.
 - **Resource-Level Security**: Users can only modify their own resources (enforced in service layer)
-- **Filter Chain Security**: Rate limiting, security headers, and authentication checks at filter level before reaching controllers
+- **Filter Chain Security**: Request-id correlation, security headers, rate limiting, and authentication checks run before controllers.
+- **Protected metrics**: `/actuator/prometheus` is protected by a dedicated `SecurityFilterChain` using HTTP Basic auth.
 
 ### Security Headers
 
@@ -157,24 +163,24 @@ Filter chain automatically adds security headers to all responses:
 
 ### Caching Strategy
 
-- **Categories**: Cached in Redis (rarely changes, high read frequency)
-- **Locations**: Cached by country/state (frequently accessed, hierarchical data)
-- **Query Results**: Expensive queries cached with TTL based on data volatility
+- **Categories**: Cached in Redis (`Constants.CacheNamespace.CATEGORY`, key `'all'`)
+- **Locations**: Cached by country/state (`COUNTRY`, `STATE`, `CITY` caches)
+- **Conditions**: Cached in Redis (`CONDITION`, key `'active'`)
+- **Auth/session validation**: Cached in Redis with key prefix `auth:session:` and TTL derived from session expiry
 
-**Decision**: Spring Cache abstraction allows switching cache providers without code changes. Redis chosen for distributed caching support (horizontal scaling).
+**Cache TTL**: Default cache TTL is configured at 30 minutes via `RedisCacheManager`.
 
 ### Database Optimization
 
-- **Strategic Indexes**: Indexes on frequently queried columns (user UUID, listing status, location IDs)
-- **EntityGraph**: Prevents N+1 query problems by eager loading relationships
-- **Projection Queries**: DTO projections for listing lists to avoid loading full entities
+- **Strategic Indexes**: Some entities define indexes/constraints. See `docs/DATABASE_INDEXES.md`.
+- **Projection Queries**: Listing browse endpoints use projection queries (`FetchListingItemsProjection`) to avoid loading full entities.
 - **Batch Operations**: JDBC batch size configured (20) for bulk inserts
 
 ### Scalability Considerations
 
-- **Stateless Design**: JWT + Redis sessions enable horizontal scaling (no sticky sessions required)
+- **Stateless request handling**: HTTP sessions are not used; authentication is validated per request via filters.
 - **Connection Pooling**: HikariCP connection pool configured for optimal database connection management
-- **Async Processing**: Email sending and non-critical operations handled asynchronously
+- **Async Processing**: OTP email dispatch and S3 deletes run via `@Async("appDefault")` executor.
 - **Response Compression**: GZIP compression reduces bandwidth by 60-80% for JSON responses
 
 ---
