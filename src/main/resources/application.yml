@@ -1,4 +1,8 @@
 spring:
+  data:
+    redis:
+      repositories:
+        enabled: false
   application:
     seed-secret: ${SEED_SECRET}
     location-api-key: ${LOCATION_API_KEY:api-key}

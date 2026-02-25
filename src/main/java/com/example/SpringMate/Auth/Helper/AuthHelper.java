@@ -89,7 +89,7 @@ public class AuthHelper {
                               boolean secure) {
         // Jakarta Cookie does not support sameSite attribute, hence will be blocked by browser in cross site
         ResponseCookie cookie = ResponseCookie.from(name, value)
-//                .httpOnly(true)
+                .httpOnly(true)
                 .path(appProperties.getCookie().getPath())
                 .maxAge(maxAge)
 //                .sameSite("None")    // required for cross-site cookies // Not required anymore as local setup is samesite now

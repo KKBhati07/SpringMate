@@ -72,8 +72,10 @@ public class ListingService {
         if (searchString != null) {
             searchString = searchString.trim();
             if (searchString.isBlank()) {
-                searchString = null;
+                searchString = "";
             }
+        } else {
+            searchString = "";
         }
         Page<FetchListingItemsProjection> pagedRecords = listingRepository
                 .findAllByFilters(
