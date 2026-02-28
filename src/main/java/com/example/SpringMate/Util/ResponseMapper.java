@@ -51,6 +51,7 @@ public class ResponseMapper {
                     .name(listing.getSeller().getName())
                     .profileUrl(listing.getSeller().getProfileUrl())
                     .emailVerified(listing.getSeller().isEmailVerified())
+                    .uuid(listing.getSeller().getUuid())
                     .deleted(listing.getSeller().isDeleted())
                     .build());
         }
