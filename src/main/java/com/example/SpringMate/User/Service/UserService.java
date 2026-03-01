@@ -81,11 +81,14 @@ public class UserService {
     }
 
 
-    public PaginatedResponse<UserDetailsDto> fetchAll(int page, int size) {
+    public PaginatedResponse<UserDetailsDto> fetchAll(int page, int size, String search) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("name"));
-        Page<User> pagedUsers = userRepository.findAll(pageable);
-
-
+        Page<User> pagedUsers;
+        if (search != null && !search.isBlank()) {
+            pagedUsers = userRepository.searchByNameOrEmailContaining(search.trim(), pageable);
+        } else {
+            pagedUsers = userRepository.findAll(pageable);
+        }
         return new PaginatedResponse<>(
                 injectSignedProfileUrl(pagedUsers.getContent()),
                 pagedUsers.getNumber(),
