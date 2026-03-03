@@ -47,16 +47,18 @@ public class AdminController {
     public ResponseEntity<Response<PaginatedResponse<UserDetailsDto>>> fetchAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
+            @RequestParam(value = "search", required = false) String search,
             @AuthenticationPrincipal AuthenticatedUser authenticatedUser
     ) {
         log.info(
-                "ADMIN_ACTION action=FETCH_USERS user=[ UUID : {}] page={} size={}",
+                "ADMIN_ACTION action=FETCH_USERS user=[ UUID : {}] page={} size={} search={}",
                 authenticatedUser.uuid(),
                 page,
-                size
+                size,
+                search
         );
         return ResponseEntity.ok(
-                Response.success(userService.fetchAll(page, size),
+                Response.success(userService.fetchAll(page, size, search),
                         "Users fetched successfully")
         );
     }
