@@ -128,6 +128,7 @@ public final class Urls {
                 Listing.BASE + Listing.SUGGEST,
                 Listing.BASE + Listing.GET_BY_USER,
                 Listing.BASE + Listing.GET_DETAILS,
+                Urls.Actuator.HEALTH,
                 Location.BASE + "/**",
                 Internal.Auth.BASE + "/**"
         };

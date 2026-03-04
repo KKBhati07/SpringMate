@@ -84,8 +84,8 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers(Urls.Actuator.BASE + "/**").hasRole(Roles.SUPER_ADMIN)
                                 .requestMatchers(Urls.Security.PUBLIC_ENDPOINTS).permitAll()
+                                .requestMatchers(Urls.Actuator.BASE + "/**").hasRole(Roles.SUPER_ADMIN)
                                 .anyRequest().authenticated()
                 )
                 .addFilterBefore(sessionAuthenticationFilter,
