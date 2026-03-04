@@ -122,6 +122,7 @@ public final class Urls {
         public static final String[] PUBLIC_ENDPOINTS = {
                 User.BASE + User.CREATE_USER,
                 Category.BASE + "/**",
+                Auth.BASE + Auth.LOGIN_WITH_PASS,
                 Auth.BASE + Auth.REQUEST_LOGIN_OTP,
                 Auth.BASE + Auth.OTP_LOGIN,
                 Listing.BASE + Listing.GET_ALL,
