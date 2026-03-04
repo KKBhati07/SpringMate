@@ -7,6 +7,15 @@ spring:
     hikari:
       maximum-pool-size: 20
 
+  data:
+    redis:
+      url: ${SPRING_DATA_REDIS_URL}
+      timeout: 10s
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+
   jpa:
     properties:
       hibernate:
@@ -17,6 +26,7 @@ spring:
       ddl-auto: validate     # NEVER update in prod
 
 server:
+  port: ${PORT:8080}
   tomcat:
     threads:
       max: 200
