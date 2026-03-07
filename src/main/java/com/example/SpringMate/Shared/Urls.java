@@ -93,6 +93,10 @@ public final class Urls {
         public static final String SET = "/{listing_id}";
     }
 
+    public static final class Health {
+        public static final String STATUS = "/health";
+    }
+
     public static final class ExternalApi {
         public static final class Locations {
             public static final String BASE_URL = "https://api.countrystatecity.in/v1";
@@ -129,6 +133,7 @@ public final class Urls {
                 Listing.BASE + Listing.SUGGEST,
                 Listing.BASE + Listing.GET_BY_USER,
                 Listing.BASE + Listing.GET_DETAILS,
+                Health.STATUS,
                 Urls.Actuator.HEALTH,
                 Location.BASE + "/**",
                 Internal.Auth.BASE + "/**"
