@@ -25,6 +25,8 @@ public class ResponseMapper {
                 .contactNo(user.getContactNo())
                 .deleted(user.isDeleted())
                 .profileUrl(storageService.getPreSignedUrl(user.getProfileUrl()))
+                .emailVerified(user.isEmailVerified())
+                .phoneVerified(user.isPhoneVerified())
                 .build();
     }
 

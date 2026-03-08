@@ -33,4 +33,8 @@ public class CoreUserService {
                 .orElseThrow(UserNotFoundException::new);
     }
 
+    public void markEmailVerified(User user) {
+        user.setEmailVerified(true);
+        userRepository.save(user);
+    }
 }

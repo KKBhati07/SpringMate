@@ -16,6 +16,7 @@ public class UserDetailsDto {
     private boolean isAdmin;
     private String contactNo;
     private String profileUrl;
+    private boolean emailVerified;
+    private boolean phoneVerified;
     private boolean deleted;
-
 }

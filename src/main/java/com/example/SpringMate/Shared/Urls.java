@@ -21,6 +21,8 @@ public final class Urls {
         public static final String LOGOUT = "/logout";
         public static final String AUTH_DETAILS = "/auth_details";
         public static final String REQUEST_LOGIN_OTP = "/request_login_otp";
+        public static final String REQUEST_EMAIL_VERIFICATION_OTP = "/request_email_verification_otp";
+        public static final String VERIFY_EMAIL_VERIFICATION_OTP = "/verify_email_verification_otp";
         public static final String OTP_LOGIN = "/login_with_otp";
         public static final String RESOLVE_SESSION = "/resolve_session";
     }
