@@ -49,6 +49,10 @@ app:
   aws:
     region: ${AWS_REGION}
     bucket-name: ${AWS_BUCKET_NAME}
+    ses-source-email: ${SES_SOURCE_EMAIL}
+    presign:
+      get-expiry-minutes: ${AWS_GET_URL_EXPIRY}
+      put-expiry-minutes: ${AWS_PUT_URL_EXPIRY}
 
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS}

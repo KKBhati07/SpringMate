@@ -85,7 +85,6 @@ public class AuthService {
      */
     @Transactional
     public void generateAndSendOTP(OtpRequestDto loginDTO) throws MessagingException {
-        Map<String, Object> responseMap = new HashMap<>();
         if (loginDTO.getType() == OTPType.LOGIN) {
             User user = coreUserService.getUserByEmail(loginDTO.getEmail());
             if (user == null) {

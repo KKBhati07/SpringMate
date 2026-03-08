@@ -64,7 +64,16 @@ The SpringMate backend follows a layered architecture pattern with clear separat
 - **AWS S3**: File storage with presigned URL pattern
 - **Redis**: Caching and session storage
 - **PostgreSQL**: Primary relational database
-- **SMTP**: Email service for OTP and notifications
+- **AWS SES (SDK v2)**: Transactional email delivery for OTP, email verification, and user notifications with DKIM enabled.
+
+#### Email Delivery (AWS SES)
+
+- Emails are sent using AWS SES via the AWS SDK v2.
+- Domain identity is verified in SES.
+- DKIM signing is enabled for improved deliverability.
+- Emails are transactional only (OTP, verification, user notifications).
+- Email sending is executed asynchronously using `@Async("appDefault")`.
+- Resilience4j retry and circuit breaker patterns are applied to SES calls.
 
 ### Infrastructure
 - **Docker**: Containerization for development and deployment
@@ -81,6 +90,8 @@ The SpringMate backend follows a layered architecture pattern with clear separat
 ```
 Client → AuthenticationFilter (/api/v1/auth/login_with_password)
           OR AuthController (/api/v1/auth/login_with_otp)
+                              ↓
+      OtpNotificationDispatcher → EmailService → AWS SES
                               ↓
                       SessionManagementHelper (create session)
                               ↓
@@ -180,7 +191,7 @@ Filter chain automatically adds security headers to all responses:
 
 - **Stateless request handling**: HTTP sessions are not used; authentication is validated per request via filters.
 - **Connection Pooling**: HikariCP connection pool configured for optimal database connection management
-- **Async Processing**: OTP email dispatch and S3 deletes run via `@Async("appDefault")` executor.
+- **Async Processing**: OTP and transactional email dispatch run asynchronously and are sent via AWS SES with retry and circuit breaker resilience.
 - **Response Compression**: GZIP compression reduces bandwidth by 60-80% for JSON responses
 
 ---

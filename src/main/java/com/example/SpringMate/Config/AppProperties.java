@@ -18,10 +18,16 @@ import java.util.List;
 public class AppProperties {
 
     private final Aws aws = new Aws();
+    private final Email email = new Email();
     private final Cors cors = new Cors();
     private final Cookie cookie = new Cookie();
     private final Auth auth = new Auth();
     private final Security security = new Security();
+
+    @Data
+    public static class Email {
+        private boolean enabled = true;
+    }
 
     @Data
     public static class Aws {
@@ -30,6 +36,9 @@ public class AppProperties {
 
         @NotBlank(message = "AWS bucket name is required")
         private String bucketName;
+
+        @NotBlank(message = "SES source email is required")
+        private String sesSourceEmail;
 
         private final Presign presign = new Presign();
 
@@ -102,25 +111,25 @@ public class AppProperties {
         @Data
         public static class Headers {
             private final Hsts hsts = new Hsts();
-            
+
             @NotBlank(message = "Frame options must be specified")
             private String frameOptions = "DENY";
-            
+
             private boolean contentTypeOptions = true;
             private boolean xssProtection = true;
-            
+
             @NotBlank(message = "Referrer policy must be specified")
             private String referrerPolicy = "strict-origin-when-cross-origin";
-            
+
             private String csp = "default-src 'self'; frame-ancestors 'none';";
 
             @Data
             public static class Hsts {
                 private boolean enabled = true;
-                
+
                 @Min(value = 0, message = "HSTS max age must be non-negative")
                 private long maxAgeSeconds = 3600L;
-                
+
                 private boolean includeSubdomains = true;
             }
         }

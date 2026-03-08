@@ -1,35 +1,52 @@
 package com.example.SpringMate.Shared.Service;
 
+import com.example.SpringMate.Config.AppProperties;
 import com.example.SpringMate.Shared.Constants;
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
+import lombok.extern.slf4j.Slf4j;
+import software.amazon.awssdk.services.ses.model.*;
+import software.amazon.awssdk.services.ses.SesClient;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class EmailService {
-    private final JavaMailSender javaMailSender;
     private final EmailTemplateService emailTemplateService;
+    private final SesClient sesClient;
+    private final AppProperties appProperties;
 
-    public void sendOtpEmail(String to, String subject, String otp) throws MessagingException {
+    public void sendOtpEmail(String to, String subject, String otp) {
         String htmlContent = emailTemplateService.generateOTPEmail(Constants.EmailHeaders.LOGIN, otp);
         sendEmail(to, subject, htmlContent);
     }
 
     /**
-     * Sends an HTML email with pre-rendered content.
+     * Sends an HTML email using AWS SES.
      */
-    public void sendEmail(String to, String subject, String htmlContent) throws MessagingException {
-        MimeMessage message = javaMailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+    public void sendEmail(String to, String subject, String htmlContent) {
+        if (!appProperties.getEmail().isEnabled()) {
+            log.debug("Email disabled (EMAIL_ENABLED=false); skipping send to {}", to);
+            return;
+        }
 
-        helper.setTo(to);
-        helper.setSubject(subject);
-        helper.setText(htmlContent, true);
+        SendEmailRequest request = SendEmailRequest.builder()
+                .destination(Destination.builder()
+                        .toAddresses(to)
+                        .build())
+                .message(Message.builder()
+                        .subject(Content.builder()
+                                .data(subject)
+                                .build())
+                        .body(Body.builder()
+                                .html(Content.builder()
+                                        .data(htmlContent)
+                                        .build())
+                                .build())
+                        .build())
+                .source(appProperties.getAws().getSesSourceEmail())
+                .build();
 
-        javaMailSender.send(message);
+        sesClient.sendEmail(request);
     }
 }
