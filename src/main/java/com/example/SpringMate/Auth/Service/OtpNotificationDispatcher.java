@@ -22,16 +22,17 @@ public class OtpNotificationDispatcher {
     @Async("appDefault")
     @Retry(name = "sendEmail")
     @CircuitBreaker(name = "sendEmail", fallbackMethod = "handleEmailFailure")
-    public void dispatchEmail(String to, String subject, String otp) throws MessagingException {
+    public void dispatchEmail(String to, String subject, String otp){
         log.info("OTP email dispatch attempt subject={}", subject);
         emailService.sendOtpEmail(to, subject, otp);
         log.info("OTP email dispatched successfully subject={}", subject);
     }
 
-    public String handleEmailFailure(Exception ex) {
-        log.warn("OTP email dispatch failed after retries, triggering fallback", ex);
-        return null;
-
+    /**
+     * Fallback for dispatchEmail
+     */
+    public void handleEmailFailure(String to, String subject, String otp, Throwable ex) {
+        log.warn("OTP email dispatch failed after retries, fallback invoked to={} subject={}", to, subject, ex);
     }
 
 

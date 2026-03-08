@@ -41,19 +41,6 @@ spring:
       ddl-auto: update  # Automatically updates the database schema. OK for dev.
     # database-platform: org.hibernate.dialect.PostgreSQLDialect  # Uncomment and fix if needed
 
-  mail: # Configuration specific to Spring's Mail support
-    host: smtp.gmail.com                  # SMTP server host (Gmail's SMTP server)
-    port: 587                             # Port for TLS/STARTTLS (Gmail requires 587)
-    username: ${EMAIL_USERNAME}           # Email username (injected via environment variable or .env)
-    password: ${EMAIL_PASSWORD}           # Email password or App Password (also from env or .env)
-    properties: # Additional mail-specific properties
-      mail: # Nesting for standard JavaMail properties
-        smtp: # SMTP-specific configuration
-          auth: true                      # Enables SMTP authentication
-          starttls: # STARTTLS encryption config
-            enable: true                  # Enables STARTTLS (encryption over port 587)
-        debug: true                       # Enables detailed logging of the email sending process
-
 resilience4j:
   retry:
     instances:
@@ -129,13 +116,9 @@ app:
     prometheus:
       username: prometheus
       password: ${PROMETHEUS_PASS:prometheus-pass}
-  # AWS S3 Configuration
-  aws:
-    region: ${AWS_REGION:ap-south-1}
-    bucket-name: ${AWS_BUCKET_NAME:marketmatestore}
-    presign:
-      get-expiry-minutes: ${AWS_GET_URL_EXPIRY:10}     # Expiration for GET presigned URLs (minutes)
-      put-expiry-minutes: ${AWS_PUT_URL_EXPIRY:15}     # Expiration for PUT presigned URLs (minutes)
+
+  email:
+    enabled: ${EMAIL_ENABLED:true}
 
   # CORS Configuration (profile-specific values in application-{profile}.yml)
   cors:

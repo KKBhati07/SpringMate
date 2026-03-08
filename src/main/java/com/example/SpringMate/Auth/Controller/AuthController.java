@@ -1,6 +1,7 @@
 package com.example.SpringMate.Auth.Controller;
 
 import com.example.SpringMate.Auth.DTO.AuthDetailsResponseDto;
+import com.example.SpringMate.Auth.DTO.EmailVerificationRequestDto;
 import com.example.SpringMate.Auth.DTO.OtpLoginResponseDto;
 import com.example.SpringMate.Auth.DTO.OtpRequestDto;
 import com.example.SpringMate.Auth.DTO.OtpLoginRequestDto;
@@ -12,7 +13,8 @@ import com.example.SpringMate.Util.AuthenticatedUser;
 import com.example.SpringMate.Util.Response;
 import com.example.SpringMate.Auth.Service.AuthService;
 import com.example.SpringMate.Shared.Urls;
-import jakarta.mail.MessagingException;
+import com.example.SpringMate.Shared.Enum.OTPType;
+import com.example.SpringMate.Shared.Exception.ForbiddenException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -87,20 +89,58 @@ public class AuthController {
 
     @PostMapping(Urls.Auth.REQUEST_LOGIN_OTP)
     public ResponseEntity<Response<Object>>
-    requestLoginOTP(@Valid @RequestBody OtpRequestDto otpRequestDTO)
-            throws MessagingException {
+    requestLoginOTP(@Valid @RequestBody OtpRequestDto otpRequestDTO) {
         log.info(
                 "action=REQUEST_LOGIN_OTP identifierType={}",
                 otpRequestDTO.getType()
         );
 
-        authService.generateAndSendOTP(otpRequestDTO);
+        authService.generateAndSendOTP(otpRequestDTO.getEmail(), OTPType.LOGIN);
 
         // Always return a generic message (for security)
         return ResponseEntity.ok(
                 Response.success(null,
                         "If your account exists, an OTP has been sent"));
 
+    }
+
+
+    @GetMapping(Urls.Auth.REQUEST_EMAIL_VERIFICATION_OTP)
+    public ResponseEntity<Response<Object>>
+    requestEmailVerificationOTP(@AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
+        log.info(
+                "action=REQUEST_EMAIL_VERIFICATION_OTP userId={}",
+                authenticatedUser.uuid()
+        );
+
+        authService.generateAndSendOTP(
+                authenticatedUser.email(),
+                OTPType.EMAIL_VERIFICATION
+        );
+
+        return ResponseEntity.ok(
+                Response.success(null,
+                        "Email verification OTP has been sent"));
+
+    }
+
+    @PostMapping(Urls.Auth.VERIFY_EMAIL_VERIFICATION_OTP)
+    public ResponseEntity<Response<Map<String, Boolean>>> verifyEmailVerificationOTP(
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser,
+            @Valid @RequestBody EmailVerificationRequestDto requestDto
+    ) {
+        log.info("action=VERIFY_EMAIL_VERIFICATION_OTP_ATTEMPT userId={}", authenticatedUser.uuid());
+        if (!authenticatedUser.email().equalsIgnoreCase(requestDto.getEmail())) {
+            log.warn("action=VERIFY_EMAIL_VERIFICATION_OTP result=EMAIL_MISMATCH");
+            throw new ForbiddenException("Cannot verify another user's email");
+        }
+
+        authService.verifyEmailVerificationOtp(requestDto.getEmail(), requestDto.getOtp());
+
+        log.info("action=VERIFY_EMAIL_VERIFICATION_OTP_SUCCESS");
+        return ResponseEntity.ok(
+                Response.success(Map.of("verified", true), "Email verified successfully")
+        );
     }
 
     @PostMapping(Urls.Auth.OTP_LOGIN)

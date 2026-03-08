@@ -63,6 +63,15 @@ app:
       - https://marketmate.local:4200
       - https://admin.marketmate.local:4300
 
+  # AWS S3 Configuration
+  aws:
+    region: ${AWS_REGION:ap-south-1}
+    bucket-name: ${AWS_BUCKET_NAME:marketmatestore}
+    ses-source-email: ${SES_SOURCE_EMAIL:noreply@marketmatecloud.in}
+    presign:
+      get-expiry-minutes: ${AWS_GET_URL_EXPIRY:10}     # Expiration for GET presigned URLs (minutes)
+      put-expiry-minutes: ${AWS_PUT_URL_EXPIRY:15}     # Expiration for PUT presigned URLs (minutes)
+
   cookie:
     domain: .marketmate.local
     secure: true  # Using HTTPS locally with self-signed cert

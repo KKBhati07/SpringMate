@@ -4,7 +4,6 @@ package com.example.SpringMate.Auth.Service;
 import com.example.SpringMate.Auth.Cache.AuthCacheService;
 import com.example.SpringMate.Auth.DTO.AuthDetailsResponseDto;
 import com.example.SpringMate.Auth.DTO.OtpLoginResponseDto;
-import com.example.SpringMate.Auth.DTO.OtpRequestDto;
 import com.example.SpringMate.Auth.DTO.OtpLoginRequestDto;
 import com.example.SpringMate.Auth.DTO.SessionResolveRequestDto;
 import com.example.SpringMate.Auth.DTO.SessionResolveResponseDto;
@@ -23,7 +22,6 @@ import com.example.SpringMate.Shared.Constants;
 import com.example.SpringMate.Shared.Enum.OTPType;
 import com.example.SpringMate.User.Service.CoreUserService;
 import com.example.SpringMate.Util.ResponseMapper;
-import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
@@ -34,8 +32,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -84,46 +80,72 @@ public class AuthService {
      * Rate limited to 60 seconds to prevent abuse.
      */
     @Transactional
-    public void generateAndSendOTP(OtpRequestDto loginDTO) throws MessagingException {
-        Map<String, Object> responseMap = new HashMap<>();
-        if (loginDTO.getType() == OTPType.LOGIN) {
-            User user = coreUserService.getUserByEmail(loginDTO.getEmail());
+    public void generateAndSendOTP(String email, OTPType type) {
+        if (type == OTPType.LOGIN) {
+            User user = coreUserService.getUserByEmail(email);
             if (user == null) {
-                log.info("action=OTP_REQUEST result=USER_NOT_FOUND");
+                log.info("action=LOGIN_OTP_REQUEST result=USER_NOT_FOUND");
                 return;
             }
 
-            Optional<VerificationCode> codeOptional =
-                    verificationCodeRepository.
-                            findTopByUserAndTypeOrderByCreatedAtDesc(user, OTPType.LOGIN.name());
-            if (codeOptional.isPresent()) {
-                LocalDateTime lastSentAt = codeOptional.get().getCreatedAt();
-                if (ChronoUnit.SECONDS.between(lastSentAt, LocalDateTime.now()) < 60) {
-                    log.warn("action=OTP_REQUEST result=RATE_LIMITED");
-                    throw new TooManyRequestsException("Please wait before requesting another OTP.");
-                }
+            if (isRateLimited(user, OTPType.LOGIN)) {
+                log.warn("action=LOGIN_OTP_REQUEST result=RATE_LIMITED");
+                throw new TooManyRequestsException("Please wait before requesting another OTP.");
             }
             verificationCodeRepository.deleteByUserAndType(user, OTPType.LOGIN.name());
 
-            String otp = authHelper.generateOTP();
-            VerificationCode code = VerificationCode.builder()
-                    .code(otp).type(OTPType.LOGIN.name())
-                    .user(user).build();
-            verificationCodeRepository.save(code);
+            String otp = generateAndSaveOTP(user, OTPType.LOGIN);
 
             otpNotificationDispatcher.dispatchEmail(
-                    loginDTO.getEmail(),
+                    email,
                     Constants.EmailHeaders.LOGIN,
                     otp
             );
 
-            log.info("action=OTP_REQUEST result=SENT");
+            log.info("action=LOGIN_OTP_REQUEST result=SENT");
+            return;
+        }
+        if (type == OTPType.EMAIL_VERIFICATION) {
+            User user = coreUserService.getUserByEmail(email);
+            if (user == null) {
+                log.info("action=EMAIL_VERIFICATION_OTP_REQUEST result=USER_NOT_FOUND");
+                return;
+            }
+            if (user.isEmailVerified()) {
+                log.info("action=EMAIL_VERIFICATION_OTP_REQUEST result=EMAIL_ALREADY_VERIFIED");
+                return;
+            }
+            if (isRateLimited(user, OTPType.EMAIL_VERIFICATION)) {
+                log.warn("action=EMAIL_VERIFICATION_OTP_REQUEST result=RATE_LIMITED");
+                throw new TooManyRequestsException("Please wait before requesting another OTP.");
+            }
+            verificationCodeRepository.deleteByUserAndType(user, OTPType.EMAIL_VERIFICATION.name());
+            String otp = generateAndSaveOTP(user, OTPType.EMAIL_VERIFICATION);
+            otpNotificationDispatcher.dispatchEmail(email, Constants.EmailHeaders.EMAIL_VERIFICATION, otp);
+            log.info("action=EMAIL_VERIFICATION_OTP_REQUEST result=SENT");
             return;
         }
         log.warn("action=OTP_REQUEST reason=INVALID_TYPE");
         throw new BadRequestException("Ambiguous request type");
+    }
 
+    public boolean isRateLimited(User user, OTPType type) {
+        Optional<VerificationCode> codeOptional = verificationCodeRepository
+                .findTopByUserAndTypeOrderByCreatedAtDesc(user, type.name());
+        if (codeOptional.isPresent()) {
+            LocalDateTime lastSentAt = codeOptional.get().getCreatedAt();
+            return ChronoUnit.SECONDS.between(lastSentAt, LocalDateTime.now()) < 60;
+        }
+        return false;
+    }
 
+    public String generateAndSaveOTP(User user, OTPType type) {
+        String otp = authHelper.generateOTP();
+        VerificationCode code = VerificationCode.builder()
+                .code(otp).type(type.name())
+                .user(user).build();
+        verificationCodeRepository.save(code);
+        return otp;
     }
 
     /**
@@ -166,6 +188,38 @@ public class AuthService {
         }
         log.warn("action=OTP_VERIFY reason=INVALID_TYPE");
         throw new BadRequestException("Ambiguous request type");
+    }
+
+    /**
+     * Verifies the email verification OTP: validates the code, then marks the user's email as verified.
+     * Does not create a session or log the user in.
+     */
+    @Transactional
+    public void verifyEmailVerificationOtp(String email, String otp) {
+        log.info("action=EMAIL_VERIFICATION_OTP_VERIFY_ATTEMPT");
+        User user = coreUserService.getUserByEmail(email);
+        if (user == null) {
+            log.warn("action=EMAIL_VERIFICATION_OTP_VERIFY result=USER_NOT_FOUND");
+            throw new UnauthorizedException("Verification failed");
+        }
+        Optional<VerificationCode> codeOptional = verificationCodeRepository
+                .findTopByUserAndTypeOrderByCreatedAtDesc(user, OTPType.EMAIL_VERIFICATION.name());
+        if (codeOptional.isEmpty()) {
+            log.warn("action=EMAIL_VERIFICATION_OTP_VERIFY result=NO_CODE");
+            throw new UnauthorizedException("Verification failed");
+        }
+        VerificationCode code = codeOptional.get();
+        if (code.getExpiresAt().isBefore(LocalDateTime.now())) {
+            log.warn("action=EMAIL_VERIFICATION_OTP_VERIFY result=EXPIRED");
+            throw new UnauthorizedException("Verification code expired");
+        }
+        if (!code.getCode().equals(otp)) {
+            log.warn("action=EMAIL_VERIFICATION_OTP_VERIFY result=INVALID_CODE");
+            throw new UnauthorizedException("Verification failed");
+        }
+        verificationCodeRepository.deleteByUserAndType(user, OTPType.EMAIL_VERIFICATION.name());
+        coreUserService.markEmailVerified(user);
+        log.info("action=EMAIL_VERIFICATION_OTP_VERIFY result=SUCCESS userUuid={}", user.getUuid());
     }
 
     /**

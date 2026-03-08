@@ -8,6 +8,7 @@ import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.ses.SesClient;
 
 @Configuration
 @RequiredArgsConstructor
@@ -32,4 +33,14 @@ public class AwsConfig {
                 .credentialsProvider(DefaultCredentialsProvider.create())
                 .build();
     }
+
+    @Bean
+    @Lazy
+    public SesClient sesClient() {
+        return SesClient.builder()
+                .region(Region.of(appProperties.getAws().getRegion()))
+                .credentialsProvider(DefaultCredentialsProvider.create())
+                .build();
+    }
+
 }
