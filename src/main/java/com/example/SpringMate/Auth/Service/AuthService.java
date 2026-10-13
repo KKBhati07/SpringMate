@@ -63,9 +63,12 @@ public class AuthService {
             sessionManagementHelper.updateSessionLogoutTime(session.getSessionId());
 
             SecurityContextHolder.clearContext();
-            log.info("action=LOGOUT_SESSION result=SUCCESS");
         } else {
             log.info("action=LOGOUT_SESSION result=SESSION_NOT_FOUND");
+        }
+        authCacheService.evict(sessionId);
+        if (sessionOpt.isPresent()) {
+            log.info("action=LOGOUT_SESSION result=SUCCESS");
         }
     }
 
