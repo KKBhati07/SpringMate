@@ -29,6 +29,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -57,17 +59,34 @@ public class AuthService {
             throw new BadRequestException("Invalid token");
         }
         Optional<Session> sessionOpt = sessionRepository.findBySessionId(sessionId);
+        boolean sessionPresent = false;
         if (sessionOpt.isPresent()) {
             Session session = sessionOpt.get();
             sessionRepository.delete(session);
             sessionManagementHelper.updateSessionLogoutTime(session.getSessionId());
 
             SecurityContextHolder.clearContext();
+            sessionPresent = true;
         } else {
             log.info("action=LOGOUT_SESSION result=SESSION_NOT_FOUND");
         }
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            boolean rowWasPresent = sessionPresent;
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    evictSessionAndLogSuccess(sessionId, rowWasPresent);
+                }
+            });
+        } else {
+            log.warn("action=LOGOUT_SESSION reason=NO_ACTIVE_TRANSACTION");
+            evictSessionAndLogSuccess(sessionId, sessionPresent);
+        }
+    }
+
+    private void evictSessionAndLogSuccess(String sessionId, boolean sessionPresent) {
         authCacheService.evict(sessionId);
-        if (sessionOpt.isPresent()) {
+        if (sessionPresent) {
             log.info("action=LOGOUT_SESSION result=SUCCESS");
         }
     }
